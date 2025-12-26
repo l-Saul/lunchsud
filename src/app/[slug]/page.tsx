@@ -5,8 +5,6 @@ type Props = {
 }
 
 export default async function Page({ params }: Props) {
-  const hoje = new Date()
-
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_BASE_URL}/api/agendamentos/${params.slug}`,
     { cache: 'no-store' }
@@ -19,8 +17,6 @@ export default async function Page({ params }: Props) {
     <ClientPage
       slug={params.slug}
       ocupados={ocupados}
-      ano={hoje.getFullYear()}
-      mes={hoje.getMonth()}
     />
   )
 }

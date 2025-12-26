@@ -6,8 +6,6 @@ import { Calendar } from '@/components/Calendar'
 type Props = {
   slug: string
   ocupados: string[]
-  ano: number
-  mes: number
 }
 
 function formatarTelefone(valor: string) {
@@ -19,12 +17,16 @@ function formatarTelefone(valor: string) {
   return `${digits.slice(0, 2)} ${digits.slice(2, 7)} ${digits.slice(7)}`
 }
 
-export default function ClientPage({ slug, ocupados, ano, mes }: Props) {
+export default function ClientPage({ slug, ocupados }: Props) {
   const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null)
   const [nome, setNome] = useState('')
   const [telefone, setTelefone] = useState('')
   const [mensagem, setMensagem] = useState('')
   const [diasOcupados, setDiasOcupados] = useState<string[]>(ocupados)
+
+  const hoje = new Date()
+  const ano = hoje.getFullYear()
+  const mes = hoje.getMonth()
 
   async function recarregar() {
     const res = await fetch(`/api/agendamentos/${slug}`)
@@ -81,8 +83,6 @@ export default function ClientPage({ slug, ocupados, ano, mes }: Props) {
           ocupados={diasOcupados}
           selectedDay={diaSelecionado}
           onSelectDay={setDiaSelecionado}
-          ano={ano}
-          mes={mes}
         />
 
         {diaSelecionado && (
