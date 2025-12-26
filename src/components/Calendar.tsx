@@ -14,10 +14,14 @@ export function Calendar({ ocupados, selectedDay, onSelectDay }: Props) {
   const primeiroDiaSemana = new Date(ano, mes, 1).getDay()
   const diasNoMes = new Date(ano, mes + 1, 0).getDate()
 
-  function diaOcupado(dia: number) {
-    const data = new Date(ano, mes, dia).toISOString().split('T')[0]
+    function diaOcupado(dia: number) {
+    const yyyy = ano
+    const mm = String(mes + 1).padStart(2, '0')
+    const dd = String(dia).padStart(2, '0')
+
+    const data = `${yyyy}-${mm}-${dd}`
     return ocupados.includes(data)
-  }
+    }
 
   const dias = [
     ...Array(primeiroDiaSemana).fill(null),
