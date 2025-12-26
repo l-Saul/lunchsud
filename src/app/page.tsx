@@ -1,57 +1,69 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 
 type Ala = {
-  id: number
   nome: string
   slug: string
 }
 
-export default function IndexPage() {
+export default function Home() {
   const [alas, setAlas] = useState<Ala[]>([])
+  const [erro, setErro] = useState('')
 
   useEffect(() => {
     fetch('/api/alas')
-      .then(r => r.json())
-      .then(setAlas)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setAlas(data)
+        } else {
+          setErro('Não foi possível carregar as alas')
+        }
+      })
+      .catch(() => setErro('Erro ao carregar alas'))
   }, [])
 
   return (
     <main className="min-h-screen bg-white px-4 py-8 flex justify-center">
-      <div className="w-full max-w-3xl space-y-8">
+      <div className="w-full max-w-xl space-y-8">
 
+        {/* TÍTULO */}
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold">
-            Agendamento de Almoço
+            Almoço dos Missionários
           </h1>
-          <p className="text-gray-700 text-lg">
+          <p className="text-lg text-gray-700">
             Selecione sua ala
           </p>
         </div>
 
-        <div className="grid gap-4">
+        {/* LISTA DE ALAS */}
+        {erro && (
+          <p className="text-center text-red-600">{erro}</p>
+        )}
+
+        <div className="space-y-4">
           {alas.map(ala => (
             <Link
-              key={ala.id}
+              key={ala.slug}
               href={`/${ala.slug}`}
-              className="
-                block rounded-xl border p-6 text-lg font-medium
-                hover:bg-gray-50 transition
-              "
+              className="block w-full text-center bg-blue-100 text-blue-900
+                         text-lg font-medium py-4 rounded-lg
+                         hover:bg-blue-200"
             >
               {ala.nome}
             </Link>
           ))}
-
-          {alas.length === 0 && (
-            <p className="text-center text-gray-500">
-              Nenhuma ala disponível.
-            </p>
-          )}
         </div>
 
+        {/* CASO NÃO TENHA ALAS */}
+        {alas.length === 0 && !erro && (
+          <p className="text-center text-gray-600">
+            Nenhuma ala disponível no momento.
+          </p>
+        )}
       </div>
     </main>
   )
