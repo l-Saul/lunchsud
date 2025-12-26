@@ -1,11 +1,11 @@
 import { supabase } from '@/lib/supabase'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
-  request: Request,
-  { params }: { params: { slug: string } }
+  request: NextRequest,
+  context: { params: Promise<{ slug: string }> }
 ) {
-  const { slug } = params
+  const { slug } = await context.params
 
   const { data: ala, error: alaError } = await supabase
     .from('ala')
