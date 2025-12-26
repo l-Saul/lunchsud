@@ -12,8 +12,7 @@ function formatarTelefone(valor: string) {
   const digits = valor.replace(/\D/g, '').slice(0, 11)
 
   if (digits.length <= 2) return digits
-  if (digits.length <= 7)
-    return `${digits.slice(0, 2)} ${digits.slice(2)}`
+  if (digits.length <= 7) return `${digits.slice(0, 2)} ${digits.slice(2)}`
   return `${digits.slice(0, 2)} ${digits.slice(2, 7)} ${digits.slice(7)}`
 }
 
@@ -28,18 +27,12 @@ export default function ClientPage({ slug, ocupados }: Props) {
   const ano = hoje.getFullYear()
   const mes = hoje.getMonth()
 
-  async function recarregar() {
-    const res = await fetch(`/api/agendamentos/${slug}`)
-    const data = await res.json()
-    setDiasOcupados(data.map((i: any) => i.data))
-  }
-
-    async function agendar() {
+  async function agendar() {
     if (!slug || !diaSelecionado) return
 
     if (telefone.replace(/\D/g, '').length !== 11) {
-        setMensagem('Informe um telefone celular válido.')
-        return
+      setMensagem('Informe um telefone celular válido.')
+      return
     }
 
     const mm = String(mes + 1).padStart(2, '0')
@@ -47,24 +40,25 @@ export default function ClientPage({ slug, ocupados }: Props) {
     const data = `${ano}-${mm}-${dd}`
 
     const res = await fetch('/api/agendar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, data, nome, telefone })
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug, data, nome, telefone })
     })
 
     if (!res.ok) {
-        setMensagem('Este dia acabou de ser ocupado. Escolha outro.')
-        setDiaSelecionado(null)
-        recarregar()
-        return
+      setMensagem('Este dia acabou de ser ocupado. Escolha outro.')
+      setDiaSelecionado(null)
+      return
     }
+
+    // ✅ marca o dia como ocupado localmente (sem refetch)
+    setDiasOcupados(prev => [...prev, data])
 
     setMensagem('Agendamento realizado com sucesso.')
     setNome('')
     setTelefone('')
     setDiaSelecionado(null)
-    recarregar()
-    }
+  }
 
   return (
     <main className="min-h-screen bg-white px-4 py-8 flex justify-center">
