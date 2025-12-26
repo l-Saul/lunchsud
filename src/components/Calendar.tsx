@@ -18,10 +18,13 @@ export function Calendar({
   const primeiroDiaSemana = new Date(ano, mes, 1).getDay()
   const diasNoMes = new Date(ano, mes + 1, 0).getDate()
 
-  function diaOcupado(dia: number) {
-    const data = new Date(ano, mes, dia).toISOString().split('T')[0]
-    return ocupados.includes(data)
-  }
+function diaOcupado(dia: number) {
+  const mm = String(mes + 1).padStart(2, '0')
+  const dd = String(dia).padStart(2, '0')
+  const data = `${ano}-${mm}-${dd}`
+
+  return ocupados.includes(data)
+}
 
   const dias = [
     ...Array(primeiroDiaSemana).fill(null),
