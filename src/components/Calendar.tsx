@@ -55,23 +55,28 @@ export function Calendar({ ocupados, onSelectDay }: Props) {
 
           return (
             <button
-              key={dia}
-              disabled={ocupado}
-              onClick={() => {
+            key={dia}
+            disabled={ocupado}
+            onClick={() => {
                 setDiaSelecionado(dia)
                 onSelectDay(dia)
-              }}
-              className="h-14 rounded-lg text-lg font-medium transition"
-              style={{
+            }}
+            className="h-14 rounded-lg text-lg font-medium transition hover:brightness-95"
+            style={{
                 backgroundColor: ocupado
-                  ? 'var(--ocupado)'
-                  : selecionado
-                  ? 'var(--selecionado)'
-                  : 'var(--disponivel)',
-                color: ocupado ? '#6b7280' : selecionado ? '#ffffff' : 'var(--cal-texto)',
-              }}
+                ? 'var(--cal-ocupado)'
+                : selecionado
+                ? 'var(--cal-selecionado)'
+                : 'var(--cal-disponivel)',
+                color: ocupado
+                ? '#6b7280'
+                : selecionado
+                ? '#ffffff'
+                : 'var(--cal-texto)',
+                cursor: ocupado ? 'not-allowed' : 'pointer',
+            }}
             >
-              {dia}
+            {dia}
             </button>
           )
         })}
