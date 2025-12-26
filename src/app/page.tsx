@@ -1,65 +1,54 @@
-<<<<<<< HEAD
+'use client'
+
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
 type Ala = {
   nome: string
   slug: string
 }
 
-async function getAlas(): Promise<Ala[]> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/alas`, {
-    cache: 'no-store'
-  })
+export default function IndexPage() {
+  const [alas, setAlas] = useState<Ala[]>([])
 
-  if (!res.ok) return []
-  return res.json()
-}
-
-export default async function Home() {
-  const alas = await getAlas()
+  useEffect(() => {
+    fetch('/api/alas')
+      .then(r => r.json())
+      .then(setAlas)
+  }, [])
 
   return (
     <main className="min-h-screen bg-white px-4 py-8 flex justify-center">
-      <div className="w-full max-w-xl space-y-8">
+      <div className="w-full max-w-3xl space-y-8">
 
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold">
-            Almoço dos Missionários
+            Agendamento de Almoço
           </h1>
-          <p className="text-lg text-gray-700">
+          <p className="text-gray-700 text-lg">
             Selecione sua ala
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div className="grid gap-4">
           {alas.map(ala => (
             <Link
               key={ala.slug}
               href={`/${ala.slug}`}
-              className="block w-full text-center bg-blue-100 text-blue-900
-                         text-lg font-medium py-4 rounded-lg
-                         hover:bg-blue-200"
+              className="block rounded-xl border p-6 text-lg font-medium hover:bg-gray-50 transition"
             >
               {ala.nome}
             </Link>
           ))}
+
+          {alas.length === 0 && (
+            <p className="text-center text-gray-500">
+              Nenhuma ala disponível.
+            </p>
+          )}
         </div>
 
-        {alas.length === 0 && (
-          <p className="text-center text-gray-600">
-            Nenhuma ala disponível no momento.
-          </p>
-        )}
       </div>
-=======
-export default function Home() {
-  return (
-    <main>
-      <h1>Almoço dos Missionários</h1>
-      <p>
-        Utilize o link fornecido pela sua ala para realizar o agendamento.
-      </p>
->>>>>>> parent of a3c82d2 (1.010)
     </main>
   )
 }
