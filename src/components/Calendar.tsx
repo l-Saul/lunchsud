@@ -1,3 +1,7 @@
+'use client'
+
+import { useState } from 'react'
+
 type Props = {
   ocupados: string[]
   onSelectDay: (day: number) => void
@@ -8,14 +12,13 @@ export function Calendar({ ocupados, onSelectDay }: Props) {
   const ano = hoje.getFullYear()
   const mes = hoje.getMonth()
 
-  const primeiroDiaSemana = new Date(ano, mes, 1).getDay() // 0 = domingo
+  const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null)
+
+  const primeiroDiaSemana = new Date(ano, mes, 1).getDay()
   const diasNoMes = new Date(ano, mes + 1, 0).getDate()
 
   function diaOcupado(dia: number) {
-    const data = new Date(ano, mes, dia)
-      .toISOString()
-      .split('T')[0]
-
+    const data = new Date(ano, mes, dia).toISOString().split('T')[0]
     return ocupados.includes(data)
   }
 
@@ -25,47 +28,54 @@ export function Calendar({ ocupados, onSelectDay }: Props) {
   ]
 
   return (
-    <div className="space-y-4">
-      {/* Cabeçalho */}
-      <h2 className="text-center text-xl font-semibold">
+    <div
+      className="space-y-4"
+      style={{
+        ['--disponivel' as any]: 'var(--cal-disponivel)',
+        ['--ocupado' as any]: 'var(--cal-ocupado)',
+        ['--selecionado' as any]: 'var(--cal-selecionado)',
+      }}
+    >
+      <h2 className="text-center text-xl font-semibold capitalize">
         {hoje.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
       </h2>
 
-      {/* Dias da semana */}
       <div className="grid grid-cols-7 text-center font-medium text-gray-600">
         {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
           <div key={d}>{d}</div>
         ))}
       </div>
 
-      {/* Grade do calendário */}
       <div className="grid grid-cols-7 gap-2">
         {dias.map((dia, i) => {
           if (!dia) return <div key={i} />
 
           const ocupado = diaOcupado(dia)
+          const selecionado = dia === diaSelecionado
 
           return (
             <button
               key={dia}
               disabled={ocupado}
-              onClick={() => onSelectDay(dia)}
-              className={`
-                h-14 rounded-lg text-lg font-medium
-                ${ocupado
-                  ? 'bg-gray-200 text-gray-400'
-                  : 'bg-green-100 text-green-900 hover:bg-green-200'}
-              `}
+              onClick={() => {
+                setDiaSelecionado(dia)
+                onSelectDay(dia)
+              }}
+              className="h-14 rounded-lg text-lg font-medium transition"
+              style={{
+                backgroundColor: ocupado
+                  ? 'var(--ocupado)'
+                  : selecionado
+                  ? 'var(--selecionado)'
+                  : 'var(--disponivel)',
+                color: ocupado ? '#6b7280' : selecionado ? '#ffffff' : 'var(--cal-texto)',
+              }}
             >
               {dia}
             </button>
           )
         })}
       </div>
-
-      <p className="text-sm text-gray-600 text-center">
-        Dias em cinza já estão ocupados
-      </p>
     </div>
   )
 }
