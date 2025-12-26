@@ -7,6 +7,15 @@ type Props = {
   params: Promise<{ slug: string }>
 }
 
+function formatarTelefone(valor: string) {
+  const digits = valor.replace(/\D/g, '').slice(0, 11)
+
+  if (digits.length <= 2) return digits
+  if (digits.length <= 7)
+    return `${digits.slice(0, 2)} ${digits.slice(2)}`
+  return `${digits.slice(0, 2)} ${digits.slice(2, 7)} ${digits.slice(7)}`
+}
+
 export default function Page({ params }: Props) {
   const [slug, setSlug] = useState('')
   const [ocupados, setOcupados] = useState<string[]>([])
@@ -41,6 +50,11 @@ export default function Page({ params }: Props) {
 
   async function agendar() {
     if (!diaSelecionado) return
+
+    if (telefone.replace(/\D/g, '').length !== 11) {
+    setMensagem('Informe um telefone celular válido.')
+    return
+    }
 
     const data = new Date(ano, mes, diaSelecionado)
       .toISOString()
@@ -104,9 +118,10 @@ export default function Page({ params }: Props) {
 
             <input
               className="w-full border rounded-lg p-3 text-lg"
-              placeholder="Telefone"
+              placeholder="41 99999 9999"
+              inputMode="numeric"
               value={telefone}
-              onChange={e => setTelefone(e.target.value)}
+              onChange={e => setTelefone(formatarTelefone(e.target.value))}
             />
 
             <button
