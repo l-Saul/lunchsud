@@ -4,13 +4,17 @@ type Props = {
   ocupados: string[]
   selectedDay: number | null
   onSelectDay: (day: number) => void
+  ano: number
+  mes: number // 0-based (0 = janeiro)
 }
 
-export function Calendar({ ocupados, selectedDay, onSelectDay }: Props) {
-  const hoje = new Date()
-  const ano = hoje.getFullYear()
-  const mes = hoje.getMonth()
-
+export function Calendar({
+  ocupados,
+  selectedDay,
+  onSelectDay,
+  ano,
+  mes,
+}: Props) {
   const primeiroDiaSemana = new Date(ano, mes, 1).getDay()
   const diasNoMes = new Date(ano, mes + 1, 0).getDate()
 
@@ -27,7 +31,10 @@ export function Calendar({ ocupados, selectedDay, onSelectDay }: Props) {
   return (
     <div className="space-y-4">
       <h2 className="text-center text-xl font-semibold capitalize">
-        {hoje.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+        {new Date(ano, mes).toLocaleDateString('pt-BR', {
+          month: 'long',
+          year: 'numeric',
+        })}
       </h2>
 
       <div className="grid grid-cols-7 text-center font-medium text-gray-600">
