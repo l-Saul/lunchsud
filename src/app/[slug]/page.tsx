@@ -27,7 +27,6 @@ export default function Page({ params }: Props) {
   const hoje = new Date()
   const ano = hoje.getFullYear()
   const mes = hoje.getMonth()
-  const diasNoMes = new Date(ano, mes + 1, 0).getDate()
 
   useEffect(() => {
     params.then(p => setSlug(p.slug))
@@ -43,17 +42,12 @@ export default function Page({ params }: Props) {
     if (slug) carregar()
   }, [slug])
 
-  function ocupado(dia: number) {
-    const d = new Date(ano, mes, dia).toISOString().split('T')[0]
-    return ocupados.includes(d)
-  }
-
   async function agendar() {
     if (!diaSelecionado) return
 
     if (telefone.replace(/\D/g, '').length !== 11) {
-    setMensagem('Informe um telefone celular válido.')
-    return
+      setMensagem('Informe um telefone celular válido.')
+      return
     }
 
     const data = new Date(ano, mes, diaSelecionado)
@@ -69,7 +63,9 @@ export default function Page({ params }: Props) {
     const j = await res.json()
 
     if (!res.ok) {
-      setMensagem(j.error)
+      setMensagem('Este dia acabou de ser ocupado. Escolha outro.')
+      setDiaSelecionado(null)
+      carregar()
       return
     }
 
@@ -86,7 +82,6 @@ export default function Page({ params }: Props) {
     <main className="min-h-screen bg-white px-4 py-8 flex justify-center">
       <div className="w-full max-w-xl space-y-8">
 
-        {/* TÍTULO */}
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold">
             Agendar almoço para os missionários
@@ -96,10 +91,11 @@ export default function Page({ params }: Props) {
           </p>
         </div>
 
-        {/* CALENDÁRIO */}
+        {/* CALENDÁRIO (SINCRONIZADO) */}
         <Calendar
-        ocupados={ocupados}
-        onSelectDay={setDiaSelecionado}
+          ocupados={ocupados}
+          selectedDay={diaSelecionado}
+          onSelectDay={setDiaSelecionado}
         />
 
         {/* FORMULÁRIO */}
@@ -133,7 +129,6 @@ export default function Page({ params }: Props) {
           </div>
         )}
 
-        {/* MENSAGEM */}
         {mensagem && (
           <p className="text-center text-lg font-medium text-green-700">
             {mensagem}

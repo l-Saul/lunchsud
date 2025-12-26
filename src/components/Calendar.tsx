@@ -1,18 +1,15 @@
 'use client'
 
-import { useState } from 'react'
-
 type Props = {
   ocupados: string[]
+  selectedDay: number | null
   onSelectDay: (day: number) => void
 }
 
-export function Calendar({ ocupados, onSelectDay }: Props) {
+export function Calendar({ ocupados, selectedDay, onSelectDay }: Props) {
   const hoje = new Date()
   const ano = hoje.getFullYear()
   const mes = hoje.getMonth()
-
-  const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null)
 
   const primeiroDiaSemana = new Date(ano, mes, 1).getDay()
   const diasNoMes = new Date(ano, mes + 1, 0).getDate()
@@ -28,14 +25,7 @@ export function Calendar({ ocupados, onSelectDay }: Props) {
   ]
 
   return (
-    <div
-      className="space-y-4"
-      style={{
-        ['--disponivel' as any]: 'var(--cal-disponivel)',
-        ['--ocupado' as any]: 'var(--cal-ocupado)',
-        ['--selecionado' as any]: 'var(--cal-selecionado)',
-      }}
-    >
+    <div className="space-y-4">
       <h2 className="text-center text-xl font-semibold capitalize">
         {hoje.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
       </h2>
@@ -51,32 +41,29 @@ export function Calendar({ ocupados, onSelectDay }: Props) {
           if (!dia) return <div key={i} />
 
           const ocupado = diaOcupado(dia)
-          const selecionado = dia === diaSelecionado
+          const selecionado = dia === selectedDay
 
           return (
             <button
-            key={dia}
-            disabled={ocupado}
-            onClick={() => {
-                setDiaSelecionado(dia)
-                onSelectDay(dia)
-            }}
-            className="h-14 rounded-lg text-lg font-medium transition hover:brightness-95"
-            style={{
+              key={dia}
+              disabled={ocupado}
+              onClick={() => onSelectDay(dia)}
+              className="h-14 rounded-lg text-lg font-medium transition hover:brightness-95"
+              style={{
                 backgroundColor: ocupado
-                ? 'var(--cal-ocupado)'
-                : selecionado
-                ? 'var(--cal-selecionado)'
-                : 'var(--cal-disponivel)',
+                  ? 'var(--cal-ocupado)'
+                  : selecionado
+                  ? 'var(--cal-selecionado)'
+                  : 'var(--cal-disponivel)',
                 color: ocupado
-                ? '#6b7280'
-                : selecionado
-                ? '#ffffff'
-                : 'var(--cal-texto)',
+                  ? '#6b7280'
+                  : selecionado
+                  ? '#ffffff'
+                  : 'var(--cal-texto)',
                 cursor: ocupado ? 'not-allowed' : 'pointer',
-            }}
+              }}
             >
-            {dia}
+              {dia}
             </button>
           )
         })}
