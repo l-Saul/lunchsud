@@ -3,9 +3,9 @@ import { NextResponse } from 'next/server'
 
 export async function GET(
   _: Request,
-  context: { params: Promise<{ slug: string }> }
+  { params }: { params: { slug: string } }
 ) {
-  const { slug } = await context.params
+  const { slug } = params
 
   const { data: ala, error: alaError } = await supabase
     .from('ala')

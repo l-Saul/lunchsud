@@ -61,7 +61,7 @@ export async function POST(req: Request) {
   if (error) {
     if (error.code === '23505') {
       return NextResponse.json(
-        { error: 'Dia já ocupado' },
+        { error: 'Este dia acabou de ser ocupado. Escolha outro.' },
         { status: 409 }
       )
     }
