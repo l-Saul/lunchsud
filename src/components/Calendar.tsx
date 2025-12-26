@@ -52,25 +52,27 @@ export function Calendar({
 
           return (
             <button
-              key={dia}
-              disabled={ocupado}
-              onClick={() => onSelectDay(dia)}
-              className="h-14 rounded-lg text-lg font-medium transition hover:brightness-95"
-              style={{
+            key={dia}
+            aria-disabled={ocupado}
+            onClick={() => {
+                if (!ocupado) onSelectDay(dia)
+            }}
+            className="h-14 rounded-lg text-lg font-medium transition hover:brightness-95"
+            style={{
                 backgroundColor: ocupado
-                  ? 'var(--cal-ocupado)'
-                  : selecionado
-                  ? 'var(--cal-selecionado)'
-                  : 'var(--cal-disponivel)',
+                ? 'var(--cal-ocupado)'
+                : selecionado
+                ? 'var(--cal-selecionado)'
+                : 'var(--cal-disponivel)',
                 color: ocupado
-                  ? '#6b7280'
-                  : selecionado
-                  ? '#ffffff'
-                  : 'var(--cal-texto)',
+                ? '#6b7280'
+                : selecionado
+                ? '#ffffff'
+                : 'var(--cal-texto)',
                 cursor: ocupado ? 'not-allowed' : 'pointer',
-              }}
+            }}
             >
-              {dia}
+            {dia}
             </button>
           )
         })}
