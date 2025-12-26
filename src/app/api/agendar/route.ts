@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { supabaseServer } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rateLimit'
 
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
   }
 
   // 3. Buscar ala pelo slug
-  const { data: ala, error: alaError } = await supabase
+  const { data: ala, error: alaError } = await supabaseServer
     .from('ala')
     .select('id')
     .eq('slug', slug)
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
   }
 
   // 4. Inserir agendamento
-  const { error } = await supabase
+  const { error } = await supabaseServer
     .from('agendamento')
     .insert({
       ala_id: ala.id,

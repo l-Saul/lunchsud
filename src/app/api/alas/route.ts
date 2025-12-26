@@ -1,8 +1,8 @@
-import { supabase } from '@/lib/supabase'
+import { supabaseServer } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
 export async function GET() {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseServer
     .from('ala')
     .select('nome, slug')
     .order('nome')

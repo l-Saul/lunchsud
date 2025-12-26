@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { supabaseServer } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
@@ -7,7 +7,7 @@ export async function GET(
 ) {
   const { slug } = await context.params
 
-  const { data: ala, error: alaError } = await supabase
+  const { data: ala, error: alaError } = await supabaseServer
     .from('ala')
     .select('id')
     .eq('slug', slug)
@@ -17,7 +17,7 @@ export async function GET(
     return NextResponse.json({ error: 'Ala não encontrada' }, { status: 404 })
   }
 
-  const { data: agendamentos, error } = await supabase
+  const { data: agendamentos, error } = await supabaseServer
     .from('agendamento')
     .select('data')
     .eq('ala_id', ala.id)
