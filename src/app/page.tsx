@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import Link from 'next/link'
 
 type Ala = {
@@ -50,6 +51,15 @@ export default async function Home() {
           </p>
         )}
       </div>
+=======
+export default function Home() {
+  return (
+    <main>
+      <h1>Almoço dos Missionários</h1>
+      <p>
+        Utilize o link fornecido pela sua ala para realizar o agendamento.
+      </p>
+>>>>>>> parent of a3c82d2 (1.010)
     </main>
   )
 }
