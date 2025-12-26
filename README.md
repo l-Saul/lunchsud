@@ -1,36 +1,125 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🍽️ Agendamento de Almoço – Missionários
 
-## Getting Started
+Aplicação web para **agendamento de almoços por ala**, com calendário mensal simples, controle de conflitos e integração com Supabase.
 
-First, run the development server:
+O sistema permite que membros escolham um dia disponível do mês atual e realizem o agendamento de forma segura, evitando duplicidade.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## ✨ Funcionalidades
+
+- 📅 Calendário mensal do mês atual
+- ✅ Bloqueio automático de dias já ocupados
+- 🔒 Proteção contra agendamentos simultâneos (constraint no banco)
+- 📲 Formatação e validação de telefone celular (padrão brasileiro)
+- 🏠 Página inicial listando todas as alas disponíveis
+- 🔗 Página individual por ala (`/[slug]`)
+- ⚡ UX simples: sem recarregar dados após agendamento
+- 🧠 Backend confiável como fonte da verdade
+
+---
+
+## 🧱 Stack utilizada
+
+- **Next.js 16 (App Router + Turbopack)**
+- **React**
+- **TypeScript**
+- **Tailwind CSS**
+- **Supabase (PostgreSQL + API)**
+- **Vercel (deploy)**
+
+---
+
+## 🗂️ Estrutura principal
+
+```txt
+src/
+├── app/
+│   ├── page.tsx                # Index – lista de alas
+│   ├── [slug]/
+│   │   ├── page.tsx            # Server Component
+│   │   └── ClientPage.tsx      # Client Component (UI + estado)
+│   └── api/
+│       ├── alas/route.ts       # GET – lista de alas
+│       ├── agendar/route.ts    # POST – cria agendamento
+│       └── agendamentos/
+│           └── [slug]/route.ts # GET – dias ocupados por ala
+├── components/
+│   └── Calendar.tsx            # Calendário mensal
+└── lib/
+    ├── supabase-server.ts      # Cliente Supabase (server)
+    └── rateLimit.ts            # Rate limit simples
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🗃️ Modelo de dados (Supabase)
+Tabela ala
+campo	tipo	descrição
+id	bigint	PK
+nome	text	Nome da ala
+slug	text	Usado na URL
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Tabela agendamento
+campo	tipo	descrição
+id	bigint	PK
+ala_id	bigint	FK → ala
+data	date	Dia do agendamento
+nome	text	Nome do responsável
+telefone	text	Telefone
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🔐 Segurança e consistência
+Conflitos tratados no banco (PostgreSQL)
+Erro 23505 capturado no backend
+Frontend nunca sobrescreve o estado incorretamente
+Rate limit aplicado no endpoint de agendamento
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🌍 Variáveis de ambiente
+Local (.env.local)
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 
-## Deploy on Vercel
+SUPABASE_URL=...
+SUPABASE_SERVICE_ROLE_KEY=...
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🚀 Como rodar localmente
+npm install
+npm run dev
+Acesse:
+http://localhost:3000
+
+---
+
+## 📤 Deploy
+Plataforma: Vercel
+Build automático via GitHub
+Sempre fazer Redeploy com Clear Cache após mudanças em rotas dinâmicas
+
+---
+
+## 🧠 Decisões de arquitetura
+Calendário sem navegação de meses (foco no mês atual)
+Sem refetch após agendar → estado local é atualizado
+Backend é a fonte da verdade
+Simplicidade > abstrações desnecessárias
+
+---
+
+## 🛠️ Possíveis evoluções
+Bloquear dias passados
+Bloquear finais de semana
+Geração automática de imagem Open Graph do mês
+Confirmação por WhatsApp
+Painel administrativo
+
+---
+
+## 📄 Licença
+Projeto privado / uso interno.
