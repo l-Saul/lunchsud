@@ -34,29 +34,29 @@ export default function ClientPage({ slug, ocupados }: Props) {
     setDiasOcupados(data.map((i: any) => i.data))
   }
 
-  async function agendar() {
-    if (!diaSelecionado) return
+    async function agendar() {
+    if (!slug || !diaSelecionado) return
 
     if (telefone.replace(/\D/g, '').length !== 11) {
-      setMensagem('Informe um telefone celular válido.')
-      return
+        setMensagem('Informe um telefone celular válido.')
+        return
     }
 
-    const data = new Date(ano, mes, diaSelecionado)
-      .toISOString()
-      .split('T')[0]
+    const mm = String(mes + 1).padStart(2, '0')
+    const dd = String(diaSelecionado).padStart(2, '0')
+    const data = `${ano}-${mm}-${dd}`
 
     const res = await fetch('/api/agendar', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slug, data, nome, telefone })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, data, nome, telefone })
     })
 
     if (!res.ok) {
-      setMensagem('Este dia acabou de ser ocupado. Escolha outro.')
-      setDiaSelecionado(null)
-      recarregar()
-      return
+        setMensagem('Este dia acabou de ser ocupado. Escolha outro.')
+        setDiaSelecionado(null)
+        recarregar()
+        return
     }
 
     setMensagem('Agendamento realizado com sucesso.')
@@ -64,7 +64,7 @@ export default function ClientPage({ slug, ocupados }: Props) {
     setTelefone('')
     setDiaSelecionado(null)
     recarregar()
-  }
+    }
 
   return (
     <main className="min-h-screen bg-white px-4 py-8 flex justify-center">
