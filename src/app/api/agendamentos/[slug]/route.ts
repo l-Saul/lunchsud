@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase'
 import { NextResponse } from 'next/server'
 
 export async function GET(
-  _: Request,
+  request: Request,
   { params }: { params: { slug: string } }
 ) {
   const { slug } = params
