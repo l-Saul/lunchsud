@@ -1,6 +1,3 @@
-'use client'
-
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
 type Ala = {
@@ -8,28 +5,22 @@ type Ala = {
   slug: string
 }
 
-export default function Home() {
-  const [alas, setAlas] = useState<Ala[]>([])
-  const [erro, setErro] = useState('')
+async function getAlas(): Promise<Ala[]> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/alas`, {
+    cache: 'no-store'
+  })
 
-  useEffect(() => {
-    fetch('/api/alas')
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setAlas(data)
-        } else {
-          setErro('Não foi possível carregar as alas')
-        }
-      })
-      .catch(() => setErro('Erro ao carregar alas'))
-  }, [])
+  if (!res.ok) return []
+  return res.json()
+}
+
+export default async function Home() {
+  const alas = await getAlas()
 
   return (
     <main className="min-h-screen bg-white px-4 py-8 flex justify-center">
       <div className="w-full max-w-xl space-y-8">
 
-        {/* TÍTULO */}
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-bold">
             Almoço dos Missionários
@@ -38,11 +29,6 @@ export default function Home() {
             Selecione sua ala
           </p>
         </div>
-
-        {/* LISTA DE ALAS */}
-        {erro && (
-          <p className="text-center text-red-600">{erro}</p>
-        )}
 
         <div className="space-y-4">
           {alas.map(ala => (
@@ -58,8 +44,7 @@ export default function Home() {
           ))}
         </div>
 
-        {/* CASO NÃO TENHA ALAS */}
-        {alas.length === 0 && !erro && (
+        {alas.length === 0 && (
           <p className="text-center text-gray-600">
             Nenhuma ala disponível no momento.
           </p>
