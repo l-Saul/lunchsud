@@ -105,7 +105,6 @@ export default function ClientPage({ slug, ocupados }: Props) {
             alt={`Missionários da ala ${nomeAla}`}
             className="mx-auto mt-4 rounded-lg max-h-64 object-cover"
             onError={e => {
-              e.currentTarget.onerror = null
               e.currentTarget.src = '/alas/padrao.jpg'
             }}
           />
