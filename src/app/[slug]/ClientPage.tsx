@@ -35,6 +35,10 @@ function ocultarSobrenome(nome: string) {
   return `${partes[0]} ${partes[1][0]}.`
 }
 
+function imagemDaAla(slug: string) {
+  return `/alas/${slug}.jpg`
+}
+
 export default function ClientPage({ slug, ocupados }: Props) {
   const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null)
   const [nome, setNome] = useState('')
@@ -91,9 +95,20 @@ export default function ClientPage({ slug, ocupados }: Props) {
           <h1 className="text-4xl font-extrabold text-gray-900">
             Ala {nomeAla}
           </h1>
+
           <h2 className="text-2xl font-semibold text-gray-700">
             Agendar almoço para os missionários
           </h2>
+
+          <img
+            src={imagemDaAla(slug)}
+            alt={`Missionários da ala ${nomeAla}`}
+            className="mx-auto mt-4 rounded-lg max-h-64 object-cover"
+            onError={e => {
+              e.currentTarget.style.display = 'none'
+            }}
+          />
+
           <p className="text-gray-700 text-lg">
             Escolha um dia disponível abaixo
           </p>
