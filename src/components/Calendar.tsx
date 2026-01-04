@@ -1,27 +1,40 @@
 'use client'
 
-type Props = {
-  ocupados: string[]
-  selectedDay: number | null
-  onSelectDay: (day: number) => void
+type DiaOcupado = {
+  data: string // YYYY-MM-DD
+  nome: string
 }
 
-export function Calendar({ ocupados, selectedDay, onSelectDay }: Props) {
-  const hoje = new Date()
-  const ano = hoje.getFullYear()
-  const mes = hoje.getMonth()
+type Props = {
+  ocupados: DiaOcupado[]
+  selectedDay: number | null
+  onSelectDay: (day: number) => void
+  onSelectOcupado: (nome: string) => void
+}
 
-  const primeiroDiaSemana = new Date(ano, mes, 1).getDay()
-  const diasNoMes = new Date(ano, mes + 1, 0).getDate()
+export function Calendar({
+  ocupados,
+  selectedDay,
+  onSelectDay,
+  onSelectOcupado
+}: Props) {
 
-    function diaOcupado(dia: number) {
-    const yyyy = ano
-    const mm = String(mes + 1).padStart(2, '0')
+  // 🔑 DEFINE ANO/MÊS A PARTIR DOS DADOS
+  const referencia = ocupados[0]?.data ?? new Date().toISOString().slice(0, 10)
+  const [ano, mesStr] = referencia.split('-')
+  const anoNum = Number(ano)
+  const mesNum = Number(mesStr) - 1 // JS month é 0-based
+
+  const primeiroDiaSemana = new Date(anoNum, mesNum, 1).getDay()
+  const diasNoMes = new Date(anoNum, mesNum + 1, 0).getDate()
+
+  function getOcupacao(dia: number) {
+    const mm = String(mesNum + 1).padStart(2, '0')
     const dd = String(dia).padStart(2, '0')
+    const dataCalendario = `${anoNum}-${mm}-${dd}`
 
-    const data = `${yyyy}-${mm}-${dd}`
-    return ocupados.includes(data)
-    }
+    return ocupados.find(o => o.data === dataCalendario)
+  }
 
   const dias = [
     ...Array(primeiroDiaSemana).fill(null),
@@ -31,7 +44,10 @@ export function Calendar({ ocupados, selectedDay, onSelectDay }: Props) {
   return (
     <div className="space-y-4">
       <h2 className="text-center text-xl font-semibold capitalize">
-        {hoje.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+        {new Date(anoNum, mesNum).toLocaleDateString('pt-BR', {
+          month: 'long',
+          year: 'numeric'
+        })}
       </h2>
 
       <div className="grid grid-cols-7 text-center font-medium text-gray-600">
@@ -41,18 +57,25 @@ export function Calendar({ ocupados, selectedDay, onSelectDay }: Props) {
       </div>
 
       <div className="grid grid-cols-7 gap-2">
-        {dias.map((dia, i) => {
-          if (!dia) return <div key={i} />
+        {dias.map((dia, index) => {
+          if (!dia) return <div key={`empty-${index}`} />
 
-          const ocupado = diaOcupado(dia)
+          const ocupacao = getOcupacao(dia)
+          const ocupado = Boolean(ocupacao)
           const selecionado = dia === selectedDay
 
           return (
-            <button
-              key={dia}
-              disabled={ocupado}
-              onClick={() => onSelectDay(dia)}
-              className="h-14 rounded-lg text-lg font-medium transition hover:brightness-95"
+            <div
+              key={`day-${index}`}
+              role="button"
+              onClick={() => {
+                if (ocupado && ocupacao) {
+                  onSelectOcupado(ocupacao.nome)
+                } else {
+                  onSelectDay(dia)
+                }
+              }}
+              className="h-14 rounded-lg text-lg font-medium flex items-center justify-center transition hover:brightness-95 cursor-pointer"
               style={{
                 backgroundColor: ocupado
                   ? 'var(--cal-ocupado)'
@@ -64,11 +87,11 @@ export function Calendar({ ocupados, selectedDay, onSelectDay }: Props) {
                   : selecionado
                   ? '#ffffff'
                   : 'var(--cal-texto)',
-                cursor: ocupado ? 'not-allowed' : 'pointer',
+                opacity: ocupado ? 0.7 : 1
               }}
             >
               {dia}
-            </button>
+            </div>
           )
         })}
       </div>

@@ -17,9 +17,10 @@ export async function GET(
     return NextResponse.json({ error: 'Ala não encontrada' }, { status: 404 })
   }
 
+  // 🔥 FORÇA data como STRING YYYY-MM-DD (SEM timezone)
   const { data: agendamentos, error } = await supabaseServer
     .from('agendamento')
-    .select('data')
+    .select('data::text, nome')
     .eq('ala_id', ala.id)
 
   if (error) {

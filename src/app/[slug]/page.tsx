@@ -1,56 +1,32 @@
-import type { Metadata } from 'next'
+import { supabaseServer } from '@/lib/supabase-server'
 import ClientPage from './ClientPage'
 
-type Props = {
-  params: Promise<{ slug: string }>
-}
-
-export async function generateMetadata(
-  { params }: Props
-): Promise<Metadata> {
+export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
 
-  const nomeAla = decodeURIComponent(slug)
+  const { data: ala, error: alaError } = await supabaseServer
+    .from('ala')
+    .select('id')
+    .eq('slug', slug)
+    .single()
 
-  return {
-    title: `Ala ${nomeAla}`,
-    description: `Agendamento de almoço para a ala ${nomeAla}`,
-
-    openGraph: {
-      title: `Ala ${nomeAla}`,
-      description: `Agendamento de almoço para a ala ${nomeAla}`,
-      url: `https://lunchsud.vercel.app/${slug}`,
-      siteName: 'Almoço dos Missionários',
-      locale: 'pt_BR',
-      type: 'website',
-      images: [
-        {
-          url: '/og-image.png',
-          width: 1200,
-          height: 630,
-          alt: `Almoço dos Missionários – ${nomeAla}`,
-        }
-      ],
-    }
+  if (alaError || !ala) {
+    throw new Error('Ala não encontrada')
   }
-}
 
-export default async function Page({ params }: Props) {
-  const { slug } = await params
+  const { data: ocupados, error } = await supabaseServer
+    .from('agendamento')
+    .select('data, nome')
+    .eq('ala_id', ala.id)
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/agendamentos/${slug}`,
-    { cache: 'no-store' }
-  )
-
-  const data = await res.json()
-  const ocupados = Array.isArray(data) ? data.map((i: any) => i.data) : []
+  if (error) {
+    throw new Error('Erro ao carregar agendamentos')
+  }
 
   return (
     <ClientPage
       slug={slug}
-      ocupados={ocupados}
+      ocupados={ocupados ?? []}
     />
   )
 }
-

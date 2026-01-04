@@ -3,9 +3,14 @@
 import { useState } from 'react'
 import { Calendar } from '@/components/Calendar'
 
+type DiaOcupado = {
+  data: string
+  nome: string
+}
+
 type Props = {
   slug: string
-  ocupados: string[]
+  ocupados: DiaOcupado[]
 }
 
 function formatarTelefone(valor: string) {
@@ -16,16 +21,33 @@ function formatarTelefone(valor: string) {
   return `${digits.slice(0, 2)} ${digits.slice(2, 7)} ${digits.slice(7)}`
 }
 
+function formatarNomeAla(slug: string) {
+  return decodeURIComponent(slug)
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, l => l.toUpperCase())
+}
+
+function ocultarSobrenome(nome: string) {
+  const partes = nome.trim().split(/\s+/)
+
+  if (partes.length === 1) return partes[0]
+
+  return `${partes[0]} ${partes[1][0]}.`
+}
+
 export default function ClientPage({ slug, ocupados }: Props) {
   const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null)
   const [nome, setNome] = useState('')
   const [telefone, setTelefone] = useState('')
   const [mensagem, setMensagem] = useState('')
-  const [diasOcupados, setDiasOcupados] = useState<string[]>(ocupados)
+  const [diasOcupados, setDiasOcupados] = useState<DiaOcupado[]>(ocupados)
+  const [ocupadoPor, setOcupadoPor] = useState<string | null>(null)
 
   const hoje = new Date()
   const ano = hoje.getFullYear()
   const mes = hoje.getMonth()
+
+  const nomeAla = formatarNomeAla(slug)
 
   async function agendar() {
     if (!slug || !diaSelecionado) return
@@ -51,23 +73,27 @@ export default function ClientPage({ slug, ocupados }: Props) {
       return
     }
 
-    // ✅ marca o dia como ocupado localmente (sem refetch)
-    setDiasOcupados(prev => [...prev, data])
+    // marca localmente como ocupado com nome
+    setDiasOcupados(prev => [...prev, { data, nome }])
 
     setMensagem('Agendamento realizado com sucesso.')
     setNome('')
     setTelefone('')
     setDiaSelecionado(null)
+    setOcupadoPor(null)
   }
 
   return (
     <main className="min-h-screen bg-white px-4 py-8 flex justify-center">
       <div className="w-full max-w-xl space-y-8">
 
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold">
-            Agendar almoço para os missionários
+        <div className="text-center space-y-3">
+          <h1 className="text-4xl font-extrabold text-gray-900">
+            Ala {nomeAla}
           </h1>
+          <h2 className="text-2xl font-semibold text-gray-700">
+            Agendar almoço para os missionários
+          </h2>
           <p className="text-gray-700 text-lg">
             Escolha um dia disponível abaixo
           </p>
@@ -76,8 +102,22 @@ export default function ClientPage({ slug, ocupados }: Props) {
         <Calendar
           ocupados={diasOcupados}
           selectedDay={diaSelecionado}
-          onSelectDay={setDiaSelecionado}
+          onSelectDay={day => {
+            setDiaSelecionado(day)
+            setOcupadoPor(null) // só limpa quando é dia LIVRE
+          }}
+          onSelectOcupado={nome => {
+            setOcupadoPor(nome) // NÃO limpar depois
+            setDiaSelecionado(null)
+          }}
         />
+
+        {ocupadoPor && (
+          <p className="text-center text-lg font-medium text-gray-600">
+            Este dia já foi agendado por{' '}
+            <strong>{ocultarSobrenome(ocupadoPor)}</strong>.
+          </p>
+        )}
 
         {diaSelecionado && (
           <div className="space-y-4 border-t pt-6">
