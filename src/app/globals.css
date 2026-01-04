@@ -1,9 +1,17 @@
 @import "tailwindcss";
 
 :root {
+    /* generico */
     --background: #ffffff;
     --foreground: #000000;
 
+    /* baseadas no logo da igreja */
+    --home-background: #143157;
+    --letter: #ffffff;
+    --hover-selector: #5b6e88;
+    --hover-letter: #001045;
+
+    /* botão do calendario */
     --cal-disponivel: #dcfce7;
     --cal-ocupado: #e5e7eb;
     --cal-selecionado: #2563eb;
@@ -11,7 +19,5 @@
 }
 
 body {
-    background: #ffffff;
-    color: #000000;
     font-family: Arial, Helvetica, sans-serif;
 }
