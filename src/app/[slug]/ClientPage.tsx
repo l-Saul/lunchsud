@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Calendar } from '@/components/Calendar'
 
 type DiaOcupado = {
@@ -33,10 +33,6 @@ function ocultarSobrenome(nome: string) {
   return `${partes[0]} ${partes[1][0]}.`
 }
 
-function imagemInicial(slug: string) {
-  return `/alas/${slug}.jpg`
-}
-
 export default function ClientPage({ slug, ocupados }: Props) {
   const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null)
   const [nome, setNome] = useState('')
@@ -45,14 +41,28 @@ export default function ClientPage({ slug, ocupados }: Props) {
   const [diasOcupados, setDiasOcupados] = useState<DiaOcupado[]>(ocupados)
   const [ocupadoPor, setOcupadoPor] = useState<string | null>(null)
 
-  // ✅ CONTROLE DE IMAGEM POR ESTADO (CORREÇÃO DEFINITIVA)
-  const [imagemSrc, setImagemSrc] = useState(imagemInicial(slug))
+  // 🔒 imagem controlada
+  const [imagemSrc, setImagemSrc] = useState<string | null>(null)
 
   const hoje = new Date()
   const ano = hoje.getFullYear()
   const mes = hoje.getMonth()
 
   const nomeAla = formatarNomeAla(slug)
+
+  // ✅ PRÉ-CARREGA IMAGEM COM SEGURANÇA
+  useEffect(() => {
+    const img = new Image()
+    img.src = `/alas/${slug}.jpg`
+
+    img.onload = () => {
+      setImagemSrc(`/alas/${slug}.jpg`)
+    }
+
+    img.onerror = () => {
+      setImagemSrc('/alas/padrao.jpg')
+    }
+  }, [slug])
 
   async function agendar() {
     if (!slug || !diaSelecionado) return
@@ -100,12 +110,13 @@ export default function ClientPage({ slug, ocupados }: Props) {
             Agendar almoço para os missionários
           </h2>
 
-          <img
-            src={imagemSrc}
-            alt={`Missionários da ala ${nomeAla}`}
-            className="mx-auto mt-4 rounded-lg max-h-64 object-cover"
-            onError={() => setImagemSrc('/alas/padrao.jpg')}
-          />
+          {imagemSrc && (
+            <img
+              src={imagemSrc}
+              alt={`Missionários da ala ${nomeAla}`}
+              className="mx-auto mt-4 rounded-lg max-h-64 object-cover"
+            />
+          )}
 
           <p className="text-gray-700 text-lg">
             Escolha um dia disponível abaixo
