@@ -29,13 +29,11 @@ function formatarNomeAla(slug: string) {
 
 function ocultarSobrenome(nome: string) {
   const partes = nome.trim().split(/\s+/)
-
   if (partes.length === 1) return partes[0]
-
   return `${partes[0]} ${partes[1][0]}.`
 }
 
-function imagemDaAla(slug: string) {
+function imagemInicial(slug: string) {
   return `/alas/${slug}.jpg`
 }
 
@@ -46,6 +44,9 @@ export default function ClientPage({ slug, ocupados }: Props) {
   const [mensagem, setMensagem] = useState('')
   const [diasOcupados, setDiasOcupados] = useState<DiaOcupado[]>(ocupados)
   const [ocupadoPor, setOcupadoPor] = useState<string | null>(null)
+
+  // ✅ CONTROLE DE IMAGEM POR ESTADO (CORREÇÃO DEFINITIVA)
+  const [imagemSrc, setImagemSrc] = useState(imagemInicial(slug))
 
   const hoje = new Date()
   const ano = hoje.getFullYear()
@@ -77,7 +78,6 @@ export default function ClientPage({ slug, ocupados }: Props) {
       return
     }
 
-    // marca localmente como ocupado com nome
     setDiasOcupados(prev => [...prev, { data, nome }])
 
     setMensagem('Agendamento realizado com sucesso.')
@@ -101,12 +101,10 @@ export default function ClientPage({ slug, ocupados }: Props) {
           </h2>
 
           <img
-            src={imagemDaAla(slug)}
+            src={imagemSrc}
             alt={`Missionários da ala ${nomeAla}`}
             className="mx-auto mt-4 rounded-lg max-h-64 object-cover"
-            onError={e => {
-              e.currentTarget.src = '/alas/padrao.jpg'
-            }}
+            onError={() => setImagemSrc('/alas/padrao.jpg')}
           />
 
           <p className="text-gray-700 text-lg">
@@ -119,10 +117,10 @@ export default function ClientPage({ slug, ocupados }: Props) {
           selectedDay={diaSelecionado}
           onSelectDay={day => {
             setDiaSelecionado(day)
-            setOcupadoPor(null) // só limpa quando é dia LIVRE
+            setOcupadoPor(null)
           }}
           onSelectOcupado={nome => {
-            setOcupadoPor(nome) // NÃO limpar depois
+            setOcupadoPor(nome)
             setDiaSelecionado(null)
           }}
         />
