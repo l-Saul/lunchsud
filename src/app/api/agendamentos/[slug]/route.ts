@@ -1,34 +1,27 @@
 import { supabaseServer } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET(
-  _request: NextRequest,
-  context: { params: Promise<{ slug: string }> }
-) {
-  const { slug } = await context.params
+export async function GET(_request: NextRequest, context: { params: Promise<{ slug: string }> }) {
+    const { slug } = await context.params
 
-  const { data: ala, error: alaError } = await supabaseServer
-    .from('ala')
-    .select('id')
-    .eq('slug', slug)
-    .single()
+    const { data: ala, error: alaError } = await supabaseServer
+        .from('ala')
+        .select('id')
+        .eq('slug', slug)
+        .single()
 
-  if (alaError || !ala) {
-    return NextResponse.json({ error: 'Ala não encontrada' }, { status: 404 })
-  }
+    if (alaError || !ala) {
+        return NextResponse.json({ error: 'Ala não encontrada' }, { status: 404 })
+    }
 
-  // 🔥 FORÇA data como STRING YYYY-MM-DD (SEM timezone)
-  const { data: agendamentos, error } = await supabaseServer
-    .from('agendamento')
-    .select('data::text, nome')
-    .eq('ala_id', ala.id)
+    const { data: agendamentos, error } = await supabaseServer
+        .from('agendamento')
+        .select('data::text, nome')
+        .eq('ala_id', ala.id)
 
-  if (error) {
-    return NextResponse.json(
-      { error: 'Erro ao buscar agendamentos' },
-      { status: 500 }
-    )
-  }
+    if (error) {
+        return NextResponse.json({ error: 'Erro ao buscar agendamentos' }, { status: 500 })
+    }
 
-  return NextResponse.json(agendamentos)
+    return NextResponse.json(agendamentos)
 }
