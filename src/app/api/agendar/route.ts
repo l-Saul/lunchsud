@@ -1,6 +1,5 @@
 import { supabaseServer } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
-import { rateLimit } from '@/lib/rateLimit'
 
 type Body = {
   slug: string
@@ -10,22 +9,7 @@ type Body = {
 }
 
 export async function POST(req: Request) {
-  // ✅ 1. RATE LIMIT (primeira coisa)
-  const ip =
-    req.headers.get('x-forwarded-for') ??
-    req.headers.get('x-real-ip') ??
-    'unknown'
-
-  const limit = rateLimit(ip)
-
-  if (!limit.allowed) {
-    return NextResponse.json(
-      { error: 'Muitas tentativas. Tente novamente amanhã.' },
-      { status: 429 }
-    )
-  }
-
-  // ✅ 2. Ler body APÓS passar no rate limit
+  // 1. Ler body
   const body: Body = await req.json()
   const { slug, data, nome, telefone } = body
 
@@ -36,7 +20,7 @@ export async function POST(req: Request) {
     )
   }
 
-  // 3. Buscar ala pelo slug
+  // 2. Buscar ala pelo slug
   const { data: ala, error: alaError } = await supabaseServer
     .from('ala')
     .select('id')
@@ -44,10 +28,13 @@ export async function POST(req: Request) {
     .single()
 
   if (alaError || !ala) {
-    return NextResponse.json({ error: 'Ala não encontrada' }, { status: 404 })
+    return NextResponse.json(
+      { error: 'Ala não encontrada' },
+      { status: 404 }
+    )
   }
 
-  // 4. Inserir agendamento
+  // 3. Inserir agendamento
   const { error } = await supabaseServer
     .from('agendamento')
     .insert({
@@ -57,7 +44,7 @@ export async function POST(req: Request) {
       telefone
     })
 
-  // 5. Tratar conflito de data
+  // 4. Tratar conflito de data
   if (error) {
     if (error.code === '23505') {
       return NextResponse.json(
