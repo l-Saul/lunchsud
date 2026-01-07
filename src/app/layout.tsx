@@ -42,7 +42,7 @@ export const metadata: Metadata = {
         type: "website",
         images: [
         {
-            url: "lunchsud1024x1024.svg",
+            url: "lunchsud1024x1024.png",
             width: 1200,
             height: 630,
             alt: "Almoço dos Missionários"
