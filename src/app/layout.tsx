@@ -17,22 +17,20 @@ export const metadata: Metadata = {
     ],
 
     icons: {
-        icon: "/favicon.png",
-        apple: "/apple-touch-icon.png",
+        icon: [
+            { url: "/lunchsud32x32.png", sizes: "32x32", type: "image/png" },
+        ],
+        apple: [
+            { url: "/lunchsud180x180.png", sizes: "180x180", type: "image/png" },
+        ],
         other: [
-        {
+            {
             rel: "icon",
-            url: "/android-chrome-192x192.png",
-            sizes: "192x192",
-            type: "image/png"
-        },
-        {
-            rel: "icon",
-            url: "/android-chrome-512x512.png",
+            url: "/lunchsud512x512.png",
             sizes: "512x512",
-            type: "image/png"
-        }
-        ]
+            type: "image/png",
+            },
+        ],
     },
 
     openGraph: {
@@ -44,7 +42,7 @@ export const metadata: Metadata = {
         type: "website",
         images: [
         {
-            url: "/og-image.png",
+            url: "lunchsud1024x1024.svg",
             width: 1200,
             height: 630,
             alt: "Almoço dos Missionários"
