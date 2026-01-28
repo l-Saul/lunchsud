@@ -30,7 +30,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="pt-BR">
-            <body className="">
+            <body className="bg-primary">
                 <main className="">
                     {children}
                 </main>

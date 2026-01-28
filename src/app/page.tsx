@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import useSWR from 'swr'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, type Variants} from 'framer-motion'
 
 type Ala = {
@@ -47,6 +49,8 @@ const itemVariants: Variants = {
 
 export default function IndexPage() {
     const { data: alas, error, isLoading } = useSWR<Ala[]>('/api/alas', fetcher)
+    const [loadingSlug, setLoadingSlug] = useState<string | null>(null)
+    const router = useRouter()
 
     return (
         <section className="min-h-screen flex justify-center bg-primary text-white">
@@ -91,20 +95,31 @@ export default function IndexPage() {
                             initial="hidden"
                             animate="visible"
                         >
-                            {alas.map((ala) => (
+                        {alas.map((ala) => {
+                            const isLoading = loadingSlug === ala.slug
+
+                            return (
                                 <motion.div
                                     key={ala.slug}
                                     variants={itemVariants}
-                                    whileTap={{ scale: 0.97 }}
+                                    whileTap={{ scale: 0.96 }}
                                 >
-                                    <Link
-                                        href={`/${ala.slug}`}
-                                        className="block rounded-xl border border-white/20 bg-white/5 p-6 text-lg font-medium transition hover:bg-secondary active:bg-secondary/80"
+                                    <button
+                                        type="button"
+                                        disabled={!!loadingSlug}
+                                        onClick={() => {
+                                            setLoadingSlug(ala.slug)
+                                            router.push(`/${ala.slug}`)
+                                        }}
+                                        className={`w-full rounded-xl border border-white/20 p-6 text-lg font-medium transition
+                                            ${isLoading ? 'bg-secondary/80' : 'bg-white/5 hover:bg-secondary'}
+                                        `}
                                     >
-                                        {ala.nome}
-                                    </Link>
+                                        {isLoading ? 'Carregando…' : ala.nome}
+                                    </button>
                                 </motion.div>
-                            ))}
+                            )
+                        })}
                         </motion.div>
                     )}
                 </div>
