@@ -1,26 +1,59 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import useSWR from 'swr'
+import { motion, type Variants} from 'framer-motion'
 
 type Ala = {
     nome: string
     slug: string
 }
 
-export default function IndexPage() {
-    const [alas, setAlas] = useState<Ala[]>([])
+const fetcher = async (url: string): Promise<Ala[]> => {
+    const res = await fetch(url)
+    if (!res.ok) {
+        throw new Error('Erro ao carregar alas')
+    }
 
-    useEffect(() => {
-        fetch('/api/alas')
-        .then(r => r.json())
-        .then(setAlas)
-    }, [])
+    const data = await res.json()
+    if (!Array.isArray(data)) {
+        throw new Error('Payload inválido')
+    }
+
+    return data
+}
+
+const containerVariants: Variants = {
+    hidden: {},
+    visible: {
+        transition: {
+            staggerChildren: 0.06,
+        },
+    },
+}
+
+const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 8 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+            duration: 0.25,
+            ease: 'easeOut',
+        },
+    },
+}
+
+export default function IndexPage() {
+    const { data: alas, error, isLoading } = useSWR<Ala[]>('/api/alas', fetcher)
 
     return (
-        <main className="min-h-screen px-4 py-8 flex justify-center text-(--letter)" style={{ background: 'var(--home-background)' }}>
-            <div className="w-full max-w-3xl space-y-8">
+        <section className="min-h-screen flex justify-center bg-primary text-white">
+            <div
+                className="w-full max-w-3xl px-4 py-12 space-y-8"
+                aria-busy={isLoading}
+            >
                 <div className="flex justify-center">
                     <Image
                         src="/lds.jpg"
@@ -32,31 +65,50 @@ export default function IndexPage() {
                     />
                 </div>
 
-                <div className="text-center space-y-2">
-                    <h1 className="text-2xl font-bold">
-                        Por gentileza, selecione sua ala para continuar.
+                <header className="text-center">
+                    <h1 className="text-2xl font-semibold">
+                        Selecione sua ala para continuar
                     </h1>
-                </div>
+                </header>
 
                 <div className="grid gap-4">
-                {alas.map(ala => (
-                    <Link key={ala.slug} href={`/${ala.slug}`} className="block rounded-xl border p-6 text-lg font-medium transition hover:bg-(--hover-selector) hover:text-(--hover-letter)">
-                        {ala.nome}
-                    </Link>
-                ))}
-                {alas.length === 0 && (
-                    <p className="text-center text-gray-500">
-                        Atualizando...
-                    </p>
-                )}
-                </div>
+                    {isLoading && (
+                        <p className="text-center text-white/70" role="status">
+                            Carregando alas…
+                        </p>
+                    )}
 
-                <div>
-                    <p className="text-center text-sm opacity-70">
-                        Este site não possui vínculo institucional com a Igreja.
-                    </p>
+                    {error && (
+                        <p className="text-center text-red-300">
+                            Não foi possível carregar as alas.
+                        </p>
+                    )}
+
+                    {alas && (
+                        <motion.div
+                            className="grid gap-4"
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                        >
+                            {alas.map((ala) => (
+                                <motion.div
+                                    key={ala.slug}
+                                    variants={itemVariants}
+                                    whileTap={{ scale: 0.97 }}
+                                >
+                                    <Link
+                                        href={`/${ala.slug}`}
+                                        className="block rounded-xl border border-white/20 bg-white/5 p-6 text-lg font-medium transition hover:bg-secondary active:bg-secondary/80"
+                                    >
+                                        {ala.nome}
+                                    </Link>
+                                </motion.div>
+                            ))}
+                        </motion.div>
+                    )}
                 </div>
             </div>
-        </main>
+        </section>
     )
 }
