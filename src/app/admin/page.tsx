@@ -3,11 +3,16 @@ import { requireAdminSession } from '@/lib/auth';
 import LoginClientGuard from './client';
 import LoginForm from './login';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function AdminLoginPage() {
     try {
         await requireAdminSession();
         redirect('/dashboard');
-    } catch {}
+    } catch {
+        // não logado, segue
+    }
 
     return (
         <main>

@@ -11,15 +11,22 @@ export default function LoginClientGuard({
     const router = useRouter();
 
     useEffect(() => {
-        const bc = new BroadcastChannel('auth');
+        async function checkSession() {
+            const res = await fetch('/api/admin/dashboard', {
+                cache: 'no-store'
+            });
 
+            if (res.ok) {
+                router.replace('/dashboard');
+            }
+        }
+
+        checkSession();
+
+        const bc = new BroadcastChannel('auth');
         bc.onmessage = msg => {
             if (msg.data === 'login') {
-                router.push('/dashboard');
-            }
-
-            if (msg.data === 'logout') {
-                router.push('/admin');
+                router.replace('/dashboard');
             }
         };
 
