@@ -7,21 +7,29 @@ type DiaOcupado = {
 
 type Props = {
     ocupados: DiaOcupado[]
+    baseDate: Date
     selectedDay: number | null
     onSelectDay: (day: number) => void
     onSelectOcupado: (nome: string) => void
+    onNext?: () => void
+    onPrev?: () => void
+    canNext?: boolean
+    canPrev?: boolean
 }
 
 export function Calendar({
     ocupados,
+    baseDate,
     selectedDay,
     onSelectDay,
-    onSelectOcupado
+    onSelectOcupado,
+    onNext,
+    onPrev,
+    canNext,
+    canPrev
 }: Props) {
-    const referencia = ocupados[0]?.data ?? new Date().toISOString().slice(0, 10)
-    const [ano, mesStr] = referencia.split('-')
-    const anoNum = Number(ano)
-    const mesNum = Number(mesStr) - 1
+    const anoNum = baseDate.getFullYear()
+    const mesNum = baseDate.getMonth()
 
     const primeiroDiaSemana = new Date(anoNum, mesNum, 1).getDay()
     const diasNoMes = new Date(anoNum, mesNum + 1, 0).getDate()
@@ -40,12 +48,30 @@ export function Calendar({
 
     return (
         <div className="space-y-4">
-            <h2 className="text-center text-xl font-semibold capitalize text-text">
-                {new Date(anoNum, mesNum).toLocaleDateString(
-                    'pt-BR',
-                    { month: 'long', year: 'numeric' }
-                )}
-            </h2>
+            <div className="flex items-center justify-between">
+                <button
+                    onClick={onPrev}
+                    disabled={!canPrev}
+                    className="text-xl px-2 disabled:invisible"
+                >
+                    ◀
+                </button>
+
+                <h2 className="text-center text-xl font-semibold capitalize text-text">
+                    {new Date(anoNum, mesNum).toLocaleDateString(
+                        'pt-BR',
+                        { month: 'long', year: 'numeric' }
+                    )}
+                </h2>
+
+                <button
+                    onClick={onNext}
+                    disabled={!canNext}
+                    className="text-xl px-2 disabled:invisible"
+                >
+                    ▶
+                </button>
+            </div>
 
             <div className="grid grid-cols-7 text-center font-medium text-text">
                 {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (

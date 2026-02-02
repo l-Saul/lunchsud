@@ -43,8 +43,13 @@ export default function ClientPage({ slug, ocupados }: Props) {
     const [erroTelefone, setErroTelefone] = useState(false)
 
     const hoje = new Date()
-    const ano = hoje.getFullYear()
-    const mes = hoje.getMonth()
+    const mesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
+    const mesSeguinte = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1)
+
+    const [baseDate, setBaseDate] = useState(mesAtual)
+
+    const canPrev = baseDate.getTime() !== mesAtual.getTime()
+    const canNext = baseDate.getTime() !== mesSeguinte.getTime()
 
     const nomeAla = formatarNomeAla(slug)
 
@@ -100,6 +105,9 @@ export default function ClientPage({ slug, ocupados }: Props) {
         setLoading(true)
         setMensagem('')
         setTipoMensagem(null)
+
+        const ano = baseDate.getFullYear()
+        const mes = baseDate.getMonth()
 
         const mm = String(mes + 1).padStart(2, '0')
         const dd = String(diaSelecionado).padStart(2, '0')
@@ -164,11 +172,24 @@ export default function ClientPage({ slug, ocupados }: Props) {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, ease: 'easeOut' }}
-                        className="bg-background text-text rounded-2xl p-4 shadow-lg border border-muted/10"
+                        className="bg-background text-secondary rounded-xl p-4 shadow-lg border border-muted/10"
                     >
                         <Calendar
                             ocupados={diasOcupados}
+                            baseDate={baseDate}
                             selectedDay={diaSelecionado}
+                            canPrev={canPrev}
+                            canNext={canNext}
+                            onPrev={() => {
+                                setBaseDate(mesAtual)
+                                setDiaSelecionado(null)
+                                setOcupadoPor(null)
+                            }}
+                            onNext={() => {
+                                setBaseDate(mesSeguinte)
+                                setDiaSelecionado(null)
+                                setOcupadoPor(null)
+                            }}
                             onSelectDay={day => {
                                 setDiaSelecionado(day)
                                 setOcupadoPor(null)
