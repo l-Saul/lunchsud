@@ -161,6 +161,8 @@ export default function ClientPage({ slug, ocupados }: Props) {
 
                     <p className="text-lg text-white">
                         Escolha um dia disponível abaixo
+                        <br />
+                        Utilize as setas verdes para alterar entre os meses
                     </p>
                 </div>
 

@@ -52,7 +52,7 @@ export function Calendar({
                 <button
                     onClick={onPrev}
                     disabled={!canPrev}
-                    className="text-xl px-2 disabled:invisible"
+                    className="text-xl px-2 border-2 border-secondary rounded-full disabled:invisible"
                 >
                     ◀
                 </button>
@@ -67,7 +67,7 @@ export function Calendar({
                 <button
                     onClick={onNext}
                     disabled={!canNext}
-                    className="text-xl px-2 disabled:invisible"
+                    className="text-xl px-2 border-2 border-secondary rounded-full disabled:invisible"
                 >
                     ▶
                 </button>
