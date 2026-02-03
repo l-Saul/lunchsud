@@ -36,7 +36,7 @@ export default async function AdminLoginPage() {
                                 className="text-3xl font-semibold"
                                 style={{ color: 'var(--color-text)' }}
                             >
-                                Área administrativa
+                                Painel de Controle
                             </h1>
                         </div>
 
