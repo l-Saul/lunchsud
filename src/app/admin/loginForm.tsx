@@ -8,10 +8,14 @@ export default function LoginForm() {
     const [username, setUsername] = useState('');
     const [senha, setSenha] = useState('');
     const [erro, setErro] = useState('');
+    const [loading, setLoading] = useState(false);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+        if (loading) return;
+
         setErro('');
+        setLoading(true);
 
         const res = await fetch('/api/admin/login', {
             method: 'POST',
@@ -23,6 +27,7 @@ export default function LoginForm() {
 
         if (!res.ok) {
             setErro('Credenciais inválidas');
+            setLoading(false);
             return;
         }
 
@@ -44,6 +49,7 @@ export default function LoginForm() {
                 placeholder="Usuário"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
+                disabled={loading}
                 className="w-full px-4 py-3 rounded-xl border bg-white text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary"
                 style={{ borderColor: 'rgba(15, 23, 42, 0.2)' }}
             />
@@ -53,6 +59,7 @@ export default function LoginForm() {
                 placeholder="Senha"
                 value={senha}
                 onChange={e => setSenha(e.target.value)}
+                disabled={loading}
                 className="w-full px-4 py-3 rounded-xl border bg-white text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary"
                 style={{ borderColor: 'rgba(15, 23, 42, 0.2)' }}
             />
@@ -61,7 +68,7 @@ export default function LoginForm() {
                 type="submit"
                 className="w-full bg-secondary text-white font-semibold py-3 rounded-xl hover:opacity-90 transition"
             >
-                Entrar
+                {loading ? 'Carregando...' : 'Entrar'}
             </button>
 
             {erro && (
