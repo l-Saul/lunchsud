@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdminSession } from '@/lib/auth';
-import DashboardClientGuard from './client';
-import { LogoutButton } from './logout';
+import DashboardClientGuard from './dashboardClientGuard';
+import { LogoutButton } from './logoutButton';
 
 export default async function DashboardPage() {
     try {

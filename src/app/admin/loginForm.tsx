@@ -34,12 +34,18 @@ export default function LoginForm() {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
+        <form
+            onSubmit={handleSubmit}
+            className="w-full"
+            style={{ display: 'flex', flexDirection: 'column', gap: 20 }}
+        >
             <input
                 type="text"
                 placeholder="Usuário"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border bg-white text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary"
+                style={{ borderColor: 'rgba(15, 23, 42, 0.2)' }}
             />
 
             <input
@@ -47,11 +53,22 @@ export default function LoginForm() {
                 placeholder="Senha"
                 value={senha}
                 onChange={e => setSenha(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border bg-white text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary"
+                style={{ borderColor: 'rgba(15, 23, 42, 0.2)' }}
             />
 
-            <button type="submit">Entrar</button>
+            <button
+                type="submit"
+                className="w-full bg-secondary text-white font-semibold py-3 rounded-xl hover:opacity-90 transition"
+            >
+                Entrar
+            </button>
 
-            {erro && <p>{erro}</p>}
+            {erro && (
+                <p className="text-sm text-red-600 text-center">
+                    {erro}
+                </p>
+            )}
         </form>
     );
 }
