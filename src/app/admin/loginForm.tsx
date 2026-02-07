@@ -66,7 +66,7 @@ export default function LoginForm() {
 
             <button
                 type="submit"
-                className="w-full bg-secondary text-white font-semibold py-3 rounded-xl hover:opacity-90 transition"
+                className="w-full cursor-pointer bg-secondary text-white font-semibold py-3 rounded-xl hover:opacity-90 transition"
             >
                 {loading ? 'Carregando...' : 'Entrar'}
             </button>

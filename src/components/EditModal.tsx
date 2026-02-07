@@ -145,7 +145,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                         <div className="flex justify-between items-center mt-4">
                             <button
                                 onClick={() => setOpen(false)}
-                                className="px-4 py-2 rounded-md text-text hover:bg-slate-100 z-200"
+                                className="px-4 py-2 rounded-md text-text hover:bg-slate-100 z-200 cursor-pointer"
                             >
                                 Cancelar
                             </button>
@@ -153,7 +153,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                             <button
                                 onClick={handleSave}
                                 disabled={loading}
-                                className="px-4 py-2 rounded-md bg-secondary text-white hover:opacity-90 disabled:opacity-50"
+                                className="px-4 py-2 rounded-md bg-secondary text-white hover:opacity-90 disabled:opacity-50 cursor-pointer"
                             >
                                 {loading ? (
                                     <span className="animate-pulse">...</span>
