@@ -7,3 +7,22 @@
     --color-text: #0f172a;
     --color-muted: #64748b;
 }
+
+@media (max-width: 767px) {
+    .scrollbar-mobile {
+        scrollbar-width: thin;              /* Firefox */
+    }
+
+    .scrollbar-mobile::-webkit-scrollbar {
+        height: 6px;                        /* Chrome / Safari */
+    }
+
+    .scrollbar-mobile::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 4px;
+    }
+
+    .scrollbar-mobile::-webkit-scrollbar-track {
+        background: transparent;
+    }
+}

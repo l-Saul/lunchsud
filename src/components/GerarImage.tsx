@@ -134,7 +134,7 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
                     disabled={loading}
                         className={`
                             px-4 py-2 rounded-md text-white cursor-pointer
-                            transition-all duration-200
+                            transition-all duration-200 font-medium
                             ${loading
                                 ? 'bg-gray-400 cursor-not-allowed'
                                 : 'bg-primary hover:bg-secondary'}
@@ -142,7 +142,7 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
                 >
                     <span
                         className={`
-                            inline-block transition-opacity duration-200
+                            text-md inline-block transition-opacity duration-200
                             ${loading ? 'opacity-70' : 'opacity-100'}
                         `}
                     >
