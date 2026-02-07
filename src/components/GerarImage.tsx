@@ -48,41 +48,41 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
     const [loading, setLoading] = useState(false);
 
     async function gerarImagem() {
-    if (loading) return;
+        if (loading) return;
 
-    setLoading(true);
+        setLoading(true);
 
-    try {
-        const node = document.getElementById('calendar-export');
-        if (!node) return;
+        try {
+            const node = document.getElementById('calendar-export');
+            if (!node) return;
 
-        const dataUrl = await toPng(node, {
-            pixelRatio: 2,
-            backgroundColor: '#ffffff',
-        });
-
-        const res = await fetch(dataUrl);
-        const blob = await res.blob();
-
-        const file = new File([blob], `calendario-${mes}.png`, {
-            type: 'image/png',
-        });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-                files: [file],
-                title: 'Calendário',
+            const dataUrl = await toPng(node, {
+                pixelRatio: 2,
+                backgroundColor: '#ffffff',
             });
-        } else {
-            const link = document.createElement('a');
-            link.href = dataUrl;
-            link.download = `calendario-${mes}.png`;
-            link.click();
+
+            const res = await fetch(dataUrl);
+            const blob = await res.blob();
+
+            const file = new File([blob], `calendario-${mes}.png`, {
+                type: 'image/png',
+            });
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: 'Calendário',
+                });
+            } else {
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = `calendario-${mes}.png`;
+                link.click();
+            }
+        } finally {
+            setLoading(false);
         }
-    } finally {
-        setLoading(false);
     }
-}
 
 
     return (
@@ -123,8 +123,8 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
             </div>
 
             <div
-                id="calendar-export-wrapper"
-                className="fixed inset-0 invisible pointer-events-none"
+                id="calendar-export"
+                className="fixed -left-2499.75 top-0 opacity-0 pointer-events-none"
             >
                 <CalendarMonthView diasDoMes={diasDoMes} />
             </div>
