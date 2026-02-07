@@ -101,7 +101,7 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
             if (isMobile() && navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
                     files: [file],
-                    title: `Calendário do mês ${mes}`,
+                    title: `Calendário ${mes}`,
                 });
             } else {
                 const link = document.createElement('a');
