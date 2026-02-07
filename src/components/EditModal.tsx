@@ -17,7 +17,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
     async function handleSave() {
         setLoading(true);
 
-        const res = await fetch('/api/agendamento/update', {
+        const res = await fetch('/api/agendamentos/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id, ...form })
