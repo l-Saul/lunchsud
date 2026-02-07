@@ -89,50 +89,48 @@ const mesesDisponiveis = Array.from(
                                 </p>
                             </div>
 
-                            <div className="overflow-x-auto scrollbar-mobile">
-                                <div className="mx-auto w-fit">
-                                    <table className="border-collapse min-w-max">
-                                        <thead>
+                            <div className="overflow-x-auto md:overflow-visible scrollbar-mobile">
+                                <table className="w-full border-collapse min-w-160">
+                                    <thead>
+                                        <tr
+                                            className="text-left text-md"
+                                            style={{
+                                                color: 'var(--color-muted)',
+                                                borderBottom: '1px solid rgba(15, 23, 42, 0.1)',
+                                            }}
+                                        >
+                                            <th className="py-1 px-2">Data</th>
+                                            <th className="py-1 px-2">Nome</th>
+                                            <th className="py-1 px-2">Telefone</th>
+                                            <th className="py-1 px-2">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {data.map(row => (
                                             <tr
-                                                className="text-left text-md"
+                                                key={row.id}
+                                                className="text-md"
                                                 style={{
-                                                    color: 'var(--color-muted)',
-                                                    borderBottom: '1px solid rgba(15, 23, 42, 0.1)',
+                                                    color: 'var(--color-text)',
+                                                    borderBottom: '1px solid rgba(15, 23, 42, 0.05)',
                                                 }}
                                             >
-                                                <th className="py-1 px-2 whitespace-nowrap">Data</th>
-                                                <th className="py-1 px-2 whitespace-nowrap">Nome</th>
-                                                <th className="py-1 px-2 whitespace-nowrap">Telefone</th>
-                                                <th className="py-1 px-2 whitespace-nowrap">Ações</th>
+                                                <td className="py-2 px-2 whitespace-nowrap">
+                                                    {formatDateBR(row.data)}
+                                                </td>
+                                                <td className="py-2 px-2">
+                                                    {row.nome}
+                                                </td>
+                                                <td className="py-2 px-2 whitespace-nowrap">
+                                                    {row.telefone}
+                                                </td>
+                                                <td className="py-2 px-2">
+                                                    <EditModal {...row} />
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            {data.map(row => (
-                                                <tr
-                                                    key={row.id}
-                                                    className="text-md"
-                                                    style={{
-                                                        color: 'var(--color-text)',
-                                                        borderBottom: '1px solid rgba(15, 23, 42, 0.05)',
-                                                    }}
-                                                >
-                                                    <td className="py-2 px-2 whitespace-nowrap">
-                                                        {formatDateBR(row.data)}
-                                                    </td>
-                                                    <td className="py-2 px-2 whitespace-nowrap">
-                                                        {row.nome}
-                                                    </td>
-                                                    <td className="py-2 px-2 whitespace-nowrap">
-                                                        {row.telefone}
-                                                    </td>
-                                                    <td className="py-2 px-2 whitespace-nowrap">
-                                                        <EditModal {...row} />
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
 
                             <div className="flex justify-center gap-4 pt-4">
