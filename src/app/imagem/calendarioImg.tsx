@@ -17,9 +17,16 @@ export default function CalendarMonthView({ diasDoMes }: Props) {
 
     const [y, m] = diasDoMes[0].data.split('-').map(Number);
     const firstDay = new Date(y, m - 1, 1).getDay();
+    const mesAno = new Date(y, m - 1).toLocaleDateString('pt-BR', {
+        month: 'long',
+        year: 'numeric',
+    });
 
     return (
         <div className="bg-white p-6 text-black">
+            <h2 className="text-xl font-bold text-center mb-4 capitalize">
+                {mesAno}
+            </h2>
             <div className="grid grid-cols-7 gap-2 mb-2">
                 {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(dia => (
                     <div key={dia} className="font-semibold text-center">
