@@ -10,6 +10,16 @@ export default async function DashboardPage() {
     try {
         const session = await requireAdminSession();
 
+        const { data: ala, error: alaError } = await supabaseServer
+            .from('ala')
+            .select('nome')
+            .eq('id', session.alaId)
+            .single();
+
+        if (alaError) {
+            throw alaError;
+        }
+
         const { data, error } = await supabaseServer
             .from('agendamento')
             .select('id, data, nome, telefone')
@@ -58,7 +68,7 @@ export default async function DashboardPage() {
                                     className="text-sm"
                                     style={{ color: 'var(--color-muted)' }}
                                 >
-                                    Ala: {session.alaId}
+                                    {ala.nome}
                                 </p>
                             </div>
 

@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 type SessionPayload = {
     userId: string;
     alaId: string;
+    nome: string;
 };
 
 export async function requireAdminSession(): Promise<SessionPayload> {
