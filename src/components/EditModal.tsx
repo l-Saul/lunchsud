@@ -35,57 +35,73 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
 
     return (
         <>
-            <button onClick={() => setOpen(true)}>
+            <button
+                onClick={() => setOpen(true)}
+                className="px-4 py-2 rounded-md bg-primary text-white hover:opacity-90"
+            >
                 Editar
             </button>
 
             {open && (
                 <div
-                    style={overlay}
                     onClick={() => setOpen(false)}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md"
                 >
                     <div
-                        style={modal}
                         onClick={e => e.stopPropagation()}
+                        className="bg-background rounded-lg shadow-xl p-6 min-w-90"
                     >
-                        <h3 style={title}>Editar agendamento</h3>
+                        <h3 className="mb-4 text-lg font-semibold text-text">
+                            Editar agendamento
+                        </h3>
 
-                        <div style={field}>
-                            <label>Data</label>
+                        <div className="flex flex-col gap-1 mb-3">
+                            <label className="text-sm text-muted">Data</label>
                             <input
                                 type="date"
                                 value={form.data}
                                 onChange={e =>
                                     setForm({ ...form, data: e.target.value })
                                 }
+                                className="rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary"
                             />
                         </div>
 
-                        <div style={field}>
-                            <label>Nome</label>
+                        <div className="flex flex-col gap-1 mb-3">
+                            <label className="text-sm text-muted">Nome</label>
                             <input
                                 value={form.nome}
                                 onChange={e =>
                                     setForm({ ...form, nome: e.target.value })
                                 }
+                                className="rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary"
                             />
                         </div>
 
-                        <div style={field}>
-                            <label>Telefone</label>
+                        <div className="flex flex-col gap-1 mb-3">
+                            <label className="text-sm text-muted">Telefone</label>
                             <input
                                 value={form.telefone}
                                 onChange={e =>
                                     setForm({ ...form, telefone: e.target.value })
                                 }
+                                className="rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary"
                             />
                         </div>
 
-                        <div style={actions}>
-                            <button onClick={() => setOpen(false)}>
+                        <div className="flex justify-end gap-2 mt-4">
+                            <button
+                                onClick={() => setOpen(false)}
+                                className="px-4 py-2 rounded-md text-text hover:bg-slate-100"
+                            >
                                 Cancelar
                             </button>
-                            <button onClick={handleSave} disabled={loading}>
+
+                            <button
+                                onClick={handleSave}
+                                disabled={loading}
+                                className="px-4 py-2 rounded-md bg-secondary text-white hover:opacity-90 disabled:opacity-50"
+                            >
                                 Salvar
                             </button>
                         </div>
@@ -95,42 +111,3 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
         </>
     );
 }
-
-const overlay: React.CSSProperties = {
-    position: 'fixed',
-    inset: 0,
-    background: 'rgba(0,0,0,0.4)',
-    backdropFilter: 'blur(6px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 50
-};
-
-const modal: React.CSSProperties = {
-    background: '#ffffff',
-    padding: 24,
-    borderRadius: 8,
-    minWidth: 360,
-    boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
-};
-
-const title: React.CSSProperties = {
-    marginBottom: 16,
-    fontSize: 18,
-    fontWeight: 600
-};
-
-const field: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 4,
-    marginBottom: 12
-};
-
-const actions: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    gap: 8,
-    marginTop: 16
-};
