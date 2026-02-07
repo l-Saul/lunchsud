@@ -73,13 +73,12 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
         <>
             <button
                 onClick={() => setOpen(true)}
-                className="flex items-center justify-center min-h-11 min-w-11 px-4 py-2 rounded-md hover:opacity-90"
+                className="flex items-center justify-center min-h-11 min-w-11 px-4 py-2 hover:opacity-90"
             >
             <img
                 src="/editar.png"
                 alt="Editar"
-                className='cursor-pointer'
-                style={{ width: '80%', height: 'auto' }}
+                className='h-10 w-auto cursor-pointer sm:h-9'
             />
             </button>
 
