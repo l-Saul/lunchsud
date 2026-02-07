@@ -1,8 +1,9 @@
 'use client';
 
 import { toPng } from 'html-to-image';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import CalendarMonthView from '@/app/imagem/calendarioImg';
+import { createPortal } from 'react-dom';
 
 type Agendamento = {
     id: number;
@@ -54,13 +55,17 @@ function gerarDiasDoMes(mes: string, agendamentos: Agendamento[]) {
 
 export default function CalendarExportImage({ meses, agendamentos }: Props) {
     const [mes, setMes] = useState(meses[0]);
+    const [loading, setLoading] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const diasDoMes = useMemo(
         () => gerarDiasDoMes(mes, agendamentos),
         [mes, agendamentos]
     );
-
-    const [loading, setLoading] = useState(false);
 
     async function gerarImagem() {
         if (loading) return;
@@ -147,16 +152,32 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
             </div>
 
             <div
-                id="calendar-export"
-                className="absolute top-0 left-0 bg-white"
+                id="export-root"
                 style={{
-                    width: '1024px',
-                    overflow: 'visible',
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: 0,
+                    height: 0,
+                    overflow: 'hidden',
                     pointerEvents: 'none',
+                    zIndex: -1,
                 }}
-            >
-                <CalendarMonthView diasDoMes={diasDoMes} />
-            </div>
+            />
+            {mounted &&
+                createPortal(
+                    <div
+                        id="calendar-export"
+                        style={{
+                            width: '1024px',
+                            backgroundColor: '#ffffff',
+                        }}
+                    >
+                        <CalendarMonthView diasDoMes={diasDoMes} />
+                    </div>,
+                    document.getElementById('export-root')!
+                )
+            }
         </>
     );
 }

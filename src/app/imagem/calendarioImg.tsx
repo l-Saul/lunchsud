@@ -36,7 +36,7 @@ export default function CalendarMonthView({ diasDoMes }: Props) {
                 {diasDoMes.map(dia => (
                     <div
                         key={dia.data}
-                        className="border rounded-lg p-2 min-h-[120px]"
+                        className="border rounded-lg p-2 min-h-30"
                     >
                         <div className="font-bold text-sm mb-1">
                             {dia.numero}
