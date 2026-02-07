@@ -65,7 +65,7 @@ export default async function DashboardPage() {
                                 </h1>
 
                                 <p
-                                    className="text-sm"
+                                    className="text-md"
                                     style={{ color: 'var(--color-muted)' }}
                                 >
                                     {ala.nome}
@@ -76,7 +76,7 @@ export default async function DashboardPage() {
                                 <table className="w-full border-collapse">
                                     <thead>
                                         <tr
-                                            className="text-left text-sm"
+                                            className="text-left text-md"
                                             style={{
                                                 color: 'var(--color-muted)',
                                                 borderBottom:
@@ -93,7 +93,7 @@ export default async function DashboardPage() {
                                         {data.map(row => (
                                             <tr
                                                 key={row.id}
-                                                className="text-sm"
+                                                className="text-md"
                                                 style={{
                                                     color: 'var(--color-text)',
                                                     borderBottom:
