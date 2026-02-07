@@ -12,19 +12,15 @@ export function LogoutButton() {
 
         setLoading(true);
 
-        try {
-            await fetch('/api/admin/logout', {
-                method: 'POST'
-            });
+        await fetch('/api/admin/logout', {
+            method: 'POST'
+        });
 
-            const bc = new BroadcastChannel('auth');
-            bc.postMessage('logout');
-            bc.close();
+        const bc = new BroadcastChannel('auth');
+        bc.postMessage('logout');
+        bc.close();
 
-            router.push('/admin');
-        } finally {
-            setLoading(false);
-        }
+        router.push('/admin');
     }
 
     return (
@@ -43,7 +39,7 @@ export function LogoutButton() {
             {loading && (
                 <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
             )}
-            {loading ? 'Saindo...' : 'Logout'}
+            {loading ? 'Saindo...' : 'Sair da Conta'}
         </button>
     );
 }

@@ -83,10 +83,10 @@ export default async function DashboardPage() {
                                                     '1px solid rgba(15, 23, 42, 0.1)',
                                             }}
                                         >
-                                            <th className="py-3">Data</th>
-                                            <th className="py-3">Nome</th>
-                                            <th className="py-3">Telefone</th>
-                                            <th className="py-3">Ações</th>
+                                            <th className="py-2">Data</th>
+                                            <th className="py-2">Nome</th>
+                                            <th className="py-2">Telefone</th>
+                                            <th className="py-2">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody>
