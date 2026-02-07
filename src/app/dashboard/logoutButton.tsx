@@ -12,15 +12,19 @@ export function LogoutButton() {
 
         setLoading(true);
 
-        await fetch('/api/admin/logout', {
-            method: 'POST'
-        });
+        try {
+            await fetch('/api/admin/logout', {
+                method: 'POST'
+            });
 
-        const bc = new BroadcastChannel('auth');
-        bc.postMessage('logout');
-        bc.close();
+            const bc = new BroadcastChannel('auth');
+            bc.postMessage('logout');
+            bc.close();
 
-        router.push('/admin');
+            router.push('/admin');
+        } finally {
+            setLoading(false);
+        }
     }
 
     return (
@@ -33,7 +37,7 @@ export function LogoutButton() {
                 flex items-center justify-center gap-2
                 ${loading
                     ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-red-600 hover:bg-red-700'}
+                    : 'bg-primary hover:bg-secondary'}
             `}
         >
             {loading && (
