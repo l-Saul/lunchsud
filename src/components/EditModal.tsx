@@ -73,7 +73,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
         <>
             <button
                 onClick={() => setOpen(true)}
-                className="px-4 py-2 rounded-md bg-primary text-white hover:opacity-90"
+                className="px-4 py-2 rounded-md bg-secondary text-white hover:opacity-90"
             >
                 Editar
             </button>

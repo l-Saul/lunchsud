@@ -61,7 +61,7 @@ export default async function DashboardPage() {
                                     className="text-3xl font-semibold"
                                     style={{ color: 'var(--color-text)' }}
                                 >
-                                    Dashboard
+                                    Painel de Controle
                                 </h1>
 
                                 <p
