@@ -5,6 +5,7 @@ import { LogoutButton } from './logoutButton';
 import { supabaseServer } from '@/lib/supabase-server';
 import { formatDateBR } from '@/lib/date';
 import EditModal from '@/components/EditModal';
+import CalendarExportImage from '@/components/GerarImage';
 
 export default async function DashboardPage() {
     try {
@@ -29,6 +30,22 @@ export default async function DashboardPage() {
         if (error) {
             throw error;
         }
+
+const { data: mesesRaw, error: mesesError } = await supabaseServer
+    .from('agendamento')
+    .select('id, data, nome, telefone')
+    .eq('ala_id', session.alaId)
+    .order('data', { ascending: true });
+
+if (mesesError) {
+    throw mesesError;
+}
+
+const mesesDisponiveis = Array.from(
+    new Set(
+        (mesesRaw ?? []).map(r => r.data.slice(0, 7))
+    )
+).sort();
 
         return (
             <DashboardClientGuard>
@@ -116,7 +133,12 @@ export default async function DashboardPage() {
                                 </table>
                             </div>
 
-                            <div className="flex justify-center pt-4">
+                            <div className="flex justify-center gap-4 pt-4">
+                                <CalendarExportImage
+                                    meses={mesesDisponiveis}
+                                    agendamentos={data}
+                                />
+
                                 <LogoutButton />
                             </div>
                         </div>
