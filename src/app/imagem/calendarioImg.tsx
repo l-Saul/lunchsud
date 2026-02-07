@@ -15,17 +15,18 @@ type Props = {
 export default function CalendarMonthView({ diasDoMes }: Props) {
     if (diasDoMes.length === 0) return null;
 
-    const firstDay = new Date(diasDoMes[0].data).getDay();
+    const [y, m, d] = diasDoMes[0].data.split('-').map(Number);
+    const firstDay = new Date(y, m - 1, d).getDay();
 
     return (
         <div id="calendar-export" className="bg-white p-6 text-black">
             <div className="grid grid-cols-7 gap-2 mb-2">
-                {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
+                {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(dia => (
                     <div
-                        key={d}
+                        key={dia}
                         className="font-semibold text-center"
                     >
-                        {d}
+                        {dia}
                     </div>
                 ))}
             </div>
@@ -38,7 +39,7 @@ export default function CalendarMonthView({ diasDoMes }: Props) {
                 {diasDoMes.map(dia => (
                     <div
                         key={dia.data}
-                        className="border rounded-lg p-2 min-h-[120px]"
+                        className="border rounded-lg p-2 min-h-30"
                     >
                         <div className="font-bold text-sm mb-1">
                             {dia.numero}

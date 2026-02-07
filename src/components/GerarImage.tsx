@@ -19,13 +19,13 @@ type Props = {
 function gerarDiasDoMes(mes: string, agendamentos: Agendamento[]) {
     const [ano, mesNum] = mes.split('-').map(Number);
 
-    const totalDias = new Date(Date.UTC(ano, mesNum, 0)).getUTCDate();
+    const totalDias = new Date(ano, mesNum, 0).getDate();
 
     return Array.from({ length: totalDias }, (_, i) => {
         const dia = i + 1;
 
-        const dataUTC = new Date(Date.UTC(ano, mesNum - 1, dia));
-        const dataISO = dataUTC.toISOString().slice(0, 10);
+        const dataLocal = new Date(ano, mesNum - 1, dia);
+        const dataISO = dataLocal.toISOString().slice(0, 10);
 
         return {
             data: dataISO,
@@ -45,7 +45,14 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
         [mes, agendamentos]
     );
 
+    const [loading, setLoading] = useState(false);
+
     async function gerarImagem() {
+    if (loading) return;
+
+    setLoading(true);
+
+    try {
         const node = document.getElementById('calendar-export');
         if (!node) return;
 
@@ -54,11 +61,29 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
             backgroundColor: '#ffffff',
         });
 
-        const link = document.createElement('a');
-        link.href = dataUrl;
-        link.download = `calendario-${mes}.png`;
-        link.click();
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+
+        const file = new File([blob], `calendario-${mes}.png`, {
+            type: 'image/png',
+        });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                files: [file],
+                title: 'Calendário',
+            });
+        } else {
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = `calendario-${mes}.png`;
+            link.click();
+        }
+    } finally {
+        setLoading(false);
     }
+}
+
 
     return (
         <>
@@ -77,13 +102,30 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
 
                 <button
                     onClick={gerarImagem}
-                    className="px-4 py-2 rounded-md bg-primary text-white"
+                    disabled={loading}
+                        className={`
+                            px-4 py-2 rounded-md text-white cursor-pointer
+                            transition-all duration-200
+                            ${loading
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-primary hover:bg-secondary'}
+                        `}
                 >
-                    Gerar imagem
+                    <span
+                        className={`
+                            inline-block transition-opacity duration-200
+                            ${loading ? 'opacity-70' : 'opacity-100'}
+                        `}
+                    >
+                        {loading ? 'Gerando...' : 'Gerar imagem'}
+                    </span>
                 </button>
             </div>
 
-            <div className="absolute -left-[9999px] top-0">
+            <div
+                id="calendar-export-wrapper"
+                className="fixed inset-0 invisible pointer-events-none"
+            >
                 <CalendarMonthView diasDoMes={diasDoMes} />
             </div>
         </>
