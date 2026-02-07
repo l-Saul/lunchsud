@@ -43,7 +43,7 @@ export function LogoutButton() {
             {loading && (
                 <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
             )}
-            {loading ? 'Saindo...' : 'Sair da Conta'}
+            {loading ? 'Saindo...' : 'Sair'}
         </button>
     );
 }
