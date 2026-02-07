@@ -22,15 +22,12 @@ function gerarDiasDoMes(mes: string, agendamentos: Agendamento[]) {
 
     return Array.from({ length: totalDias }, (_, i) => {
         const dia = i + 1;
-        const dataLocal = new Date(ano, mesNum - 1, dia);
-        const dataISO = dataLocal.toISOString().slice(0, 10);
+        const data = `${ano}-${String(mesNum).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
 
         return {
-            data: dataISO,
+            data,
             numero: dia,
-            agendamentos: agendamentos.filter(a =>
-                a.data.startsWith(dataISO)
-            ),
+            agendamentos: agendamentos.filter(a => a.data.startsWith(data)),
         };
     });
 }
@@ -38,6 +35,7 @@ function gerarDiasDoMes(mes: string, agendamentos: Agendamento[]) {
 export default function CalendarExportImage({ meses, agendamentos }: Props) {
     const [mes, setMes] = useState(meses[0]);
     const [loading, setLoading] = useState(false);
+    const [exportando, setExportando] = useState(false);
 
     const diasDoMes = useMemo(
         () => gerarDiasDoMes(mes, agendamentos),
@@ -47,48 +45,29 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
     async function gerarImagem() {
         if (loading) return;
         setLoading(true);
+        setExportando(true);
 
         try {
+            await new Promise(resolve => setTimeout(resolve, 50));
+
             const node = document.getElementById('calendar-export');
             if (!node) return;
 
-            await new Promise(resolve => requestAnimationFrame(resolve));
-            await new Promise(resolve => requestAnimationFrame(resolve));
+            if (document.fonts?.ready) {
+                await document.fonts.ready;
+            }
 
             const dataUrl = await toPng(node, {
                 pixelRatio: 2,
                 backgroundColor: '#ffffff',
-                cacheBust: true,
             });
-
-            const isMobile =
-                typeof navigator !== 'undefined' &&
-                /iphone|ipad|android/i.test(navigator.userAgent);
-
-            if (isMobile && navigator.canShare) {
-                const res = await fetch(dataUrl);
-                const blob = await res.blob();
-
-                const file = new File([blob], `calendario-${mes}.png`, {
-                    type: 'image/png',
-                });
-
-                if (navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: 'Calendário',
-                    });
-                    return;
-                }
-            }
 
             const link = document.createElement('a');
             link.href = dataUrl;
             link.download = `calendario-${mes}.png`;
-            document.body.appendChild(link);
             link.click();
-            document.body.removeChild(link);
         } finally {
+            setExportando(false);
             setLoading(false);
         }
     }
@@ -111,29 +90,23 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
                 <button
                     onClick={gerarImagem}
                     disabled={loading}
-                    className={`
-                        px-4 py-2 rounded-md text-white transition-all duration-200 cursor-pointer
-                        ${loading
-                            ? 'bg-gray-400 cursor-not-allowed'
-                            : 'bg-primary hover:bg-secondary'}
-                    `}
+                    className={`px-4 py-2 rounded-md text-white cursor-pointer
+                    ${ loading ? 'bg-gray-400' : 'bg-primary hover:bg-secondary'
+                    }`}
                 >
                     {loading ? 'Gerando...' : 'Gerar imagem'}
                 </button>
             </div>
 
-            <div
-                id="calendar-export"
-                style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: '-9999px',
-                    width: 1200,
-                    backgroundColor: '#ffffff',
-                }}
-            >
-                <CalendarMonthView diasDoMes={diasDoMes} />
-            </div>
+            {exportando && (
+                <div
+                    className="fixed inset-0 bg-white z-50 flex justify-center items-start overflow-auto"
+                >
+                    <div id="calendar-export" style={{ width: 1200 }}>
+                        <CalendarMonthView diasDoMes={diasDoMes} />
+                    </div>
+                </div>
+            )}
         </>
     );
 }
