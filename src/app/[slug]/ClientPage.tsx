@@ -277,7 +277,7 @@ export default function ClientPage({ slug, ocupados }: Props) {
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.97 }}
                                     transition={{ duration: 0.15 }}
-                                    className="w-full bg-secondary text-white text-lg py-4 rounded-xl
+                                    className="w-full bg-secondary text-white text-lg py-4 rounded-xl cursor-pointer
                                             shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                     {loading ? 'Confirmando...' : 'Confirmar agendamento'}

@@ -67,7 +67,7 @@ export function Calendar({
                 <button
                     onClick={onNext}
                     disabled={!canNext}
-                    className="text-xl px-2 border-2 border-secondary rounded-full disabled:invisible"
+                    className="text-xl px-2 border-2 border-secondary rounded-full disabled:invisible cursor-pointer"
                 >
                     ▶
                 </button>
@@ -104,7 +104,7 @@ export function Calendar({
                                 cursor-pointer transition
                                 ${ocupado && 'bg-zinc-500 text-text'}
                                 ${selecionado && 'bg-secondary text-white '}
-                                ${!ocupado && !selecionado && 'bg-background text-text hover:bg-secondary/10 border border-zinc-300'}
+                                ${!ocupado && !selecionado && 'bg-background text-text hover:bg-zinc-100 border border-zinc-300'}
                             `}
                         >
                             {dia}

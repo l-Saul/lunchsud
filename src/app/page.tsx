@@ -111,7 +111,7 @@ export default function IndexPage() {
                                             setLoadingSlug(ala.slug)
                                             router.push(`/${ala.slug}`)
                                         }}
-                                        className={`w-full rounded-xl border border-white/20 p-6 text-lg font-medium transition
+                                        className={`w-full rounded-xl border border-white/20 p-6 text-lg font-medium transition cursor-pointer
                                             ${isLoading ? 'bg-secondary/80' : 'bg-white/5 hover:bg-secondary'}
                                         `}
                                     >
