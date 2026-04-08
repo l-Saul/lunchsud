@@ -57,6 +57,29 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
         }
     }
 
+    async function handleDelete() {
+        const confirm = window.confirm('Remover este agendamento?');
+
+        if (!confirm) return;
+
+        setLoading(true);
+
+        const res = await fetch('/api/agendamentos/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+
+        setLoading(false);
+
+        if (res.ok) {
+            setOpen(false);
+            location.reload();
+        } else {
+            alert('Erro ao remover');
+        }
+    }
+
     useEffect(() => {
         if (open) {
             document.body.style.overflow = 'hidden';
@@ -148,6 +171,18 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                                 className="px-4 py-2 rounded-md text-text hover:bg-slate-100 z-200 cursor-pointer"
                             >
                                 Cancelar
+                            </button>
+
+                            <button
+                                onClick={handleDelete}
+                                disabled={loading}
+                                className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 cursor-pointer"
+                            >
+                                {loading ? (
+                                    <span className="animate-pulse">...</span>
+                                ) : (
+                                    'Remover'
+                                )}
                             </button>
 
                             <button
