@@ -50,8 +50,6 @@
             radial-gradient(55% 35% at 50% -8%, rgba(246, 196, 83, 0.13), transparent 70%),
             radial-gradient(45% 40% at 15% 8%, rgba(31, 185, 160, 0.18), transparent 70%),
             radial-gradient(45% 40% at 88% 10%, rgba(224, 88, 143, 0.18), transparent 70%);
-        animation: respirar 16s ease-in-out infinite;
-        will-change: opacity, transform;
     }
 
     /* Foco bem visível para navegação por teclado / baixa visão */
@@ -60,26 +58,6 @@
         outline-offset: 2px;
         border-radius: 6px;
     }
-}
-
-/* Frufrus da página da ala: florzinhas que flutuam de leve.
-   O bloco de prefers-reduced-motion abaixo neutraliza estas animações
-   automaticamente (o !important vence o shorthand sem !important). */
-@keyframes flutuar {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50%      { transform: translateY(-10px) rotate(8deg); }
-}
-@keyframes flutuar-lento {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50%      { transform: translateY(8px) rotate(-6deg); }
-}
-.animar-flutuar       { animation: flutuar 6s ease-in-out infinite; }
-.animar-flutuar-lento { animation: flutuar-lento 9s ease-in-out infinite; }
-
-/* Auroras do fundo celestial respirando devagar (suave, quase imperceptível). */
-@keyframes respirar {
-    0%, 100% { opacity: 0.55; transform: scale(1); }
-    50%      { opacity: 1;    transform: scale(1.06); }
 }
 
 /* Respeita quem pede menos animação no sistema */

@@ -73,20 +73,14 @@ export default function IndexPage() {
                 aria-busy={isLoading}
             >
                 <div className="flex flex-col items-center gap-6 text-center">
-                    {/* Logo flutuando de leve (respeita prefers-reduced-motion via MotionConfig). */}
-                    <motion.div
-                        animate={{ y: [0, -8, 0] }}
-                        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                    >
-                        <Image
-                            src="/lds.jpg"
-                            alt="Igreja de Jesus Cristo dos Santos dos Últimos Dias"
-                            width={180}
-                            height={180}
-                            className="rounded-2xl shadow-xl ring-2 ring-white/15"
-                            priority
-                        />
-                    </motion.div>
+                    <Image
+                        src="/lds.jpg"
+                        alt="Igreja de Jesus Cristo dos Santos dos Últimos Dias"
+                        width={180}
+                        height={180}
+                        className="rounded-2xl shadow-xl ring-2 ring-white/15"
+                        priority
+                    />
 
                     <header className="flex flex-col items-center space-y-4">
                         <h1 className="text-3xl font-semibold">

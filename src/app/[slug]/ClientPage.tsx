@@ -3,12 +3,17 @@
 // Página pública de agendamento de uma ala: calendário + formulário.
 // Recebe do servidor o slug e os dias já ocupados; o backend continua sendo a fonte da verdade.
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Calendar } from '@/components/Calendar'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatarTelefone } from '@/lib/phone'
 import { useOcupadosRealtime } from '@/hooks/use-ocupados-realtime'
 import { Flor } from '@/components/Flor'
+
+// Estilo único dos campos do modal de agendar (label claro + placeholder).
+const campoBase =
+    'w-full min-w-0 box-border appearance-none rounded-xl border px-4 py-3.5 text-lg text-text ' +
+    'placeholder:text-muted/60 focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary'
 
 type DiaOcupado = {
     data: string
@@ -119,24 +124,43 @@ export default function ClientPage({ slug, alaId, ocupados }: Props) {
         setOcupadoPor(null)
     }
 
+    // Fecha o modal de agendar e limpa erros/mensagem (mantém nome/telefone digitados).
+    const fecharModal = useCallback(() => {
+        setDiaSelecionado(null)
+        setErroNome(false)
+        setErroTelefone(false)
+        setMensagem('')
+        setTipoMensagem(null)
+    }, [])
+
+    // Com o modal aberto: trava o scroll do fundo e fecha com a tecla Esc.
+    useEffect(() => {
+        if (!diaSelecionado) return
+
+        document.body.style.overflow = 'hidden'
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') fecharModal()
+        }
+        window.addEventListener('keydown', onKey)
+
+        return () => {
+            document.body.style.overflow = ''
+            window.removeEventListener('keydown', onKey)
+        }
+    }, [diaSelecionado, fecharModal])
+
     return (
         <main className="min-h-screen flex justify-center text-text">
             <div className="w-full max-w-2xl">
 
                 {/* HEADER */}
                 <div className="relative overflow-hidden px-3 pt-12 pb-7 text-center sm:px-6">
-                    {/* Brilhos suaves de fundo (rosa + verde), bem leves */}
-                    <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-                        <span className="absolute -left-12 -top-10 h-44 w-44 rounded-full bg-accent/25 blur-3xl" />
-                        <span className="absolute -right-10 top-2 h-36 w-36 rounded-full bg-secondary/20 blur-3xl" />
-                    </div>
-
-                    {/* Florzinhas flutuando nos cantos — decoração suave, não atrapalha a leitura */}
-                    <span aria-hidden="true" className="animar-flutuar pointer-events-none absolute left-4 top-6 opacity-30 sm:left-10">
-                        <Flor size={34} />
+                    {/* Florzinhas decorativas nos cantos (estáticas — leves). */}
+                    <span aria-hidden="true" className="pointer-events-none absolute left-4 top-6 opacity-25 sm:left-10">
+                        <Flor size={32} />
                     </span>
-                    <span aria-hidden="true" className="animar-flutuar-lento pointer-events-none absolute right-5 top-14 opacity-25 sm:right-12">
-                        <Flor size={24} />
+                    <span aria-hidden="true" className="pointer-events-none absolute right-5 top-14 opacity-20 sm:right-12">
+                        <Flor size={22} />
                     </span>
 
                     {/* Conteúdo, acima das decorações */}
@@ -163,10 +187,9 @@ export default function ClientPage({ slug, alaId, ocupados }: Props) {
 
                     {/* CALENDÁRIO */}
                     <motion.div
-                        initial={{ opacity: 0, y: 16, rotateX: -10 }}
-                        animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                        transition={{ duration: 0.4, ease: 'easeOut' }}
-                        style={{ transformPerspective: 1000 }}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeOut' }}
                         className="relative overflow-hidden bg-background text-secondary rounded-2xl p-2 sm:p-4 shadow-xl ring-1 ring-white/40 border border-muted/10"
                     >
                         {/* Fitinha de acento no topo (verde → rosa → verde). */}
@@ -229,88 +252,125 @@ export default function ClientPage({ slug, alaId, ocupados }: Props) {
                         </motion.p>
                     )}
 
+                    {/* MODAL DE AGENDAR — popup com fundo desfocado, trava o scroll e tem Cancelar. */}
                     <AnimatePresence>
                         {diaSelecionado && (
                             <motion.div
-                                initial={{ opacity: 0, y: 16 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: 16 }}
-                                transition={{ duration: 0.25, ease: 'easeOut' }}
-                                className="space-y-5 border-t border-muted/20 pt-6"
+                                key="agendar-backdrop"
+                                onClick={fecharModal}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="fixed inset-0 z-50 flex items-center justify-center bg-primary/50 p-4 backdrop-blur-sm"
                             >
-                                <h2 className="text-2xl font-semibold text-white">
-                                    Agendar para {diaSelecionado} de {mesNomeBase}
-                                </h2>
-
-                                <div>
-                                    <label htmlFor="nome" className="block text-lg font-medium mb-2 text-white">
-                                        Seu nome
-                                    </label>
-                                    <input
-                                        id="nome"
-                                        type="text"
-                                        autoComplete="name"
-                                        aria-invalid={erroNome}
-                                        className={`w-full rounded-xl p-4 text-xl text-text bg-background
-                                            border-2 ${erroNome ? 'border-red-500' : 'border-transparent'}
-                                            focus:ring-2 focus:ring-secondary focus:outline-none`}
-                                        value={nome}
-                                        onChange={e => {
-                                            setNome(e.target.value)
-                                            if (erroNome) setErroNome(false)
-                                        }}
-                                    />
-                                    {erroNome && (
-                                        <p role="alert" className="text-base text-red-300 mt-2">
-                                            Informe seu nome.
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <label htmlFor="telefone" className="block text-lg font-medium mb-2 text-white">
-                                        Seu telefone
-                                    </label>
-                                    <input
-                                        id="telefone"
-                                        type="tel"
-                                        autoComplete="tel"
-                                        inputMode="numeric"
-                                        aria-invalid={erroTelefone}
-                                        className={`w-full rounded-xl p-4 text-xl text-text bg-background
-                                            border-2 ${erroTelefone ? 'border-red-500' : 'border-transparent'}
-                                            focus:ring-2 focus:ring-secondary focus:outline-none`}
-                                        value={telefone}
-                                        onChange={e => {
-                                            setTelefone(formatarTelefone(e.target.value))
-                                            if (erroTelefone) setErroTelefone(false)
-                                        }}
-                                    />
-                                    {erroTelefone && (
-                                        <p role="alert" className="text-base text-red-300 mt-2">
-                                            Informe um telefone celular válido.
-                                        </p>
-                                    )}
-                                </div>
-
-                                <motion.button
-                                    onClick={agendar}
-                                    disabled={loading}
-                                    aria-busy={loading}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.97 }}
-                                    transition={{ duration: 0.15 }}
-                                    className="w-full bg-secondary text-white text-xl font-semibold py-5 rounded-xl cursor-pointer
-                                            shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
+                                <motion.div
+                                    onClick={e => e.stopPropagation()}
+                                    role="dialog"
+                                    aria-modal="true"
+                                    aria-label={`Agendar dia ${diaSelecionado} de ${mesNomeBase}`}
+                                    initial={{ opacity: 0, scale: 0.96, y: 12 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.96, y: 12 }}
+                                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                                    className="flex max-h-[90vh] w-full max-w-md flex-col overflow-y-auto rounded-2xl bg-background p-6 shadow-2xl"
                                 >
-                                    {loading ? 'Confirmando...' : 'Confirmar agendamento'}
-                                </motion.button>
+                                    <div className="mb-5 flex items-start justify-between gap-3">
+                                        <h2 className="text-xl font-semibold text-text">
+                                            Agendar dia {diaSelecionado} de {mesNomeBase}
+                                        </h2>
+                                        <button
+                                            onClick={fecharModal}
+                                            aria-label="Fechar"
+                                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-slate-100 cursor-pointer"
+                                        >
+                                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                                <path d="M18 6 6 18M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    <div className="flex flex-col gap-4">
+                                        <div className="flex flex-col gap-1.5">
+                                            <label htmlFor="nome" className="text-base font-medium text-text">
+                                                Seu nome
+                                            </label>
+                                            <input
+                                                id="nome"
+                                                type="text"
+                                                autoComplete="name"
+                                                placeholder="Digite seu nome aqui"
+                                                aria-invalid={erroNome}
+                                                className={`${campoBase} ${erroNome ? 'border-accent' : 'border-slate-300'}`}
+                                                value={nome}
+                                                onChange={e => {
+                                                    setNome(e.target.value)
+                                                    if (erroNome) setErroNome(false)
+                                                }}
+                                            />
+                                            {erroNome && (
+                                                <p role="alert" className="text-sm text-accent">
+                                                    Informe seu nome.
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <div className="flex flex-col gap-1.5">
+                                            <label htmlFor="telefone" className="text-base font-medium text-text">
+                                                Seu telefone (com DDD)
+                                            </label>
+                                            <input
+                                                id="telefone"
+                                                type="tel"
+                                                autoComplete="tel"
+                                                inputMode="numeric"
+                                                placeholder="Digite seu telefone aqui"
+                                                aria-invalid={erroTelefone}
+                                                className={`${campoBase} ${erroTelefone ? 'border-accent' : 'border-slate-300'}`}
+                                                value={telefone}
+                                                onChange={e => {
+                                                    setTelefone(formatarTelefone(e.target.value))
+                                                    if (erroTelefone) setErroTelefone(false)
+                                                }}
+                                            />
+                                            {erroTelefone && (
+                                                <p role="alert" className="text-sm text-accent">
+                                                    Informe um telefone celular válido.
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {tipoMensagem === 'erro' && mensagem && (
+                                        <p role="alert" className="mt-4 text-center text-sm font-medium text-accent">
+                                            {mensagem}
+                                        </p>
+                                    )}
+
+                                    <div className="mt-6 flex gap-3">
+                                        <button
+                                            onClick={fecharModal}
+                                            disabled={loading}
+                                            className="min-h-13 flex-1 rounded-xl border border-slate-300 px-4 text-lg font-medium text-text transition hover:bg-slate-100 disabled:opacity-50 cursor-pointer"
+                                        >
+                                            Cancelar
+                                        </button>
+                                        <button
+                                            onClick={agendar}
+                                            disabled={loading}
+                                            aria-busy={loading}
+                                            className="min-h-13 flex-1 rounded-xl bg-secondary px-4 text-lg font-semibold text-white shadow-md transition hover:opacity-90 disabled:opacity-60 cursor-pointer"
+                                        >
+                                            {loading ? 'Confirmando…' : 'Confirmar'}
+                                        </button>
+                                    </div>
+                                </motion.div>
                             </motion.div>
                         )}
                     </AnimatePresence>
 
                     <AnimatePresence>
-                        {mensagem && (
+                        {mensagem && !diaSelecionado && (
                             <motion.p
                                 role="status"
                                 aria-live="polite"
