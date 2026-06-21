@@ -20,6 +20,45 @@ contraste e poucos passos.
 - Exportação do calendário em **imagem** (`html-to-image`) e **PDF** (`jspdf` / `jspdf-autotable`)
 - `framer-motion` (animações) e `swr` (data fetching no client)
 
+## Supabase
+**Definição da tabela:**
+| column_name | data_type         | is_nullable | column_default                      |
+| ----------- | ----------------- | ----------- | ----------------------------------- |
+| id          | integer           | NO          | nextval('usuario_id_seq'::regclass) |
+| username    | character varying | NO          | null                                |
+| senha_hash  | text              | NO          | null                                |
+| ala_id      | integer           | NO          | null                                |
+| ativo       | boolean           | NO          | true                                |
+
+| column_name | data_type         | is_nullable | column_default |
+| ----------- | ----------------- | ----------- | -------------- |
+| id          | integer           | NO          | null           |
+| nome        | character varying | NO          | null           |
+| descricao   | character varying | YES         | null           |
+| endereco    | character varying | YES         | null           |
+| slug        | text              | NO          | null           |
+
+| column_name | data_type         | is_nullable | column_default |
+| ----------- | ----------------- | ----------- | -------------- |
+| id          | integer           | NO          | null           |
+| ala_id      | integer           | NO          | null           |
+| data        | date              | NO          | null           |
+| nome        | character varying | NO          | null           |
+| telefone    | character varying | NO          | null           |
+
+**Todas as tabelas**
+| table_name  |
+| ----------- |
+| agendamento |
+| ala         |
+| usuario     |
+
+**Chaves estrangeiras**
+| table_name  | column_name | foreign_table_name | foreign_column_name |
+| ----------- | ----------- | ------------------ | ------------------- |
+| agendamento | ala_id      | ala                | id                  |
+| usuario     | ala_id      | ala                | id                  |
+
 ## Funcionalidades
 
 ### Público
