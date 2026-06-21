@@ -1,5 +1,8 @@
 'use client'
 
+import { motion } from 'framer-motion'
+import { isPday, formatMonthLabel } from '@/lib/date'
+
 type DiaOcupado = {
     data: string
     nome: string
@@ -11,6 +14,7 @@ type Props = {
     selectedDay: number | null
     onSelectDay: (day: number) => void
     onSelectOcupado: (nome: string) => void
+    onSelectPday?: () => void
     onNext?: () => void
     onPrev?: () => void
     canNext?: boolean
@@ -23,6 +27,7 @@ export function Calendar({
     selectedDay,
     onSelectDay,
     onSelectOcupado,
+    onSelectPday,
     onNext,
     onPrev,
     canNext,
@@ -34,11 +39,14 @@ export function Calendar({
     const primeiroDiaSemana = new Date(anoNum, mesNum, 1).getDay()
     const diasNoMes = new Date(anoNum, mesNum + 1, 0).getDate()
 
-    function getOcupacao(dia: number) {
+    function dataDoDia(dia: number) {
         const mm = String(mesNum + 1).padStart(2, '0')
         const dd = String(dia).padStart(2, '0')
-        const dataCalendario = `${anoNum}-${mm}-${dd}`
-        return ocupados.find(o => o.data === dataCalendario)
+        return `${anoNum}-${mm}-${dd}`
+    }
+
+    function getOcupacao(dia: number) {
+        return ocupados.find(o => o.data === dataDoDia(dia))
     }
 
     const dias = [
@@ -48,69 +56,133 @@ export function Calendar({
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <button
+            <div className="flex items-center justify-between gap-2">
+                <motion.button
                     onClick={onPrev}
                     disabled={!canPrev}
-                    className="text-xl px-2 border-2 border-secondary rounded-full disabled:invisible"
+                    aria-label="Mês anterior"
+                    whileTap={{ scale: 0.94 }}
+                    className="flex flex-col items-center gap-0.5 rounded-xl bg-secondary px-2.5 py-2 text-white shadow-sm transition hover:opacity-90 disabled:opacity-30 disabled:cursor-default cursor-pointer"
                 >
-                    ◀
-                </button>
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                    <span className="text-xs font-semibold uppercase tracking-wide">Voltar</span>
+                </motion.button>
 
-                <h2 className="text-center text-xl font-semibold capitalize text-text">
-                    {new Date(anoNum, mesNum).toLocaleDateString(
-                        'pt-BR',
-                        { month: 'long', year: 'numeric' }
-                    )}
+                <h2 className="text-center text-base sm:text-xl font-semibold text-text">
+                    {formatMonthLabel(`${anoNum}-${String(mesNum + 1).padStart(2, '0')}`)}
                 </h2>
 
-                <button
+                <motion.button
                     onClick={onNext}
                     disabled={!canNext}
-                    className="text-xl px-2 border-2 border-secondary rounded-full disabled:invisible cursor-pointer"
+                    aria-label="Próximo mês"
+                    whileTap={{ scale: 0.94 }}
+                    className="flex flex-col items-center gap-0.5 rounded-xl bg-secondary px-2.5 py-2 text-white shadow-sm transition hover:opacity-90 disabled:opacity-30 disabled:cursor-default cursor-pointer"
                 >
-                    ▶
-                </button>
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M9 18l6-6-6-6" />
+                    </svg>
+                    <span className="text-xs font-semibold uppercase tracking-wide">Avançar</span>
+                </motion.button>
             </div>
 
-            <div className="grid grid-cols-7 text-center font-medium text-text">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-sm font-semibold uppercase tracking-wide text-muted">
                 {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
                     <div key={d}>{d}</div>
                 ))}
             </div>
 
-            <div className="grid grid-cols-7 gap-2">
+            <motion.div
+                key={`${anoNum}-${mesNum}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                className="grid grid-cols-7 gap-1 sm:gap-2"
+            >
                 {dias.map((dia, index) => {
                     if (!dia) return <div key={`empty-${index}`} />
 
+                    const pday = isPday(dataDoDia(dia))
                     const ocupacao = getOcupacao(dia)
                     const ocupado = Boolean(ocupacao)
                     const selecionado = dia === selectedDay
 
+                    const ativar = () => {
+                        if (pday) {
+                            onSelectPday?.()
+                        } else if (ocupado && ocupacao) {
+                            onSelectOcupado(ocupacao.nome)
+                        } else {
+                            onSelectDay(dia)
+                        }
+                    }
+
+                    const ariaLabel = pday
+                        ? `Dia ${dia}, P-day, indisponível`
+                        : ocupado && ocupacao
+                            ? `Dia ${dia}, ocupado por ${ocupacao.nome}`
+                            : selecionado
+                                ? `Dia ${dia}, selecionado`
+                                : `Dia ${dia}, disponível`
+
                     return (
-                        <div
+                        <motion.div
                             key={`day-${index}`}
                             role="button"
-                            onClick={() => {
-                                if (ocupado && ocupacao) {
-                                    onSelectOcupado(ocupacao.nome)
-                                } else {
-                                    onSelectDay(dia)
+                            tabIndex={0}
+                            aria-label={ariaLabel}
+                            aria-pressed={selecionado}
+                            whileTap={{ scale: 0.92 }}
+                            onClick={ativar}
+                            onKeyDown={e => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault()
+                                    ativar()
                                 }
                             }}
                             className={`
-                                h-14 w-full rounded-lg text-lg font-medium
+                                aspect-square w-full rounded-lg text-base sm:text-lg font-medium
                                 flex items-center justify-center
                                 cursor-pointer transition
-                                ${ocupado && 'bg-zinc-500 text-text'}
-                                ${selecionado && 'bg-secondary text-white '}
-                                ${!ocupado && !selecionado && 'bg-background text-text hover:bg-zinc-100 border border-zinc-300'}
+                                ${pday
+                                    ? 'bg-primary/5 text-primary/40 border border-primary/10'
+                                    : ocupado
+                                        ? 'bg-primary text-white'
+                                        : selecionado
+                                            ? 'bg-secondary text-white shadow-md'
+                                            : 'bg-white text-primary border border-slate-200 hover:border-secondary hover:bg-secondary/10'}
                             `}
                         >
-                            {dia}
-                        </div>
+                            {pday ? (
+                                <div className="flex flex-col items-center leading-none">
+                                    <span className="text-sm">{dia}</span>
+                                    <span className="text-[9px] sm:text-[10px] font-semibold uppercase">
+                                        P-day
+                                    </span>
+                                </div>
+                            ) : (
+                                dia
+                            )}
+                        </motion.div>
                     )
                 })}
+            </motion.div>
+
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-1 text-sm text-text">
+                <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 rounded border border-slate-300 bg-white" />
+                    Disponível
+                </span>
+                <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 rounded bg-primary" />
+                    Ocupado
+                </span>
+                <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 rounded border border-primary/10 bg-primary/5" />
+                    P-day
+                </span>
             </div>
         </div>
     )

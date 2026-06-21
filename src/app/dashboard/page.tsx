@@ -3,9 +3,12 @@ import { requireAdminSession } from '@/lib/auth';
 import DashboardClientGuard from './DashboardClientGuard';
 import { LogoutButton } from './LogoutButton';
 import { supabaseServer } from '@/lib/supabase-server';
-import { formatDateBR } from '@/lib/date';
+import { getDashboardRange, formatMonthLabel, diaTile, diasDisponiveisNoMes } from '@/lib/date';
 import EditModal from '@/components/EditModal';
 import CalendarExportImage from '@/components/CalendarExportImage';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function DashboardPage() {
     try {
@@ -21,122 +24,99 @@ export default async function DashboardPage() {
             throw alaError;
         }
 
+        const { inicio, fim, mesAtual, mesSeguinte } = getDashboardRange();
+
         const { data, error } = await supabaseServer
             .from('agendamento')
             .select('id, data, nome, telefone')
             .eq('ala_id', session.alaId)
+            .gte('data', inicio)
+            .lt('data', fim)
             .order('data', { ascending: true });
 
         if (error) {
             throw error;
         }
 
-const { data: mesesRaw, error: mesesError } = await supabaseServer
-    .from('agendamento')
-    .select('id, data, nome, telefone')
-    .eq('ala_id', session.alaId)
-    .order('data', { ascending: true });
-
-if (mesesError) {
-    throw mesesError;
-}
-
-const mesesDisponiveis = Array.from(
-    new Set(
-        (mesesRaw ?? []).map(r => r.data.slice(0, 7))
-    )
-).sort();
+        const agendamentos = data ?? [];
 
         return (
             <DashboardClientGuard>
-                <main
-                    className="min-h-screen flex items-center justify-center px-6 py-12"
-                    style={{ backgroundColor: 'var(--color-primary)' }}
-                >
-                    <section
-                        className="w-full"
-                        style={{ maxWidth: 900, margin: '0 auto' }}
-                    >
-                        <div
-                            className="rounded-3xl shadow-xl px-10 py-12"
-                            style={{
-                                backgroundColor: 'var(--color-background)',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: 24,
-                            }}
-                        >
-                            <div
-                                className="text-center"
-                                style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: 8,
-                                }}
-                            >
-                                <h1
-                                    className="text-3xl font-semibold"
-                                    style={{ color: 'var(--color-text)' }}
-                                >
+                <main className="min-h-screen bg-primary px-4 py-6 sm:flex sm:items-center sm:justify-center sm:px-6 sm:py-12">
+                    <section className="mx-auto w-full sm:max-w-3xl">
+                        <div className="flex flex-col gap-6 rounded-3xl bg-background px-4 py-6 shadow-xl sm:px-10 sm:py-10">
+                            <header className="flex flex-col gap-1 text-center">
+                                <h1 className="text-2xl font-semibold text-text sm:text-3xl">
                                     Painel de Controle
                                 </h1>
+                                <p className="text-sm text-muted sm:text-base">{ala.nome}</p>
+                            </header>
 
-                                <p
-                                    className="text-md"
-                                    style={{ color: 'var(--color-muted)' }}
-                                >
-                                    {ala.nome}
-                                </p>
+                            <div className="flex flex-col gap-6">
+                                {[mesAtual, mesSeguinte].map(ym => {
+                                    const itens = agendamentos.filter(r =>
+                                        r.data.startsWith(ym)
+                                    );
+                                    const disponiveis = diasDisponiveisNoMes(ym);
+
+                                    return (
+                                        <section key={ym} className="flex flex-col gap-3">
+                                            <div className="flex items-center justify-between gap-2">
+                                                <h2 className="text-base font-semibold text-text">
+                                                    {formatMonthLabel(ym)}
+                                                </h2>
+                                                <span className="rounded-full bg-secondary/10 px-3 py-1 text-sm font-medium text-secondary whitespace-nowrap">
+                                                    {itens.length} de {disponiveis} dias agendados
+                                                </span>
+                                            </div>
+
+                                            {itens.length === 0 ? (
+                                                <p className="rounded-2xl border border-dashed border-slate-300 py-6 text-center text-sm text-muted">
+                                                    Nenhum agendamento neste mês.
+                                                </p>
+                                            ) : (
+                                                <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                                                    {itens.map(row => {
+                                                        const { dia, mesAbrev } = diaTile(row.data);
+
+                                                        return (
+                                                            <li
+                                                                key={row.id}
+                                                                className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3"
+                                                            >
+                                                                <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                                                    <span className="text-lg font-bold leading-none">
+                                                                        {dia}
+                                                                    </span>
+                                                                    <span className="mt-0.5 text-[10px] uppercase leading-none">
+                                                                        {mesAbrev}
+                                                                    </span>
+                                                                </div>
+
+                                                                <div className="min-w-0 flex-1">
+                                                                    <p className="truncate font-medium text-text">
+                                                                        {row.nome}
+                                                                    </p>
+                                                                    <p className="text-sm text-muted">
+                                                                        {row.telefone}
+                                                                    </p>
+                                                                </div>
+
+                                                                <EditModal {...row} />
+                                                            </li>
+                                                        );
+                                                    })}
+                                                </ul>
+                                            )}
+                                        </section>
+                                    );
+                                })}
                             </div>
 
-                            <div className="overflow-x-auto md:overflow-visible scrollbar-mobile">
-                                <table className="w-full border-collapse min-w-160">
-                                    <thead>
-                                        <tr
-                                            className="text-left text-md"
-                                            style={{
-                                                color: 'var(--color-muted)',
-                                                borderBottom: '1px solid rgba(15, 23, 42, 0.1)',
-                                            }}
-                                        >
-                                            <th className="py-1 px-2">Data</th>
-                                            <th className="py-1 px-2">Nome</th>
-                                            <th className="py-1 px-2">Telefone</th>
-                                            <th className="py-1 px-2">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {data.map(row => (
-                                            <tr
-                                                key={row.id}
-                                                className="text-md"
-                                                style={{
-                                                    color: 'var(--color-text)',
-                                                    borderBottom: '1px solid rgba(15, 23, 42, 0.05)',
-                                                }}
-                                            >
-                                                <td className="py-2 px-2 whitespace-nowrap">
-                                                    {formatDateBR(row.data)}
-                                                </td>
-                                                <td className="py-2 px-2">
-                                                    {row.nome}
-                                                </td>
-                                                <td className="py-2 px-2 whitespace-nowrap">
-                                                    {row.telefone}
-                                                </td>
-                                                <td className="py-2 px-2">
-                                                    <EditModal {...row} />
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div className="flex justify-center gap-4 pt-4">
+                            <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:justify-center">
                                 <CalendarExportImage
-                                    meses={mesesDisponiveis}
-                                    agendamentos={data}
+                                    meses={[mesAtual, mesSeguinte]}
+                                    agendamentos={agendamentos}
                                 />
 
                                 <LogoutButton />

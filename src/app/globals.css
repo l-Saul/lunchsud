@@ -6,6 +6,45 @@
     --color-background: #ffffff;
     --color-text: #0f172a;
     --color-muted: #64748b;
+
+    --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
+    --font-serif: var(--font-source-serif), Georgia, 'Times New Roman', serif;
+}
+
+@layer base {
+    /* Base maior para leitura confortável no celular (público idoso).
+       Em % para respeitar o zoom/tamanho de fonte do sistema. */
+    html {
+        font-size: 112.5%; /* ~18px */
+        scroll-behavior: smooth;
+    }
+
+    /* Títulos com serifa para a estética serena do site da Igreja */
+    h1, h2, h3 {
+        font-family: var(--font-serif);
+    }
+
+    body {
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+    }
+
+    /* Foco bem visível para navegação por teclado / baixa visão */
+    :focus-visible {
+        outline: 3px solid var(--color-secondary);
+        outline-offset: 2px;
+        border-radius: 6px;
+    }
+}
+
+/* Respeita quem pede menos animação no sistema */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 @media (max-width: 767px) {

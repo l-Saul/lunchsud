@@ -1,8 +1,12 @@
 # LunchSud — Agendamento de Almoço para Missionários
 
 Sistema para agendar almoços de missionários por ala. Os membros escolhem um dia
-disponível do mês atual em um calendário, e líderes de ala acessam um painel
-administrativo para gerenciar os agendamentos.
+disponível (mês atual ou seguinte) em um calendário, e líderes de ala acessam um
+painel administrativo para gerenciar os agendamentos.
+
+O público-alvo principal são **senhoras com pouca familiaridade digital, acessando
+pelo celular** — por isso o design prioriza simplicidade, textos grandes, alto
+contraste e poucos passos.
 
 🔗 **Produção:** https://lunchsud.vercel.app
 
@@ -21,16 +25,45 @@ administrativo para gerenciar os agendamentos.
 ### Público
 
 - Página inicial com a lista de alas
-- Página por ala (`/[slug]`) com calendário do mês atual
-- Bloqueio automático de dias já ocupados
+- Página por ala (`/[slug]`) com calendário do mês atual e do seguinte
+- Bloqueio automático de dias já ocupados e das segundas (P-day)
 - Criação de agendamento (backend como fonte da verdade, evita conflitos)
 
 ### Administrativo
 
 - Login do líder de ala (`/admin`) com sessão via cookie JWT
-- Painel (`/dashboard`) com os agendamentos da ala
+- Painel (`/dashboard`) com os agendamentos da ala, agrupados por mês
 - Editar e excluir agendamentos
-- Exportar o calendário do mês como imagem ou PDF
+- Exportar o calendário do mês como imagem (para compartilhar no WhatsApp) ou PDF
+
+## Regras de negócio
+
+> ⚠️ Regras centrais — confirmar antes de mexer no calendário ou na API.
+
+- **Um almoço por dia, por ala.** Os dias já agendados vêm do banco e ficam
+  bloqueados no calendário (constraint única no Postgres → erro `23505` tratado
+  na API).
+- **Segunda-feira é P-day** (dia de preparação dos missionários) e **não pode
+  ser agendada.** Travado em 3 camadas: no calendário (`Calendar`), na imagem
+  gerada (`CalendarMonthView`) e no backend (`/api/agendar`), todas usando
+  `isPday()` de [`src/lib/date.ts`](src/lib/date.ts).
+- **Janela de datas:** o público agenda apenas no **mês atual e no seguinte**; o
+  painel também mostra só esses dois meses. O "hoje" é calculado no fuso
+  `America/Sao_Paulo` (`getDashboardRange`) para não "virar o mês" pelo UTC do
+  servidor na Vercel.
+- A contagem do painel ("X de Y dias agendados") usa `Y = dias do mês − segundas`
+  (`diasDisponiveisNoMes`).
+
+## Design e acessibilidade
+
+- Identidade visual inspirada no site da Igreja: **azul-marinho + branco + verde**
+  (`--color-primary`/`--color-secondary` em [`globals.css`](src/app/globals.css)).
+- Tipografia **Source Sans** (corpo) + **Source Serif** (títulos) via `next/font`.
+- Base de fonte ~18px, foco visível, alvos de toque grandes, calendário operável
+  por teclado/leitor de tela e respeito a `prefers-reduced-motion`.
+- A **imagem gerada** ([`CalendarMonthView`](src/components/CalendarMonthView.tsx))
+  usa estilos inline + SVG (não depende do Tailwind) para renderizar igual em
+  qualquer aparelho no `html-to-image`.
 
 ## Estrutura do projeto
 
@@ -45,11 +78,13 @@ src/
 │   │   ├── agendamentos/     # consulta, update, delete por ala
 │   │   ├── agendar/          # criação de agendamento
 │   │   └── alas/             # lista de alas
-│   ├── layout.tsx
+│   ├── layout.tsx            # metadados, fontes, footer
+│   ├── template.tsx          # transição suave entre páginas
+│   ├── manifest.ts           # web manifest (instalar na tela inicial)
 │   ├── page.tsx
-│   └── globals.css
+│   └── globals.css           # tema (cores/fontes) + acessibilidade
 ├── components/               # Componentes de UI reutilizáveis
-└── lib/                      # Clientes Supabase, auth e utilidades
+└── lib/                      # Clientes Supabase, auth e utilidades (date.ts)
 ```
 
 ## APIs

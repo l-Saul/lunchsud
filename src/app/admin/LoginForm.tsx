@@ -50,7 +50,7 @@ export default function LoginForm() {
                 value={username}
                 onChange={e => setUsername(e.target.value)}
                 disabled={loading}
-                className="w-full px-4 py-3 rounded-xl border bg-white text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary"
+                className="w-full px-4 py-4 text-lg rounded-xl border bg-white text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary"
                 style={{ borderColor: 'rgba(15, 23, 42, 0.2)' }}
             />
 
@@ -60,13 +60,13 @@ export default function LoginForm() {
                 value={senha}
                 onChange={e => setSenha(e.target.value)}
                 disabled={loading}
-                className="w-full px-4 py-3 rounded-xl border bg-white text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary"
+                className="w-full px-4 py-4 text-lg rounded-xl border bg-white text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary"
                 style={{ borderColor: 'rgba(15, 23, 42, 0.2)' }}
             />
 
             <button
                 type="submit"
-                className="w-full cursor-pointer bg-secondary text-white font-semibold py-3 rounded-xl hover:opacity-90 transition"
+                className="w-full cursor-pointer bg-secondary text-white text-lg font-semibold py-4 rounded-xl hover:opacity-90 transition"
             >
                 {loading ? 'Carregando...' : 'Entrar'}
             </button>

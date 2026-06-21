@@ -1,4 +1,5 @@
 import { supabaseServer } from '@/lib/supabase-server'
+import { isPday } from '@/lib/date'
 import { NextResponse } from 'next/server'
 
 type Body = {
@@ -15,6 +16,13 @@ export async function POST(req: Request) {
     if (!slug || !data || !nome || !telefone) {
         return NextResponse.json(
         { error: 'Dados obrigatórios ausentes' },
+        { status: 400 }
+        )
+    }
+
+    if (isPday(data)) {
+        return NextResponse.json(
+        { error: 'Segunda-feira é P-day e não pode ser agendada.' },
         { status: 400 }
         )
     }

@@ -1,0 +1,82 @@
+# CLAUDE.md — contexto do projeto
+
+Guia para agentes de IA trabalharem neste repositório. Leia antes de alterar
+calendário, datas ou a API de agendamento.
+
+## O que é
+
+Agendamento de almoços para missionários (Igreja de Jesus Cristo dos Santos dos
+Últimos Dias). Membros agendam por ala; líderes gerenciam num painel.
+
+**Público-alvo:** senhoras com pouca familiaridade digital, no **celular**.
+Toda decisão de UI prioriza: simples, textos grandes, alto contraste, poucos
+passos, sem aglomerar informação.
+
+## Stack & comandos
+
+- Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Supabase · Vercel
+- `npm run dev` · `npm run build` · `npm run lint` (= `eslint src`; **não** use
+  `next lint`, foi removido no Next 16).
+- Antes de concluir uma mudança, rode `npx tsc --noEmit` **e** `npm run build`.
+  Há ~5 warnings de lint pré-existentes (vars não usadas, `<img>`); 0 erros é o esperado.
+
+## Regras de negócio (CRÍTICO — não quebrar)
+
+1. **Um almoço por dia, por ala.** Garantido por constraint única no Postgres;
+   a API trata o erro `23505` em `src/app/api/agendar/route.ts`. Os dias ocupados
+   vêm do banco e são bloqueados no calendário.
+2. **Segunda = P-day** (não agendável). Travado em 3 lugares, todos via
+   `isPday()` de `src/lib/date.ts`:
+   - `src/components/Calendar.tsx` (calendário público)
+   - `src/components/CalendarMonthView.tsx` (imagem gerada)
+   - `src/app/api/agendar/route.ts` (backend, fonte da verdade)
+3. **Janela = mês atual + seguinte.** Público (`ClientPage`) e painel
+   (`dashboard/page.tsx` via `getDashboardRange`). "Hoje" é calculado em
+   `America/Sao_Paulo` para o servidor UTC não virar o mês.
+4. Painel mostra "X de Y dias agendados", `Y = dias do mês − segundas`
+   (`diasDisponiveisNoMes`).
+
+`src/lib/date.ts` é o módulo central de datas — reutilize-o, não duplique lógica
+de data/fuso/P-day em componentes.
+
+## Convenções
+
+- **Nomes de arquivo:** componentes em PascalCase (`Calendar.tsx`); utilitários
+  de `lib/` em kebab-case (`supabase-client.ts`). Mantenha o padrão.
+- **Idioma:** termos de domínio em português (`alas`, `agendar`, `agendamento`,
+  `usuarios`). **Nunca** renomeie pastas de rota da API — são contrato público/URLs.
+- **Cores:** use os tokens do tema (`bg-primary`, `text-secondary`, etc.),
+  definidos em `src/app/globals.css`. Azul `#143157` / verde `#1fb9a0` / branco.
+- **Fontes:** Source Sans (corpo) + Source Serif (títulos) via `next/font` no layout;
+  `h1/h2/h3` já recebem serifa por regra base no CSS.
+- **Acessibilidade:** texto grande (base ~18px), foco visível, alvos ≥44px,
+  `aria-label` em ícones, respeito a `prefers-reduced-motion`. Não reduza isso.
+
+## Mapa de arquivos
+
+- `src/app/[slug]/` — página pública de agendamento (`ClientPage.tsx` é o cliente).
+- `src/app/dashboard/` — painel do líder (server component + guards client).
+- `src/app/admin/` — login do líder.
+- `src/app/api/` — route handlers (ver tabela de APIs no README).
+- `src/components/Calendar.tsx` — calendário interativo público.
+- `src/components/CalendarMonthView.tsx` — calendário da **imagem exportada**.
+- `src/components/CalendarExportImage.tsx` — gera a imagem (download no desktop;
+  `navigator.share` no mobile → grupo do WhatsApp). **Preserve esse comportamento.**
+- `src/lib/` — `supabase-client/server/admin.ts`, `auth.ts` (JWT), `date.ts`.
+
+## Banco (Supabase)
+
+- `ala`: `id`, `nome`, `slug`.
+- `agendamento`: `id`, `ala_id`, `data` (`YYYY-MM-DD`), `nome`, `telefone`.
+  Constraint única em (ala_id, data) → impõe 1 por dia.
+
+## Armadilhas
+
+- **Imagem gerada** (`CalendarMonthView`): usa **estilos inline + SVG** de
+  propósito, para o `html-to-image` renderizar igual em qualquer aparelho. Não
+  troque por classes Tailwind nem por emojis.
+- **macOS é case-insensitive:** ao renomear arquivos só mudando maiúsculas, use
+  `git mv -f` e atualize os imports (os caminhos são case-sensitive no build Linux/Vercel).
+- `ClientPage.agendar()` tem um bloco de validação duplicado (legado) — funciona,
+  mas se for mexer, limpe com cuidado para não alterar o fluxo.
+- Variáveis de ambiente: ver README. Falta `AUTH_SECRET` quebra o login admin.

@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import Image from 'next/image'
 import useSWR from 'swr'
 import { useState } from 'react'
@@ -55,35 +54,39 @@ export default function IndexPage() {
     return (
         <section className="min-h-screen flex justify-center bg-primary text-white">
             <div
-                className="w-full max-w-3xl px-4 py-12 space-y-8"
+                className="w-full max-w-xl px-5 py-12 space-y-10"
                 aria-busy={isLoading}
             >
-                <div className="flex justify-center">
+                <div className="flex flex-col items-center gap-6 text-center">
                     <Image
                         src="/lds.jpg"
                         alt="Igreja de Jesus Cristo dos Santos dos Últimos Dias"
-                        width={200}
-                        height={200}
-                        className="rounded-xl"
+                        width={180}
+                        height={180}
+                        className="rounded-2xl shadow-lg"
                         priority
                     />
-                </div>
 
-                <header className="text-center">
-                    <h1 className="text-2xl font-semibold">
-                        Selecione sua ala para continuar
-                    </h1>
-                </header>
+                    <header className="flex flex-col items-center space-y-3">
+                        <h1 className="text-3xl font-semibold">
+                            Almoço dos Missionários
+                        </h1>
+                        <span className="h-1 w-16 rounded-full bg-secondary" />
+                        <p className="text-lg text-white/80">
+                            Toque na sua ala para agendar.
+                        </p>
+                    </header>
+                </div>
 
                 <div className="grid gap-4">
                     {isLoading && (
-                        <p className="text-center text-white/70" role="status">
+                        <p className="text-center text-lg text-white/70" role="status">
                             Carregando alas…
                         </p>
                     )}
 
                     {error && (
-                        <p className="text-center text-red-300">
+                        <p className="text-center text-lg text-red-300">
                             Não foi possível carregar as alas.
                         </p>
                     )}
@@ -102,7 +105,7 @@ export default function IndexPage() {
                                 <motion.div
                                     key={ala.slug}
                                     variants={itemVariants}
-                                    whileTap={{ scale: 0.96 }}
+                                    whileTap={{ scale: 0.97 }}
                                 >
                                     <button
                                         type="button"
@@ -111,11 +114,16 @@ export default function IndexPage() {
                                             setLoadingSlug(ala.slug)
                                             router.push(`/${ala.slug}`)
                                         }}
-                                        className={`w-full rounded-xl border border-white/20 p-6 text-lg font-medium transition cursor-pointer
-                                            ${isLoading ? 'bg-secondary/80' : 'bg-white/5 hover:bg-secondary'}
+                                        className={`group flex w-full items-center justify-between gap-4 rounded-2xl border-l-4 border-secondary px-6 py-5 text-left text-xl font-medium shadow-sm transition cursor-pointer disabled:cursor-default
+                                            ${isLoading
+                                                ? 'bg-secondary text-white'
+                                                : 'bg-white text-primary hover:bg-secondary hover:text-white'}
                                         `}
                                     >
-                                        {isLoading ? 'Carregando…' : ala.nome}
+                                        <span>{isLoading ? 'Abrindo…' : ala.nome}</span>
+                                        <span aria-hidden className="text-2xl leading-none text-secondary transition group-hover:text-white">
+                                            ›
+                                        </span>
                                     </button>
                                 </motion.div>
                             )

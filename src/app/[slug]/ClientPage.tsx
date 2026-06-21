@@ -37,6 +37,7 @@ export default function ClientPage({ slug, ocupados }: Props) {
     const [loading, setLoading] = useState(false)
     const [diasOcupados, setDiasOcupados] = useState<DiaOcupado[]>(ocupados)
     const [ocupadoPor, setOcupadoPor] = useState<string | null>(null)
+    const [pday, setPday] = useState(false)
     const [imagemSrc, setImagemSrc] = useState<string | null>(null)
 
     const [erroNome, setErroNome] = useState(false)
@@ -52,6 +53,7 @@ export default function ClientPage({ slug, ocupados }: Props) {
     const canNext = baseDate.getTime() !== mesSeguinte.getTime()
 
     const nomeAla = formatarNomeAla(slug)
+    const mesNomeBase = baseDate.toLocaleDateString('pt-BR', { month: 'long' })
 
     useEffect(() => {
         const img = new Image()
@@ -130,7 +132,7 @@ export default function ClientPage({ slug, ocupados }: Props) {
 
         setDiasOcupados(prev => [...prev, { data, nome }])
         setTipoMensagem('sucesso')
-        setMensagem('Agendamento realizado com sucesso.')
+        setMensagem('Almoço agendado com sucesso. Muito obrigado!')
         setNome('')
         setTelefone('')
         setDiaSelecionado(null)
@@ -139,42 +141,39 @@ export default function ClientPage({ slug, ocupados }: Props) {
 
     return (
         <main className="min-h-screen bg-primary flex justify-center text-text">
-            <div className="w-full max-w-xl">
+            <div className="w-full max-w-2xl">
 
                 {/* HEADER */}
-                <div className="px-6 py-10 text-center space-y-4">
-                    <h1 className="text-4xl font-extrabold text-secondary">
-                        Ala {nomeAla}
-                    </h1>
-
-                    <h2 className="text-2xl font-semibold text-white">
-                        Agende seu almoço para os missionários
-                    </h2>
-
+                <div className="px-3 sm:px-6 pt-10 pb-6 text-center space-y-4">
                     {imagemSrc && (
-                        <img
+                        <motion.img
+                            initial={{ opacity: 0, scale: 0.96 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.4, ease: 'easeOut' }}
                             src={imagemSrc}
                             alt={`Missionários da ala ${nomeAla}`}
-                            className="mx-auto mt-4 rounded-2xl max-h-64 object-cover shadow-md"
+                            className="mx-auto h-auto max-h-56 w-auto max-w-full rounded-2xl shadow-lg"
                         />
                     )}
 
-                    <p className="text-lg text-white">
-                        Escolha um dia disponível abaixo
-                        <br />
-                        Utilize as setas verdes para alterar entre os meses
+                    <h1 className="text-4xl font-bold text-secondary">
+                        Ala {nomeAla}
+                    </h1>
+
+                    <p className="text-xl leading-relaxed text-white/90">
+                        Toque em um dia livre para agendar o almoço.
                     </p>
                 </div>
 
                 {/* CONTEÚDO */}
-                <div className="px-6 py-8 space-y-8">
+                <div className="px-3 sm:px-6 py-6 space-y-6">
 
                     {/* CALENDÁRIO */}
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, ease: 'easeOut' }}
-                        className="bg-background text-secondary rounded-xl p-4 shadow-lg border border-muted/10"
+                        className="bg-background text-secondary rounded-xl p-2 sm:p-4 shadow-lg border border-muted/10"
                     >
                         <Calendar
                             ocupados={diasOcupados}
@@ -186,19 +185,28 @@ export default function ClientPage({ slug, ocupados }: Props) {
                                 setBaseDate(mesAtual)
                                 setDiaSelecionado(null)
                                 setOcupadoPor(null)
+                                setPday(false)
                             }}
                             onNext={() => {
                                 setBaseDate(mesSeguinte)
                                 setDiaSelecionado(null)
                                 setOcupadoPor(null)
+                                setPday(false)
                             }}
                             onSelectDay={day => {
                                 setDiaSelecionado(day)
                                 setOcupadoPor(null)
+                                setPday(false)
                             }}
                             onSelectOcupado={nome => {
                                 setOcupadoPor(nome)
                                 setDiaSelecionado(null)
+                                setPday(false)
+                            }}
+                            onSelectPday={() => {
+                                setPday(true)
+                                setDiaSelecionado(null)
+                                setOcupadoPor(null)
                             }}
                         />
                     </motion.div>
@@ -214,6 +222,17 @@ export default function ClientPage({ slug, ocupados }: Props) {
                         </motion.p>
                     )}
 
+                    {pday && (
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.2 }}
+                            className="text-center text-lg font-medium text-white"
+                        >
+                            Segunda-feira é dia de <strong>P-day</strong>. Escolha outro dia.
+                        </motion.p>
+                    )}
+
                     <AnimatePresence>
                         {diaSelecionado && (
                             <motion.div
@@ -223,17 +242,21 @@ export default function ClientPage({ slug, ocupados }: Props) {
                                 transition={{ duration: 0.25, ease: 'easeOut' }}
                                 className="space-y-5 border-t border-muted/20 pt-6"
                             >
-                                <h2 className="text-xl font-semibold text-white">
-                                    Agendar para o dia {diaSelecionado}
+                                <h2 className="text-2xl font-semibold text-white">
+                                    Agendar para {diaSelecionado} de {mesNomeBase}
                                 </h2>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-1 text-white">
-                                        Nome
+                                    <label htmlFor="nome" className="block text-lg font-medium mb-2 text-white">
+                                        Seu nome
                                     </label>
                                     <input
-                                        className={`w-full rounded-lg p-3 text-lg text-text bg-background
-                                            border ${erroNome ? 'border-red-500' : 'border-muted/30'}
+                                        id="nome"
+                                        type="text"
+                                        autoComplete="name"
+                                        aria-invalid={erroNome}
+                                        className={`w-full rounded-xl p-4 text-xl text-text bg-background
+                                            border-2 ${erroNome ? 'border-red-500' : 'border-transparent'}
                                             focus:ring-2 focus:ring-secondary focus:outline-none`}
                                         value={nome}
                                         onChange={e => {
@@ -242,21 +265,25 @@ export default function ClientPage({ slug, ocupados }: Props) {
                                         }}
                                     />
                                     {erroNome && (
-                                        <p className="text-sm text-secondary mt-1">
+                                        <p role="alert" className="text-base text-red-300 mt-2">
                                             Informe seu nome.
                                         </p>
                                     )}
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-1 text-white">
-                                        Telefone
+                                    <label htmlFor="telefone" className="block text-lg font-medium mb-2 text-white">
+                                        Seu telefone
                                     </label>
                                     <input
-                                        className={`w-full rounded-lg p-3 text-lg text-text bg-background
-                                            border ${erroTelefone ? 'border-red-500' : 'border-muted/30'}
-                                            focus:ring-2 focus:ring-secondary focus:outline-none`}
+                                        id="telefone"
+                                        type="tel"
+                                        autoComplete="tel"
                                         inputMode="numeric"
+                                        aria-invalid={erroTelefone}
+                                        className={`w-full rounded-xl p-4 text-xl text-text bg-background
+                                            border-2 ${erroTelefone ? 'border-red-500' : 'border-transparent'}
+                                            focus:ring-2 focus:ring-secondary focus:outline-none`}
                                         value={telefone}
                                         onChange={e => {
                                             setTelefone(formatarTelefone(e.target.value))
@@ -264,7 +291,7 @@ export default function ClientPage({ slug, ocupados }: Props) {
                                         }}
                                     />
                                     {erroTelefone && (
-                                        <p className="text-sm text-secondary mt-1">
+                                        <p role="alert" className="text-base text-red-300 mt-2">
                                             Informe um telefone celular válido.
                                         </p>
                                     )}
@@ -277,7 +304,7 @@ export default function ClientPage({ slug, ocupados }: Props) {
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.97 }}
                                     transition={{ duration: 0.15 }}
-                                    className="w-full bg-secondary text-white text-lg py-4 rounded-xl cursor-pointer
+                                    className="w-full bg-secondary text-white text-xl font-semibold py-5 rounded-xl cursor-pointer
                                             shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                     {loading ? 'Confirmando...' : 'Confirmar agendamento'}

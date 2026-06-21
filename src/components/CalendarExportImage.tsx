@@ -3,6 +3,7 @@
 import { toPng } from 'html-to-image';
 import { useMemo, useState, useEffect } from 'react';
 import CalendarMonthView from '@/components/CalendarMonthView';
+import { formatMonthLabel } from '@/lib/date';
 import { createPortal } from 'react-dom';
 
 type Agendamento = {
@@ -116,15 +117,15 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
 
     return (
         <>
-            <div className="flex gap-2">
+            <div className="flex w-full gap-2 sm:w-auto">
                 <select
                     value={mes}
                     onChange={e => setMes(e.target.value)}
-                    className="px-3 py-2 rounded-md border"
+                    className="flex-1 rounded-md border border-slate-300 px-3 py-2 sm:flex-none"
                 >
                     {meses.map(m => (
                         <option key={m} value={m}>
-                            {m}
+                            {formatMonthLabel(m)}
                         </option>
                     ))}
                 </select>
@@ -133,6 +134,7 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
                     onClick={gerarImagem}
                     disabled={loading}
                         className={`
+                            flex-1 sm:flex-none
                             px-4 py-2 rounded-md text-white cursor-pointer
                             transition-all duration-200 font-medium
                             ${loading

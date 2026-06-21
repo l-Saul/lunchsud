@@ -112,7 +112,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                 >
                     <div
                         onClick={e => e.stopPropagation()}
-                        className="bg-background rounded-lg shadow-xl p-6 min-w-90"
+                        className="bg-background rounded-2xl shadow-xl p-6 w-[calc(100%-2rem)] max-w-md"
                     >
                         <h3 className="mb-4 text-lg font-semibold text-text">
                             Editar agendamento
@@ -126,7 +126,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                                 onChange={e =>
                                     setForm({ ...form, data: e.target.value })
                                 }
-                                className="rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary"
+                                className="w-full rounded-md border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary"
                             />
                         </div>
 
@@ -138,7 +138,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                                     setForm({ ...form, nome: e.target.value });
                                     if (erroNome) setErroNome(false);
                                 }}
-                                className={`rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary
+                                className={`w-full rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary
                                     border ${erroNome ? 'border-red-500' : 'border-slate-300'}`}
                             />
                             {erroNome && (
@@ -155,7 +155,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                                 onChange={e =>
                                     setForm({ ...form, telefone: formatarTelefone(e.target.value) })
                                 }
-                                className={`rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary
+                                className={`w-full rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-secondary
                                     border ${erroTelefone ? 'border-red-500' : 'border-slate-300'}`}
                             />
                             {erroTelefone && (
@@ -165,7 +165,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                             )}
                         </div>
 
-                        <div className="flex justify-between items-center mt-4">
+                        <div className="flex flex-wrap justify-between items-center gap-2 mt-4">
                             <button
                                 onClick={() => setOpen(false)}
                                 className="px-4 py-2 rounded-md text-text hover:bg-slate-100 z-200 cursor-pointer"
