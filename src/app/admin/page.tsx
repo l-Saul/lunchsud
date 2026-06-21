@@ -19,7 +19,7 @@ export default async function AdminLoginPage() {
     } catch {}
 
     return (
-        <main className="flex min-h-screen items-center justify-center bg-primary px-4 py-12">
+        <main className="flex min-h-screen items-center justify-center px-4 py-12">
             <section className="w-full max-w-md">
                 <LoginClientGuard>
                     <LoginCard />

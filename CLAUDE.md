@@ -18,7 +18,10 @@ passos, sem aglomerar informação.
 - `npm run dev` · `npm run build` · `npm run lint` (= `eslint src`; **não** use
   `next lint`, foi removido no Next 16).
 - Antes de concluir uma mudança, rode `npx tsc --noEmit` **e** `npm run build`.
-  Há ~5 warnings de lint pré-existentes (vars não usadas, `<img>`); 0 erros é o esperado.
+  Hoje `eslint src` passa **limpo (0 erros, 0 warnings)** — mantenha assim.
+- **Nunca rode `npm run build` com o `npm run dev` aberto:** os dois disputam o
+  diretório `.next` e corrompem o cache (erro `ENOENT … build-manifest.json`).
+  Pare um antes do outro; para só checar tipos, use `npx tsc --noEmit`.
 
 ## Regras de negócio (CRÍTICO — não quebrar)
 
@@ -35,6 +38,8 @@ passos, sem aglomerar informação.
    `America/Sao_Paulo` para o servidor UTC não virar o mês.
 4. Painel mostra "X de Y dias agendados", `Y = dias do mês − segundas`
    (`diasDisponiveisNoMes`).
+5. **Histórico = só os 3 meses anteriores** ao atual (`getHistoricoRange(3)`);
+   não carregue mais que isso no painel.
 
 `src/lib/date.ts` é o módulo central de datas — reutilize-o, não duplique lógica
 de data/fuso/P-day em componentes.
@@ -56,9 +61,13 @@ de data/fuso/P-day em componentes.
 ## Mapa de arquivos
 
 - `src/app/[slug]/` — página pública de agendamento (`ClientPage.tsx` é o cliente).
+  `page.tsx` tem `generateMetadata` por ala: **título do compartilhamento = nome
+  da ala**, descrição = escritura (2 Néfi 31:20). É a página que o membro recebe.
 - `src/app/dashboard/` — painel do líder (server component + guards client).
+  `MesColapsavel.tsx` deixa cada mês recolher/expandir ao clicar no nome.
 - `src/app/admin/` — login do líder.
 - `src/app/api/` — route handlers (ver tabela de APIs no README).
+- `src/components/Footer.tsx` — rodapé global; crédito do dev (link externo p/ portfólio).
 - `src/components/Calendar.tsx` — calendário interativo público.
 - `src/components/CalendarMonthView.tsx` — calendário da **imagem exportada**.
 - `src/components/CalendarExportImage.tsx` — gera a imagem (download no desktop;
@@ -107,6 +116,13 @@ de data/fuso/P-day em componentes.
   troque por classes Tailwind nem por emojis.
 - **macOS é case-insensitive:** ao renomear arquivos só mudando maiúsculas, use
   `git mv -f` e atualize os imports (os caminhos são case-sensitive no build Linux/Vercel).
-- `ClientPage.agendar()` tem um bloco de validação duplicado (legado) — funciona,
-  mas se for mexer, limpe com cuidado para não alterar o fluxo.
+- **Fundo celestial:** o "céu" (gradiente + auroras) vive em `body::before` no
+  `globals.css`. As páginas usam fundo **transparente** de propósito para deixá-lo
+  aparecer — **não** volte a pôr `bg-primary` nos `main`/`section` das páginas.
+- **EditModal:** a remoção usa confirmação **inline** (não `window.confirm`, que
+  falha em vários celulares) e fecha por clique fora / Esc / X. Mantenha os alvos
+  de toque ≥48px e a cor de remoção em **rosa** (`accent`), não vermelho.
+- Animações em framer-motion respeitam `prefers-reduced-motion` via
+  `MotionConfig reducedMotion="user"` no `template.tsx`; decorações em CSS são
+  neutralizadas pelo bloco `@media (prefers-reduced-motion)` no `globals.css`.
 - Variáveis de ambiente: ver README. Falta `AUTH_SECRET` quebra o login admin.

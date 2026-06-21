@@ -6,10 +6,11 @@ import DashboardClientGuard from './DashboardClientGuard';
 import { DashboardRealtime } from './DashboardRealtime';
 import { LogoutButton } from './LogoutButton';
 import { supabaseServer } from '@/lib/supabase/server';
-import { getDashboardRange, formatMonthLabel, diaTile, diasDisponiveisNoMes } from '@/lib/date';
+import { getDashboardRange, getHistoricoRange, formatMonthLabel, diaTile, diasDisponiveisNoMes } from '@/lib/date';
 import EditModal from '@/components/EditModal';
 import CalendarExportImage from '@/components/CalendarExportImage';
 import { AnimatedCard } from './AnimatedCard';
+import { MesColapsavel } from './MesColapsavel';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -51,11 +52,14 @@ export default async function DashboardPage() {
 
         const agendamentos = data ?? [];
 
-        // Histórico: todos os agendamentos da ala, agrupados por mês.
+        // Histórico: só os 3 meses anteriores ao atual (não carrega mais que isso).
+        const { inicio: histInicio, fim: histFim } = getHistoricoRange(3);
         const { data: historicoRaw } = await supabaseServer
             .from('agendamento')
             .select('data')
             .eq('ala_id', session.alaId)
+            .gte('data', histInicio)
+            .lt('data', histFim)
             .order('data', { ascending: true });
 
         const contagem = new Map<string, number>();
@@ -74,7 +78,7 @@ export default async function DashboardPage() {
             <DashboardClientGuard>
                 {/* Atualiza o painel ao vivo quando alguém agenda/edita/remove nesta ala. */}
                 <DashboardRealtime alaId={session.alaId} />
-                <main className="min-h-screen bg-primary px-4 py-8 sm:px-6 sm:py-12">
+                <main className="min-h-screen px-4 py-8 sm:px-6 sm:py-12">
                     <section className="mx-auto flex w-full max-w-3xl flex-col gap-6">
                         {/* Cabeçalho (fora dos cards) */}
                         <header className="flex items-center justify-between gap-3">
@@ -105,7 +109,7 @@ export default async function DashboardPage() {
                         {/* Card 1 — Agendamentos do mês */}
                         <AnimatedCard
                             delay={0.05}
-                            className="flex flex-col gap-6 rounded-3xl bg-background p-4 shadow-xl sm:p-8"
+                            className="flex flex-col gap-6 rounded-3xl bg-background p-4 shadow-xl ring-1 ring-white/40 sm:p-8"
                         >
                             {/* Gerar imagem no topo */}
                             <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
@@ -129,16 +133,12 @@ export default async function DashboardPage() {
                                     const disponiveis = diasDisponiveisNoMes(ym);
 
                                     return (
-                                        <section key={ym} className="flex flex-col gap-3 py-5 first:pt-0 last:pb-0">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <h3 className="text-base font-semibold text-text">
-                                                    {formatMonthLabel(ym)}
-                                                </h3>
-                                                <span className="rounded-full bg-accent/10 px-3 py-1 text-sm font-medium text-accent whitespace-nowrap">
-                                                    {itens.length} de {disponiveis} dias
-                                                </span>
-                                            </div>
-
+                                        <MesColapsavel
+                                            key={ym}
+                                            label={formatMonthLabel(ym)}
+                                            total={itens.length}
+                                            disponiveis={disponiveis}
+                                        >
                                             {itens.length === 0 ? (
                                                 <p className="rounded-2xl border border-dashed border-slate-300 py-6 text-center text-sm text-muted">
                                                     Nenhum almoço agendado ainda.
@@ -177,7 +177,7 @@ export default async function DashboardPage() {
                                                     })}
                                                 </ul>
                                             )}
-                                        </section>
+                                        </MesColapsavel>
                                     );
                                 })}
                             </div>
@@ -186,7 +186,7 @@ export default async function DashboardPage() {
                         {/* Card 2 — Histórico de almoços */}
                         <AnimatedCard
                             delay={0.12}
-                            className="flex flex-col gap-5 rounded-3xl bg-background p-4 shadow-xl sm:p-8"
+                            className="flex flex-col gap-5 rounded-3xl bg-background p-4 shadow-xl ring-1 ring-white/40 sm:p-8"
                         >
                             <div className="flex items-center gap-2">
                                 <span className="h-5 w-1.5 rounded-full bg-accent" />

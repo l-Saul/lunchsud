@@ -8,6 +8,7 @@ import { Calendar } from '@/components/Calendar'
 import { motion, AnimatePresence } from 'framer-motion'
 import { formatarTelefone } from '@/lib/phone'
 import { useOcupadosRealtime } from '@/hooks/use-ocupados-realtime'
+import { Flor } from '@/components/Flor'
 
 type DiaOcupado = {
     data: string
@@ -119,18 +120,42 @@ export default function ClientPage({ slug, alaId, ocupados }: Props) {
     }
 
     return (
-        <main className="min-h-screen bg-primary flex justify-center text-text">
+        <main className="min-h-screen flex justify-center text-text">
             <div className="w-full max-w-2xl">
 
                 {/* HEADER */}
-                <div className="flex flex-col items-center gap-4 px-3 pt-12 pb-6 text-center sm:px-6">
-                    <h1 className="text-4xl font-bold text-white">
-                        Ala {nomeAla}
-                    </h1>
-                    <span className="h-1 w-16 rounded-full bg-secondary" />
-                    <p className="text-xl leading-relaxed text-white/90">
-                        Toque em um dia livre para agendar o almoço.
-                    </p>
+                <div className="relative overflow-hidden px-3 pt-12 pb-7 text-center sm:px-6">
+                    {/* Brilhos suaves de fundo (rosa + verde), bem leves */}
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+                        <span className="absolute -left-12 -top-10 h-44 w-44 rounded-full bg-accent/25 blur-3xl" />
+                        <span className="absolute -right-10 top-2 h-36 w-36 rounded-full bg-secondary/20 blur-3xl" />
+                    </div>
+
+                    {/* Florzinhas flutuando nos cantos — decoração suave, não atrapalha a leitura */}
+                    <span aria-hidden="true" className="animar-flutuar pointer-events-none absolute left-4 top-6 opacity-30 sm:left-10">
+                        <Flor size={34} />
+                    </span>
+                    <span aria-hidden="true" className="animar-flutuar-lento pointer-events-none absolute right-5 top-14 opacity-25 sm:right-12">
+                        <Flor size={24} />
+                    </span>
+
+                    {/* Conteúdo, acima das decorações */}
+                    <div className="relative z-10 flex flex-col items-center gap-4">
+                        <h1 className="text-4xl font-bold text-white drop-shadow-sm">
+                            Ala {nomeAla}
+                        </h1>
+
+                        {/* Divisória com florzinha — toque delicado */}
+                        <div className="flex items-center gap-3" aria-hidden="true">
+                            <span className="h-px w-10 bg-linear-to-r from-transparent to-accent/70 sm:w-16" />
+                            <Flor size={26} />
+                            <span className="h-px w-10 bg-linear-to-l from-transparent to-accent/70 sm:w-16" />
+                        </div>
+
+                        <p className="text-xl leading-relaxed text-white/90">
+                            Toque em um dia livre para agendar o almoço.
+                        </p>
+                    </div>
                 </div>
 
                 {/* CONTEÚDO */}
@@ -141,8 +166,10 @@ export default function ClientPage({ slug, alaId, ocupados }: Props) {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, ease: 'easeOut' }}
-                        className="bg-background text-secondary rounded-xl p-2 sm:p-4 shadow-lg border border-muted/10"
+                        className="relative overflow-hidden bg-background text-secondary rounded-2xl p-2 sm:p-4 shadow-xl ring-1 ring-white/40 border border-muted/10"
                     >
+                        {/* Fitinha de acento no topo (verde → rosa → verde). */}
+                        <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-secondary via-accent to-secondary" />
                         <Calendar
                             ocupados={diasOcupados}
                             baseDate={baseDate}

@@ -1,5 +1,9 @@
 'use client';
 
+// Card que entra com um fade-up suave. `delay` permite escalonar a entrada de
+// vários cards (ex.: o painel usa 0.05 e 0.12 para um aparecer logo após o outro).
+// Só apresentação — não tem estado nem lógica; recebe estilo via `className`.
+
 import { motion } from 'framer-motion';
 
 export function AnimatedCard({

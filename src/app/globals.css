@@ -30,6 +30,22 @@
         text-rendering: optimizeLegibility;
     }
 
+    /* Fundo celestial: um "céu" sereno com luz suave vinda do alto e auroras
+       discretas (verde + rosa) sobre uma base azul profunda. Fixo e atrás de
+       tudo (z-index -1) para não pesar no scroll do celular. As páginas usam
+       fundo transparente para deixá-lo aparecer. */
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background:
+            radial-gradient(55% 35% at 50% -8%, rgba(246, 196, 83, 0.12), transparent 70%),
+            radial-gradient(45% 40% at 15% 8%, rgba(31, 185, 160, 0.16), transparent 70%),
+            radial-gradient(45% 40% at 88% 10%, rgba(224, 88, 143, 0.16), transparent 70%),
+            linear-gradient(180deg, #1c3e6e 0%, #143157 50%, #0d1f3a 100%);
+    }
+
     /* Foco bem visível para navegação por teclado / baixa visão */
     :focus-visible {
         outline: 3px solid var(--color-secondary);
@@ -37,6 +53,20 @@
         border-radius: 6px;
     }
 }
+
+/* Frufrus da página da ala: florzinhas que flutuam de leve.
+   O bloco de prefers-reduced-motion abaixo neutraliza estas animações
+   automaticamente (o !important vence o shorthand sem !important). */
+@keyframes flutuar {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-10px) rotate(8deg); }
+}
+@keyframes flutuar-lento {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(8px) rotate(-6deg); }
+}
+.animar-flutuar       { animation: flutuar 6s ease-in-out infinite; }
+.animar-flutuar-lento { animation: flutuar-lento 9s ease-in-out infinite; }
 
 /* Respeita quem pede menos animação no sistema */
 @media (prefers-reduced-motion: reduce) {

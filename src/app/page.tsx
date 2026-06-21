@@ -7,6 +7,7 @@ import useSWR from 'swr'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, type Variants} from 'framer-motion'
+import { Flor } from '@/components/Flor'
 
 type Ala = {
     nome: string
@@ -54,7 +55,7 @@ export default function IndexPage() {
     const router = useRouter()
 
     return (
-        <section className="min-h-screen flex justify-center bg-primary text-white">
+        <section className="min-h-screen flex justify-center text-white">
             <div
                 className="w-full max-w-xl px-5 py-12 space-y-10"
                 aria-busy={isLoading}
@@ -65,15 +66,20 @@ export default function IndexPage() {
                         alt="Igreja de Jesus Cristo dos Santos dos Últimos Dias"
                         width={180}
                         height={180}
-                        className="rounded-2xl shadow-lg"
+                        className="rounded-2xl shadow-xl ring-2 ring-white/15"
                         priority
                     />
 
-                    <header className="flex flex-col items-center space-y-3">
+                    <header className="flex flex-col items-center space-y-4">
                         <h1 className="text-3xl font-semibold">
                             Almoço dos Missionários
                         </h1>
-                        <span className="h-1 w-16 rounded-full bg-secondary" />
+                        {/* Divisória com florzinha — toque sereno e cohesão com a página da ala */}
+                        <div className="flex items-center gap-3" aria-hidden="true">
+                            <span className="h-px w-10 bg-linear-to-r from-transparent to-secondary/70" />
+                            <Flor size={22} />
+                            <span className="h-px w-10 bg-linear-to-l from-transparent to-secondary/70" />
+                        </div>
                         <p className="text-lg text-white/80">
                             Toque na sua ala para agendar.
                         </p>

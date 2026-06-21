@@ -67,13 +67,23 @@ contraste e poucos passos.
 - Página por ala (`/[slug]`) com calendário do mês atual e do seguinte
 - Bloqueio automático de dias já ocupados e das segundas (P-day)
 - Criação de agendamento (backend como fonte da verdade, evita conflitos)
+- Ao compartilhar o link da ala, o preview mostra o **nome da ala** como título e
+  uma escritura sobre Cristo (2 Néfi 31:20) como descrição (metadata por ala)
 
 ### Administrativo
 
 - Login do líder de ala (`/admin`) com sessão via cookie JWT
 - Painel (`/dashboard`) com os agendamentos da ala, agrupados por mês
-- Editar e excluir agendamentos
+- Cada mês **recolhe/expande** ao clicar no nome (evita rolar listas longas)
+- Histórico de almoços dos **3 meses anteriores**
+- Editar e excluir agendamentos (modal mobile-first, confirmação de remoção inline)
 - Exportar o calendário do mês como imagem (para compartilhar no WhatsApp) ou PDF
+
+### Tempo real
+
+- Calendário público e painel se atualizam **ao vivo** (Supabase Realtime via
+  WebSocket): se alguém agenda, edita ou remove, quem está com a tela aberta vê
+  na hora. Requer a configuração de Realtime no Supabase (ver abaixo).
 
 ## Regras de negócio
 
@@ -109,21 +119,24 @@ contraste e poucos passos.
 ```
 src/
 ├── app/                      # App Router (rotas + páginas)
-│   ├── [slug]/               # Página pública de uma ala
+│   ├── [slug]/               # Página pública de uma ala (+ metadata por ala)
 │   ├── admin/                # Login do líder
 │   ├── dashboard/            # Painel administrativo da ala
 │   ├── api/                  # Route handlers (backend)
-│   │   ├── admin/            # login, logout, dashboard, usuarios
+│   │   ├── admin/            # login, logout, dashboard (checagem de sessão)
 │   │   ├── agendamentos/     # consulta, update, delete por ala
 │   │   ├── agendar/          # criação de agendamento
 │   │   └── alas/             # lista de alas
 │   ├── layout.tsx            # metadados, fontes, footer
 │   ├── template.tsx          # transição suave entre páginas
 │   ├── manifest.ts           # web manifest (instalar na tela inicial)
+│   ├── robots.ts             # robots (não indexa /admin e /dashboard)
 │   ├── page.tsx
-│   └── globals.css           # tema (cores/fontes) + acessibilidade
+│   └── globals.css           # tema (cores/fontes) + fundo celestial + acessibilidade
 ├── components/               # Componentes de UI reutilizáveis
-└── lib/                      # Clientes Supabase, auth e utilidades (date.ts)
+├── hooks/                    # use-ocupados-realtime (atualização ao vivo via WebSocket)
+└── lib/                      # supabase/{client,server,admin}, auth, date,
+                              #   phone, validation (entrada), rate-limit
 ```
 
 ## APIs
@@ -156,6 +169,34 @@ SUPABASE_SERVICE_ROLE_KEY=
 AUTH_SECRET=
 ```
 
+## Realtime (Supabase)
+
+A atualização ao vivo usa o **Supabase Realtime**. Rode **uma vez** no SQL Editor
+do Supabase (sem isso, o calendário não atualiza sozinho entre abas/pessoas):
+
+```sql
+alter publication supabase_realtime add table agendamento;
+alter table agendamento enable row level security;
+create policy "leitura publica" on agendamento for select to anon using (true);
+-- Faz REMOÇÕES/edições propagarem ao vivo: por padrão o Postgres só envia a PK
+-- no DELETE e o filtro por ala_id não casaria.
+alter table agendamento replica identity full;
+```
+
+> O cliente anon só é usado como **gatilho** (o payload é ignorado; os dados são
+> rebuscados pelo servidor). Para não expor `telefone` via REST, dá para restringir
+> as colunas do anon: `grant select (id, ala_id, data, nome) on agendamento to anon;`.
+
+## Segurança
+
+- **Validação de entrada** em todas as rotas públicas (`src/lib/validation.ts`):
+  teto de tamanho de corpo, formato e charset antes de tocar no banco.
+- **Rate limit por IP** (`src/lib/rate-limit.ts`, em memória): `/api/agendar` 6/min,
+  `/api/admin/login` 5/10min, GETs públicos 30/min. Ao escalar horizontalmente,
+  troque o `store` por Upstash/Vercel KV (mesma interface).
+- Headers de segurança em `next.config.ts` (`X-Frame-Options`, `nosniff`, HSTS…).
+- As rotas nunca ecoam o erro do banco; respondem mensagens genéricas.
+
 ## Rodar localmente
 
 ```bash
@@ -173,6 +214,10 @@ npm run build   # build de produção
 npm run start   # serve o build de produção
 npm run lint    # ESLint
 ```
+
+## Créditos
+
+Desenvolvido por **Luis Henrique Engel Saul** — [luishsaul.com.br](https://luishsaul.com.br).
 
 ## Licença
 

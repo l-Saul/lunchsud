@@ -35,6 +35,33 @@ export function getDashboardRange(timeZone = TZ) {
     };
 }
 
+/**
+ * Janela do histórico: os N meses ANTERIORES ao mês atual (sem o atual).
+ * Ex.: em junho com mesesAtras=3 → [março-01, junho-01) = mar, abr, mai.
+ * Usado para o painel não carregar histórico antigo demais.
+ *
+ * - inicio: 'YYYY-MM-01' de N meses atrás (inclusivo)
+ * - fim:    'YYYY-MM-01' do mês atual (exclusivo)
+ */
+export function getHistoricoRange(mesesAtras = 3, timeZone = TZ) {
+    const hoje = new Intl.DateTimeFormat('en-CA', {
+        timeZone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).format(new Date());
+
+    const [ano, mes] = hoje.split('-').map(Number); // mes: 1-12
+
+    const inicioAtual = new Date(ano, mes - 1, 1); // 1º dia do mês atual
+    const inicioHist = new Date(ano, mes - 1 - mesesAtras, 1); // N meses antes
+
+    return {
+        inicio: `${inicioHist.getFullYear()}-${pad(inicioHist.getMonth() + 1)}-01`,
+        fim: `${inicioAtual.getFullYear()}-${pad(inicioAtual.getMonth() + 1)}-01`,
+    };
+}
+
 const MESES = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',

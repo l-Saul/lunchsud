@@ -1,9 +1,11 @@
 'use client';
 
 // Botão de lápis + modal para o líder editar/remover um agendamento (usado no painel).
+// Mobile-first: inputs de altura uniforme, alvos de toque ≥48px, confirmação de
+// remoção inline (sem window.confirm, que falha em alguns celulares) e fechamento
+// por clique fora, tecla Esc ou botão X.
 
-import { useState } from 'react';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatarTelefone } from '@/lib/phone';
 
@@ -14,6 +16,11 @@ type Props = {
     telefone: string;
 };
 
+// Estilo único para os três campos → mesma altura/aparência no celular.
+const campoBase =
+    'h-12 w-full box-border rounded-lg border px-3 text-base text-text ' +
+    'focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary';
+
 export default function EditModal({ id, data, nome, telefone }: Props) {
     const [erroNome, setErroNome] = useState(false);
     const [erroTelefone, setErroTelefone] = useState(false);
@@ -21,6 +28,13 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState({ data, nome, telefone }); // cópia editável da linha
     const [loading, setLoading] = useState(false);
+    const [confirmarRemocao, setConfirmarRemocao] = useState(false);
+
+    // Fecha o modal e zera estados transitórios.
+    function fechar() {
+        setOpen(false);
+        setConfirmarRemocao(false);
+    }
 
     // Valida no client e envia o update; recarrega a página para refletir a mudança.
     async function handleSave() {
@@ -47,19 +61,15 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
         setLoading(false);
 
         if (res.ok) {
-            setOpen(false);
+            fechar();
             location.reload();
         } else {
             alert('Erro ao atualizar');
         }
     }
 
-    // Remove o agendamento após confirmação e recarrega.
+    // Remove o agendamento (já confirmado pelo passo inline) e recarrega.
     async function handleDelete() {
-        const confirm = window.confirm('Remover este agendamento?');
-
-        if (!confirm) return;
-
         setLoading(true);
 
         const res = await fetch('/api/agendamentos/delete', {
@@ -71,23 +81,27 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
         setLoading(false);
 
         if (res.ok) {
-            setOpen(false);
+            fechar();
             location.reload();
         } else {
             alert('Erro ao remover');
         }
     }
 
-    // Trava o scroll do fundo enquanto o modal está aberto.
+    // Trava o scroll do fundo e habilita Esc para fechar enquanto o modal está aberto.
     useEffect(() => {
-        if (open) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
+        if (!open) return;
+
+        document.body.style.overflow = 'hidden';
+
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') fechar();
+        };
+        window.addEventListener('keydown', onKey);
 
         return () => {
             document.body.style.overflow = '';
+            window.removeEventListener('keydown', onKey);
         };
     }, [open]);
 
@@ -109,7 +123,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                 {open && (
                     <motion.div
                         key="backdrop"
-                        onClick={() => setOpen(false)}
+                        onClick={fechar}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -125,11 +139,23 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.96, y: 12 }}
                             transition={{ duration: 0.22, ease: 'easeOut' }}
-                            className="w-full max-w-md rounded-2xl bg-background p-6 shadow-2xl"
+                            className="flex max-h-[90vh] w-full max-w-md flex-col overflow-y-auto rounded-2xl bg-background p-6 shadow-2xl"
                         >
-                            <h3 className="mb-5 text-xl font-semibold text-text">
-                                Editar agendamento
-                            </h3>
+                            <div className="mb-5 flex items-center justify-between gap-3">
+                                <h3 className="text-xl font-semibold text-text">
+                                    Editar agendamento
+                                </h3>
+                                {/* Botão X: fecho explícito (mobile pode não pegar o clique no fundo). */}
+                                <button
+                                    onClick={fechar}
+                                    aria-label="Fechar"
+                                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-slate-100 cursor-pointer"
+                                >
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                        <path d="M18 6 6 18M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
 
                             <div className="flex flex-col gap-4">
                                 <div className="flex flex-col gap-1.5">
@@ -143,7 +169,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                                         onChange={e =>
                                             setForm({ ...form, data: e.target.value })
                                         }
-                                        className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary"
+                                        className={`${campoBase} border-slate-300`}
                                     />
                                 </div>
 
@@ -159,11 +185,10 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                                             setForm({ ...form, nome: e.target.value });
                                             if (erroNome) setErroNome(false);
                                         }}
-                                        className={`w-full rounded-lg px-3 py-2.5 text-base focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary
-                                            border ${erroNome ? 'border-red-400' : 'border-slate-300'}`}
+                                        className={`${campoBase} ${erroNome ? 'border-accent' : 'border-slate-300'}`}
                                     />
                                     {erroNome && (
-                                        <p className="mt-0.5 text-sm text-red-500">
+                                        <p className="mt-0.5 text-sm text-accent">
                                             Informe o nome.
                                         </p>
                                     )}
@@ -181,42 +206,61 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                                         onChange={e =>
                                             setForm({ ...form, telefone: formatarTelefone(e.target.value) })
                                         }
-                                        className={`w-full rounded-lg px-3 py-2.5 text-base focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary
-                                            border ${erroTelefone ? 'border-red-400' : 'border-slate-300'}`}
+                                        className={`${campoBase} ${erroTelefone ? 'border-accent' : 'border-slate-300'}`}
                                     />
                                     {erroTelefone && (
-                                        <p className="mt-0.5 text-sm text-red-500">
+                                        <p className="mt-0.5 text-sm text-accent">
                                             Informe um telefone válido.
                                         </p>
                                     )}
                                 </div>
                             </div>
 
-                            <div className="mt-6 flex items-center justify-between gap-3">
-                                <button
-                                    onClick={handleDelete}
-                                    disabled={loading}
-                                    className="rounded-lg px-3 py-2.5 text-sm font-medium text-red-500 transition hover:bg-red-50 disabled:opacity-50 cursor-pointer"
-                                >
-                                    {loading ? '…' : 'Remover'}
-                                </button>
-
-                                <div className="flex items-center gap-2">
+                            {/* Ações: empilhadas e largas (mobile-first). */}
+                            <div className="mt-6 flex flex-col gap-3">
+                                <div className="flex gap-3">
                                     <button
-                                        onClick={() => setOpen(false)}
-                                        className="rounded-lg px-4 py-2.5 text-sm font-medium text-text transition hover:bg-slate-100 cursor-pointer"
+                                        onClick={fechar}
+                                        className="min-h-12 flex-1 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 cursor-pointer"
                                     >
                                         Cancelar
                                     </button>
-
                                     <button
                                         onClick={handleSave}
                                         disabled={loading}
-                                        className="rounded-lg bg-secondary px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50 cursor-pointer"
+                                        className="min-h-12 flex-1 rounded-xl bg-secondary px-5 text-base font-semibold text-white transition hover:opacity-90 disabled:opacity-50 cursor-pointer"
                                     >
                                         {loading ? 'Salvando…' : 'Salvar'}
                                     </button>
                                 </div>
+
+                                {/* Remover com confirmação inline (substitui o window.confirm). */}
+                                {confirmarRemocao ? (
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => setConfirmarRemocao(false)}
+                                            disabled={loading}
+                                            className="min-h-12 flex-1 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 disabled:opacity-50 cursor-pointer"
+                                        >
+                                            Manter
+                                        </button>
+                                        <button
+                                            onClick={handleDelete}
+                                            disabled={loading}
+                                            className="min-h-12 flex-1 rounded-xl bg-accent px-4 text-base font-semibold text-white transition hover:opacity-90 disabled:opacity-50 cursor-pointer"
+                                        >
+                                            {loading ? 'Removendo…' : 'Confirmar remoção'}
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => setConfirmarRemocao(true)}
+                                        disabled={loading}
+                                        className="min-h-12 w-full rounded-xl px-4 text-base font-medium text-accent transition hover:bg-accent/10 disabled:opacity-50 cursor-pointer"
+                                    >
+                                        Remover agendamento
+                                    </button>
+                                )}
                             </div>
                         </motion.div>
                     </motion.div>
