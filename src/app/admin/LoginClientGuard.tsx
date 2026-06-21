@@ -1,5 +1,8 @@
 'use client';
 
+// Na tela de login: se já houver sessão válida (ou um login em outra aba), pula direto
+// para o /dashboard.
+
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 

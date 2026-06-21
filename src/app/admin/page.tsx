@@ -1,10 +1,16 @@
+import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { requireAdminSession } from '@/lib/auth';
 import LoginClientGuard from './LoginClientGuard';
-import LoginForm from './LoginForm';
+import LoginCard from './LoginCard';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+export const metadata: Metadata = {
+    title: 'Entrar',
+    robots: { index: false, follow: false },
+};
 
 export default async function AdminLoginPage() {
     try {
@@ -13,35 +19,10 @@ export default async function AdminLoginPage() {
     } catch {}
 
     return (
-        <main
-            className="min-h-screen flex items-center justify-center px-6 py-12"
-            style={{ backgroundColor: 'var(--color-primary)' }}
-        >
-            <section className="w-full" style={{ maxWidth: 480, margin: '0 auto' }}>
+        <main className="flex min-h-screen items-center justify-center bg-primary px-4 py-12">
+            <section className="w-full max-w-md">
                 <LoginClientGuard>
-                    <div
-                        className="rounded-3xl shadow-xl px-10 py-12"
-                        style={{
-                            backgroundColor: 'var(--color-background)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 24,
-                        }}
-                    >
-                        <div
-                            className="text-center"
-                            style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
-                        >
-                            <h1
-                                className="text-3xl font-semibold"
-                                style={{ color: 'var(--color-text)' }}
-                            >
-                                Painel de Controle
-                            </h1>
-                        </div>
-
-                        <LoginForm />
-                    </div>
+                    <LoginCard />
                 </LoginClientGuard>
             </section>
         </main>

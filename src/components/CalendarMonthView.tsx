@@ -1,6 +1,11 @@
 'use client';
 
+// Versão "bonita" do calendário usada APENAS na imagem exportada (WhatsApp).
+// Usa estilos inline + SVG de propósito: o html-to-image não depende do Tailwind,
+// então renderiza igual em qualquer aparelho.
+
 import { isPday, formatMonthLabel } from '@/lib/date';
+import { Flor } from './Flor';
 
 type Props = {
     diasDoMes: {
@@ -19,26 +24,6 @@ const SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const AZUL = '#143157';
 const VERDE = '#1fb9a0';
 const ROSA = '#e0588f';
-
-function Flor({ size = 18 }: { size?: number }) {
-    return (
-        <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-            <g fill={ROSA}>
-                {[0, 72, 144, 216, 288].map(deg => (
-                    <ellipse
-                        key={deg}
-                        cx="12"
-                        cy="6.5"
-                        rx="2.6"
-                        ry="4.4"
-                        transform={`rotate(${deg} 12 12)`}
-                    />
-                ))}
-            </g>
-            <circle cx="12" cy="12" r="2.8" fill="#f6c453" />
-        </svg>
-    );
-}
 
 export default function CalendarMonthView({ diasDoMes }: Props) {
     if (diasDoMes.length === 0) return null;

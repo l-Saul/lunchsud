@@ -135,8 +135,7 @@ src/
 | POST   | `/api/agendar`                | Cria um agendamento                | —     |
 | POST   | `/api/admin/login`            | Autentica o líder (gera cookie)    | —     |
 | POST   | `/api/admin/logout`           | Encerra a sessão                   | admin |
-| GET    | `/api/admin/dashboard`        | Dados do painel da ala             | admin |
-| GET    | `/api/admin/usuarios`         | Lista usuários/agendamentos da ala | admin |
+| GET    | `/api/admin/dashboard`        | Checagem de sessão (guard de login)| admin |
 | POST   | `/api/agendamentos/update`    | Atualiza um agendamento            | admin |
 | POST   | `/api/agendamentos/delete`    | Remove um agendamento              | admin |
 

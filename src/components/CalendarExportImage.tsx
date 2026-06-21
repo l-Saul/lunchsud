@@ -1,9 +1,13 @@
 'use client';
 
+// Gera a imagem do calendário do mês (PNG) a partir de um DOM oculto e:
+// - no desktop, baixa o arquivo;
+// - no mobile, abre o menu de compartilhar (ex.: enviar no grupo do WhatsApp).
+
 import { toPng } from 'html-to-image';
 import { useMemo, useState, useEffect } from 'react';
 import CalendarMonthView from '@/components/CalendarMonthView';
-import { formatMonthLabel } from '@/lib/date';
+import { MonthSelect } from '@/components/MonthSelect';
 import { createPortal } from 'react-dom';
 
 type Agendamento = {
@@ -18,6 +22,7 @@ type Props = {
     agendamentos: Agendamento[];
 };
 
+// Heurística de "é toque" (celular/tablet) para decidir baixar vs compartilhar.
 function isMobile() {
     return (
         typeof window !== 'undefined' &&
@@ -25,6 +30,7 @@ function isMobile() {
     );
 }
 
+// Espera 2 frames para garantir que o DOM oculto já pintou antes de capturar.
 function waitForRender() {
     return new Promise<void>(resolve => {
         requestAnimationFrame(() => {
@@ -33,6 +39,7 @@ function waitForRender() {
     });
 }
 
+// Monta os dias do mês com seus agendamentos (formato que o CalendarMonthView espera).
 function gerarDiasDoMes(mes: string, agendamentos: Agendamento[]) {
     const [ano, mesNum] = mes.split('-').map(Number);
 
@@ -59,10 +66,12 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
     const [loading, setLoading] = useState(false);
     const [mounted, setMounted] = useState(false);
 
+    // createPortal só pode rodar após montar no client.
     useEffect(() => {
         setMounted(true);
     }, []);
 
+    // Dias do mês selecionado (com seus agendamentos) que alimentam o calendário da imagem.
     const diasDoMes = useMemo(
         () => gerarDiasDoMes(mes, agendamentos),
         [mes, agendamentos]
@@ -76,6 +85,7 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
         try {
             await waitForRender();
 
+            // Captura o calendário renderizado no container oculto (#calendar-export).
             const node = document.getElementById('calendar-export');
             if (!node) return;
 
@@ -99,12 +109,14 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
                 type: 'image/png',
             });
 
+            // Mobile com suporte a compartilhar arquivo -> abre o menu nativo (WhatsApp etc.).
             if (isMobile() && navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
                     files: [file],
                     title: `Calendário ${mes}`,
                 });
             } else {
+                // Desktop (ou sem share) -> baixa o PNG.
                 const link = document.createElement('a');
                 link.href = dataUrl;
                 link.download = `calendario-${mes}.png`;
@@ -118,41 +130,25 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
     return (
         <>
             <div className="flex w-full gap-2 sm:w-auto">
-                <select
-                    value={mes}
-                    onChange={e => setMes(e.target.value)}
-                    className="flex-1 rounded-md border border-slate-300 px-3 py-2 sm:flex-none"
-                >
-                    {meses.map(m => (
-                        <option key={m} value={m}>
-                            {formatMonthLabel(m)}
-                        </option>
-                    ))}
-                </select>
+                <MonthSelect meses={meses} value={mes} onChange={setMes} />
 
                 <button
                     onClick={gerarImagem}
                     disabled={loading}
-                        className={`
-                            flex-1 sm:flex-none
-                            px-4 py-2 rounded-md text-white cursor-pointer
-                            transition-all duration-200 font-medium
-                            ${loading
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-primary hover:bg-secondary'}
-                        `}
+                    className={`
+                        flex-1 sm:flex-none
+                        rounded-lg px-4 py-2.5 text-sm font-semibold text-white cursor-pointer
+                        transition
+                        ${loading
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-primary hover:bg-secondary'}
+                    `}
                 >
-                    <span
-                        className={`
-                            text-md inline-block transition-opacity duration-200
-                            ${loading ? 'opacity-70' : 'opacity-100'}
-                        `}
-                    >
-                        {loading ? 'Gerando...' : 'Gerar imagem'}
-                    </span>
+                    {loading ? 'Gerando…' : 'Gerar imagem'}
                 </button>
             </div>
 
+            {/* Container 0x0 e oculto: hospeda o calendário em 1024px só para virar imagem. */}
             <div
                 id="export-root"
                 style={{

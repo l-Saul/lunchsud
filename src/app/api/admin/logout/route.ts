@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+// Logout: expira o cookie de sessão (maxAge 0).
 export async function POST() {
     const res = NextResponse.json({ success: true });
 

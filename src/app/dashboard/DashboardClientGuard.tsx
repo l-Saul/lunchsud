@@ -1,5 +1,8 @@
 'use client';
 
+// Sincroniza logout entre abas: se o líder sai em uma aba, as outras voltam ao login
+// (via BroadcastChannel 'auth').
+
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 

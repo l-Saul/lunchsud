@@ -1,5 +1,7 @@
 'use client';
 
+// Botão Sair: encerra a sessão no servidor e avisa as outras abas (BroadcastChannel).
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -32,12 +34,12 @@ export function LogoutButton() {
             onClick={handleLogout}
             disabled={loading}
             className={`
-                px-4 py-2 rounded-md font-medium text-white bg-primary
-                transition-all duration-300 cursor-pointer
+                px-4 py-2 rounded-lg font-medium text-white
+                transition cursor-pointer
                 flex items-center justify-center gap-2
                 ${loading
                     ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-primary hover:bg-secondary'}
+                    : 'bg-secondary hover:opacity-90'}
             `}
         >
             {loading && (

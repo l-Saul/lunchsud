@@ -25,10 +25,15 @@ export const metadata: Metadata = {
     },
     description:
         "Agende um almoço para os missionários da sua ala. Escolha um dia disponível no calendário, de forma simples e rápida.",
-    robots: {
-        index: false,
-        follow: false,
-    },
+    keywords: [
+        "almoço",
+        "missionários",
+        "agendamento",
+        "ala",
+        "Igreja de Jesus Cristo dos Santos dos Últimos Dias",
+    ],
+    authors: [{ name: "LunchSud" }],
+    creator: "LunchSud",
     manifest: "/manifest.webmanifest",
     appleWebApp: {
         capable: true,
@@ -74,6 +79,7 @@ export const viewport: Viewport = {
     initialScale: 1,
 }
 
+// Layout raiz: aplica as fontes, o fundo azul e o rodapé fixo em todas as páginas.
 export default function RootLayout({
     children,
 }: {

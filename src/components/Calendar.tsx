@@ -1,5 +1,9 @@
 'use client'
 
+// Calendário público do agendamento. Mostra um mês por vez (atual ou seguinte),
+// marca dias ocupados (rosa) e segundas como P-day (bloqueado). Só apresentação:
+// quem busca os dados e controla o mês é a ClientPage.
+
 import { motion } from 'framer-motion'
 import { isPday, formatMonthLabel } from '@/lib/date'
 
@@ -49,6 +53,7 @@ export function Calendar({
         return ocupados.find(o => o.data === dataDoDia(dia))
     }
 
+    // Células vazias até o 1º dia cair na coluna certa, depois os dias do mês.
     const dias = [
         ...Array(primeiroDiaSemana).fill(null),
         ...Array.from({ length: diasNoMes }, (_, i) => i + 1),
@@ -104,6 +109,7 @@ export function Calendar({
                 {dias.map((dia, index) => {
                     if (!dia) return <div key={`empty-${index}`} />
 
+                    // Estado do dia define cor e o que acontece ao tocar.
                     const pday = isPday(dataDoDia(dia))
                     const ocupacao = getOcupacao(dia)
                     const ocupado = Boolean(ocupacao)
@@ -149,7 +155,7 @@ export function Calendar({
                                 ${pday
                                     ? 'bg-primary/5 text-primary/40 border border-primary/10'
                                     : ocupado
-                                        ? 'bg-primary text-white'
+                                        ? 'bg-accent text-white'
                                         : selecionado
                                             ? 'bg-secondary text-white shadow-md'
                                             : 'bg-white text-primary border border-slate-200 hover:border-secondary hover:bg-secondary/10'}
@@ -176,7 +182,7 @@ export function Calendar({
                     Disponível
                 </span>
                 <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 rounded bg-primary" />
+                    <span className="h-4 w-4 rounded bg-accent" />
                     Ocupado
                 </span>
                 <span className="flex items-center gap-2">

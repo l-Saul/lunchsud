@@ -42,7 +42,8 @@ de data/fuso/P-day em componentes.
 ## Convenções
 
 - **Nomes de arquivo:** componentes em PascalCase (`Calendar.tsx`); utilitários
-  de `lib/` em kebab-case (`supabase-client.ts`). Mantenha o padrão.
+  de `lib/` e hooks em kebab-case (`date.ts`, `use-ocupados-realtime.ts`).
+  Mantenha o padrão.
 - **Idioma:** termos de domínio em português (`alas`, `agendar`, `agendamento`,
   `usuarios`). **Nunca** renomeie pastas de rota da API — são contrato público/URLs.
 - **Cores:** use os tokens do tema (`bg-primary`, `text-secondary`, etc.),
@@ -62,13 +63,42 @@ de data/fuso/P-day em componentes.
 - `src/components/CalendarMonthView.tsx` — calendário da **imagem exportada**.
 - `src/components/CalendarExportImage.tsx` — gera a imagem (download no desktop;
   `navigator.share` no mobile → grupo do WhatsApp). **Preserve esse comportamento.**
-- `src/lib/` — `supabase-client/server/admin.ts`, `auth.ts` (JWT), `date.ts`.
+- `src/lib/` — `supabase/{client,server,admin}.ts` (clients agrupados),
+  `auth.ts` (JWT), `date.ts`, `phone.ts`, `validation.ts` (saneamento de entrada),
+  `rate-limit.ts` (limite por IP).
+- `src/hooks/` — `use-ocupados-realtime.ts`: Realtime via **WebSocket**
+  (Supabase Realtime, não polling). Usado no calendário público e no painel.
+
+## Segurança (não enfraquecer)
+
+- **Toda rota pública valida a entrada** via `src/lib/validation.ts` (`lerJson` +
+  `parseAgendar`/`parseLogin`/`parseSlug`/`parseEdicao`/`parseId`): teto de tamanho
+  de corpo, formato e charset. Não volte a ler `req.json()` cru nem a inserir
+  campos sem sanear.
+- **Rate limit por IP** em `src/lib/rate-limit.ts` (em memória, janela fixa):
+  `/api/agendar` 6/min, `/api/admin/login` 5/10min, GETs públicos 30/min. É
+  **por instância** (serverless) — ao escalar horizontalmente, troque só o `store`
+  por Upstash/Vercel KV mantendo a mesma interface.
+- Rotas **nunca** ecoam `error.message` do banco (vaza detalhes); respondem genérico.
+- SQL injection: mitigado pelo query builder do Supabase (parametrizado). Não
+  introduza SQL cru/`.rpc` com concatenação de string.
+- **PII:** a policy `leitura publica` (anon SELECT) expõe `telefone` via REST do
+  Supabase. O app nunca mostra telefone — avaliar restringir colunas/usar view.
 
 ## Banco (Supabase)
 
 - `ala`: `id`, `nome`, `slug`.
 - `agendamento`: `id`, `ala_id`, `data` (`YYYY-MM-DD`), `nome`, `telefone`.
   Constraint única em (ala_id, data) → impõe 1 por dia.
+- **Realtime (uma vez, no SQL editor):** sem isso o WebSocket não atualiza ao vivo.
+  ```sql
+  alter publication supabase_realtime add table agendamento;
+  alter table agendamento enable row level security;
+  create policy "leitura publica" on agendamento for select to anon using (true);
+  alter table agendamento replica identity full;  -- DELETE/UPDATE ao vivo
+  ```
+  O `replica identity full` é o que faz **remoções** atualizarem ao vivo: por
+  padrão o Postgres só envia a PK em DELETE, e o filtro `ala_id` não casaria.
 
 ## Armadilhas
 

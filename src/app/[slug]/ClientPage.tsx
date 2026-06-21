@@ -1,8 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+// Página pública de agendamento de uma ala: calendário + formulário.
+// Recebe do servidor o slug e os dias já ocupados; o backend continua sendo a fonte da verdade.
+
+import { useState } from 'react'
 import { Calendar } from '@/components/Calendar'
 import { motion, AnimatePresence } from 'framer-motion'
+import { formatarTelefone } from '@/lib/phone'
+import { useOcupadosRealtime } from '@/hooks/use-ocupados-realtime'
 
 type DiaOcupado = {
     data: string
@@ -11,24 +16,18 @@ type DiaOcupado = {
 
 type Props = {
     slug: string
+    alaId: number
     ocupados: DiaOcupado[]
 }
 
-function formatarTelefone(valor: string) {
-    const digits = valor.replace(/\D/g, '').slice(0, 11)
-
-    if (digits.length <= 2) return digits
-    if (digits.length <= 7) return `${digits.slice(0, 2)} ${digits.slice(2)}`
-    return `${digits.slice(0, 2)} ${digits.slice(2, 7)} ${digits.slice(7)}`
-}
-
+// Converte o slug da URL ("ala-exemplo") no nome exibido ("Ala Exemplo").
 function formatarNomeAla(slug: string) {
     return decodeURIComponent(slug)
         .replace(/-/g, ' ')
         .replace(/\b\w/g, l => l.toUpperCase())
 }
 
-export default function ClientPage({ slug, ocupados }: Props) {
+export default function ClientPage({ slug, alaId, ocupados }: Props) {
     const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null)
     const [nome, setNome] = useState('')
     const [telefone, setTelefone] = useState('')
@@ -38,7 +37,6 @@ export default function ClientPage({ slug, ocupados }: Props) {
     const [diasOcupados, setDiasOcupados] = useState<DiaOcupado[]>(ocupados)
     const [ocupadoPor, setOcupadoPor] = useState<string | null>(null)
     const [pday, setPday] = useState(false)
-    const [imagemSrc, setImagemSrc] = useState<string | null>(null)
 
     const [erroNome, setErroNome] = useState(false)
     const [erroTelefone, setErroTelefone] = useState(false)
@@ -55,65 +53,44 @@ export default function ClientPage({ slug, ocupados }: Props) {
     const nomeAla = formatarNomeAla(slug)
     const mesNomeBase = baseDate.toLocaleDateString('pt-BR', { month: 'long' })
 
-    useEffect(() => {
-        const img = new Image()
-        img.src = `/alas/${slug}.jpg`
-
-        img.onload = () => setImagemSrc(`/alas/${slug}.jpg`)
-        img.onerror = () => setImagemSrc('/alas/lds.jpg')
-    }, [slug])
+    // Ao vivo: se outra pessoa agendar/editar/remover nesta ala, o WebSocket dispara
+    // e recarregamos os dias ocupados (uma busca por evento, nunca em loop).
+    useOcupadosRealtime(alaId, () => {
+        fetch(`/api/agendamentos/${slug}`, { cache: 'no-store' })
+            .then(res => (res.ok ? res.json() : null))
+            .then((dados: DiaOcupado[] | null) => {
+                if (dados) setDiasOcupados(dados)
+            })
+            .catch(() => {})
+    })
 
     async function agendar() {
         if (!slug || !diaSelecionado) return
 
+        // Limpa estados de erro/mensagem da tentativa anterior.
         setErroNome(false)
         setErroTelefone(false)
         setMensagem('')
         setTipoMensagem(null)
 
-        let valido = true
+        // Validação do formulário (nome preenchido e telefone com 11 dígitos).
+        const nomeInvalido = !nome.trim()
+        const telefoneInvalido = telefone.replace(/\D/g, '').length !== 11
 
-            if (!nome.trim()) {
-                setErroNome(true)
-                valido = false
-            }
-
-            if (telefone.replace(/\D/g, '').length !== 11) {
-                setErroTelefone(true)
-                valido = false
-            }
-
-            if (!valido) {
-                setTipoMensagem('erro')
-                setMensagem('Preencha corretamente os campos destacados.')
-                return
-            }
-
-            setLoading(true)
-
-
-        if (!nome.trim()) {
+        if (nomeInvalido || telefoneInvalido) {
+            setErroNome(nomeInvalido)
+            setErroTelefone(telefoneInvalido)
             setTipoMensagem('erro')
-            setMensagem('Informe seu nome.')
-            return
-        }
-
-        if (telefone.replace(/\D/g, '').length !== 11) {
-            setTipoMensagem('erro')
-            setMensagem('Informe um telefone celular válido.')
+            setMensagem('Preencha corretamente os campos destacados.')
             return
         }
 
         setLoading(true)
-        setMensagem('')
-        setTipoMensagem(null)
 
+        // Monta a data 'YYYY-MM-DD' do dia escolhido no mês visível.
         const ano = baseDate.getFullYear()
         const mes = baseDate.getMonth()
-
-        const mm = String(mes + 1).padStart(2, '0')
-        const dd = String(diaSelecionado).padStart(2, '0')
-        const data = `${ano}-${mm}-${dd}`
+        const data = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(diaSelecionado).padStart(2, '0')}`
 
         const res = await fetch('/api/agendar', {
             method: 'POST',
@@ -123,6 +100,7 @@ export default function ClientPage({ slug, ocupados }: Props) {
 
         setLoading(false)
 
+        // 409/erro: o dia foi ocupado entre abrir a tela e confirmar.
         if (!res.ok) {
             setTipoMensagem('erro')
             setMensagem('Este dia acabou de ser ocupado. Escolha outro.')
@@ -130,6 +108,7 @@ export default function ClientPage({ slug, ocupados }: Props) {
             return
         }
 
+        // Sucesso: marca o dia localmente e limpa o formulário.
         setDiasOcupados(prev => [...prev, { data, nome }])
         setTipoMensagem('sucesso')
         setMensagem('Almoço agendado com sucesso. Muito obrigado!')
@@ -144,22 +123,11 @@ export default function ClientPage({ slug, ocupados }: Props) {
             <div className="w-full max-w-2xl">
 
                 {/* HEADER */}
-                <div className="px-3 sm:px-6 pt-10 pb-6 text-center space-y-4">
-                    {imagemSrc && (
-                        <motion.img
-                            initial={{ opacity: 0, scale: 0.96 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.4, ease: 'easeOut' }}
-                            src={imagemSrc}
-                            alt={`Missionários da ala ${nomeAla}`}
-                            className="mx-auto h-auto max-h-56 w-auto max-w-full rounded-2xl shadow-lg"
-                        />
-                    )}
-
-                    <h1 className="text-4xl font-bold text-secondary">
+                <div className="flex flex-col items-center gap-4 px-3 pt-12 pb-6 text-center sm:px-6">
+                    <h1 className="text-4xl font-bold text-white">
                         Ala {nomeAla}
                     </h1>
-
+                    <span className="h-1 w-16 rounded-full bg-secondary" />
                     <p className="text-xl leading-relaxed text-white/90">
                         Toque em um dia livre para agendar o almoço.
                     </p>
@@ -321,7 +289,11 @@ export default function ClientPage({ slug, ocupados }: Props) {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ duration: 0.2 }}
-                                className="text-center text-lg font-medium text-primary"
+                                // Cor conforme o tipo: erro em rosa, sucesso em verde (antes ficava
+                                // azul sobre o fundo azul = invisível).
+                                className={`text-center text-lg font-medium ${
+                                    tipoMensagem === 'erro' ? 'text-accent' : 'text-secondary'
+                                }`}
                             >
                                 {mensagem}
                             </motion.p>

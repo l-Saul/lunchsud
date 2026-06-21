@@ -1,26 +1,37 @@
+// Node runtime: bcrypt depende de APIs do Node (não roda no Edge).
 export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { supabaseAdmin } from '@/lib/supabase/admin';
+import { lerJson, parseLogin, ValidationError } from '@/lib/validation';
+import { rateLimit, clientIp, tooManyRequests } from '@/lib/rate-limit';
 
+// Login do líder: valida usuário/senha (bcrypt) e grava o cookie de sessão (JWT).
 export async function POST(req: Request) {
-    const { username, senha } = await req.json();
+    // Anti-brute-force: no máximo 5 tentativas por IP a cada 10 minutos.
+    const limite = rateLimit(`login:${clientIp(req)}`, 5, 10 * 60_000);
+    if (!limite.ok) return tooManyRequests(limite.retryAfter);
 
-    if (!username || !senha) {
-        return NextResponse.json(
-            { error: 'Dados inválidos' },
-            { status: 400 }
-        );
+    // Validação estrita; erros viram "Credenciais inválidas" pra não vazar nada.
+    let username: string;
+    let senha: string;
+    try {
+        ({ username, senha } = parseLogin(await lerJson(req)));
+    } catch (e) {
+        const status = e instanceof ValidationError ? 401 : 400;
+        return NextResponse.json({ error: 'Credenciais inválidas' }, { status });
     }
 
+    // Busca o usuário pela coluna username (ver tabela "usuario" no README).
     const { data: usuario, error } = await supabaseAdmin
         .from('usuario')
         .select('id, senha_hash, ala_id, ativo')
         .eq('username', username)
         .single();
 
+    // Mesma resposta para inexistente/inativo/erro: não revela qual campo falhou.
     if (error || !usuario || !usuario.ativo) {
         return NextResponse.json(
             { error: 'Credenciais inválidas' },
@@ -47,6 +58,7 @@ export async function POST(req: Request) {
         );
     }
 
+    // Token carrega o id do usuário e da ala; expira em 1 dia.
     const token = jwt.sign(
         { userId: usuario.id, alaId: usuario.ala_id },
         process.env.AUTH_SECRET,
@@ -55,6 +67,7 @@ export async function POST(req: Request) {
 
     const res = NextResponse.json({ success: true });
 
+    // Cookie httpOnly (não acessível por JS) com a sessão.
     res.cookies.set('admin_session', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',

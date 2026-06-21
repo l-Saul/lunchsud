@@ -1,7 +1,5 @@
-export function formatDateBR(dateISO: string) {
-    const [y, m, d] = dateISO.split('-');
-    return `${d}/${m}/${y}`;
-}
+// Utilidades de data: janela mês atual+seguinte, rótulos de mês e a regra de
+// P-day (segunda-feira). Sem dependência do fuso do servidor.
 
 const TZ = 'America/Sao_Paulo';
 

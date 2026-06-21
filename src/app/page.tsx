@@ -1,5 +1,7 @@
 'use client'
 
+// Home: lista as alas (via SWR em /api/alas) como botões que levam ao agendamento.
+
 import Image from 'next/image'
 import useSWR from 'swr'
 import { useState } from 'react'

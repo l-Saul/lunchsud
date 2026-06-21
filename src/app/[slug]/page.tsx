@@ -1,6 +1,8 @@
-import { supabaseServer } from '@/lib/supabase-server'
+import { supabaseServer } from '@/lib/supabase/server'
 import ClientPage from './ClientPage'
 
+// Server Component: resolve a ala pelo slug e pré-carrega os dias ocupados (SSR),
+// repassando tudo para a ClientPage interativa.
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
 
@@ -26,6 +28,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
     return (
         <ClientPage
         slug={slug}
+        alaId={ala.id}
         ocupados={ocupados ?? []}
         />
     )

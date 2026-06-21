@@ -1,12 +1,17 @@
 'use client';
 
+// Formulário de login do líder: envia usuário/senha para /api/admin/login e,
+// em caso de sucesso, avisa as abas e vai para o /dashboard.
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 
 export default function LoginForm() {
     const router = useRouter();
     const [username, setUsername] = useState('');
     const [senha, setSenha] = useState('');
+    const [mostrarSenha, setMostrarSenha] = useState(false);
     const [erro, setErro] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -39,43 +44,77 @@ export default function LoginForm() {
     }
 
     return (
-        <form
-            onSubmit={handleSubmit}
-            className="w-full"
-            style={{ display: 'flex', flexDirection: 'column', gap: 20 }}
-        >
-            <input
-                type="text"
-                placeholder="Usuário"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                disabled={loading}
-                className="w-full px-4 py-4 text-lg rounded-xl border bg-white text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary"
-                style={{ borderColor: 'rgba(15, 23, 42, 0.2)' }}
-            />
+        <form onSubmit={handleSubmit} className="flex w-full flex-col gap-5">
+            <div className="flex flex-col gap-1.5">
+                <label htmlFor="username" className="text-sm font-medium text-muted">
+                    Usuário
+                </label>
+                <input
+                    id="username"
+                    type="text"
+                    autoComplete="username"
+                    autoFocus
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    disabled={loading}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-lg text-text focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary"
+                />
+            </div>
 
-            <input
-                type="password"
-                placeholder="Senha"
-                value={senha}
-                onChange={e => setSenha(e.target.value)}
-                disabled={loading}
-                className="w-full px-4 py-4 text-lg rounded-xl border bg-white text-text placeholder-muted focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary"
-                style={{ borderColor: 'rgba(15, 23, 42, 0.2)' }}
-            />
-
-            <button
-                type="submit"
-                className="w-full cursor-pointer bg-secondary text-white text-lg font-semibold py-4 rounded-xl hover:opacity-90 transition"
-            >
-                {loading ? 'Carregando...' : 'Entrar'}
-            </button>
+            <div className="flex flex-col gap-1.5">
+                <label htmlFor="senha" className="text-sm font-medium text-muted">
+                    Senha
+                </label>
+                <div className="relative">
+                    <input
+                        id="senha"
+                        type={mostrarSenha ? 'text' : 'password'}
+                        autoComplete="current-password"
+                        value={senha}
+                        onChange={e => setSenha(e.target.value)}
+                        disabled={loading}
+                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3.5 pr-12 text-lg text-text focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setMostrarSenha(v => !v)}
+                        aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                        aria-pressed={mostrarSenha}
+                        className="absolute inset-y-0 right-0 flex items-center px-4 text-muted transition hover:text-secondary cursor-pointer"
+                    >
+                        {mostrarSenha ? (
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                                <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                                <line x1="1" y1="1" x2="23" y2="23" />
+                            </svg>
+                        ) : (
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                        )}
+                    </button>
+                </div>
+            </div>
 
             {erro && (
-                <p className="text-sm text-red-600 text-center">
+                <p role="alert" className="text-center text-sm font-medium text-red-500">
                     {erro}
                 </p>
             )}
+
+            <motion.button
+                type="submit"
+                disabled={loading}
+                whileTap={{ scale: 0.98 }}
+                className="mt-1 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-secondary py-4 text-lg font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+            >
+                {loading && (
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                )}
+                {loading ? 'Entrando…' : 'Entrar'}
+            </motion.button>
         </form>
     );
 }
