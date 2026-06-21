@@ -30,20 +30,28 @@
         text-rendering: optimizeLegibility;
     }
 
-    /* Fundo celestial: um "céu" sereno com luz suave vinda do alto e auroras
-       discretas (verde + rosa) sobre uma base azul profunda. Fixo e atrás de
-       tudo (z-index -1) para não pesar no scroll do celular. As páginas usam
-       fundo transparente para deixá-lo aparecer. */
+    /* Fundo celestial em duas camadas, fixas e atrás de tudo (não pesam no
+       scroll do celular). As páginas usam fundo transparente para deixá-lo ver.
+       - ::before = base do "céu" (gradiente azul profundo, estático)
+       - ::after  = auroras (luz dourada do alto + verde + rosa) que respiram devagar */
     body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -2;
+        background: linear-gradient(180deg, #1c3e6e 0%, #143157 50%, #0d1f3a 100%);
+    }
+    body::after {
         content: "";
         position: fixed;
         inset: 0;
         z-index: -1;
         background:
-            radial-gradient(55% 35% at 50% -8%, rgba(246, 196, 83, 0.12), transparent 70%),
-            radial-gradient(45% 40% at 15% 8%, rgba(31, 185, 160, 0.16), transparent 70%),
-            radial-gradient(45% 40% at 88% 10%, rgba(224, 88, 143, 0.16), transparent 70%),
-            linear-gradient(180deg, #1c3e6e 0%, #143157 50%, #0d1f3a 100%);
+            radial-gradient(55% 35% at 50% -8%, rgba(246, 196, 83, 0.13), transparent 70%),
+            radial-gradient(45% 40% at 15% 8%, rgba(31, 185, 160, 0.18), transparent 70%),
+            radial-gradient(45% 40% at 88% 10%, rgba(224, 88, 143, 0.18), transparent 70%);
+        animation: respirar 16s ease-in-out infinite;
+        will-change: opacity, transform;
     }
 
     /* Foco bem visível para navegação por teclado / baixa visão */
@@ -67,6 +75,12 @@
 }
 .animar-flutuar       { animation: flutuar 6s ease-in-out infinite; }
 .animar-flutuar-lento { animation: flutuar-lento 9s ease-in-out infinite; }
+
+/* Auroras do fundo celestial respirando devagar (suave, quase imperceptível). */
+@keyframes respirar {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50%      { opacity: 1;    transform: scale(1.06); }
+}
 
 /* Respeita quem pede menos animação no sistema */
 @media (prefers-reduced-motion: reduce) {

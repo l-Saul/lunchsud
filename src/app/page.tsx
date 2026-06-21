@@ -4,10 +4,11 @@
 
 import Image from 'next/image'
 import useSWR from 'swr'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, type Variants} from 'framer-motion'
 import { Flor } from '@/components/Flor'
+import { escrituraAleatoria } from '@/lib/escrituras'
 
 type Ala = {
     nome: string
@@ -54,6 +55,17 @@ export default function IndexPage() {
     const [loadingSlug, setLoadingSlug] = useState<string | null>(null)
     const router = useRouter()
 
+    // Escritura sorteada a cada refresh. A home é estática (prerender no build),
+    // então o sorteio precisa rodar no client, na montagem — só assim varia a cada
+    // carregamento sem dar mismatch de hidratação. É uma inicialização única e
+    // intencional, daí a exceção pontual à regra set-state-in-effect.
+    const [escritura, setEscritura] = useState<string | null>(null)
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setEscritura(escrituraAleatoria())
+    }, [])
+    const [verso, referencia] = (escritura ?? '').split(' — ')
+
     return (
         <section className="min-h-screen flex justify-center text-white">
             <div
@@ -61,14 +73,20 @@ export default function IndexPage() {
                 aria-busy={isLoading}
             >
                 <div className="flex flex-col items-center gap-6 text-center">
-                    <Image
-                        src="/lds.jpg"
-                        alt="Igreja de Jesus Cristo dos Santos dos Últimos Dias"
-                        width={180}
-                        height={180}
-                        className="rounded-2xl shadow-xl ring-2 ring-white/15"
-                        priority
-                    />
+                    {/* Logo flutuando de leve (respeita prefers-reduced-motion via MotionConfig). */}
+                    <motion.div
+                        animate={{ y: [0, -8, 0] }}
+                        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+                    >
+                        <Image
+                            src="/lds.jpg"
+                            alt="Igreja de Jesus Cristo dos Santos dos Últimos Dias"
+                            width={180}
+                            height={180}
+                            className="rounded-2xl shadow-xl ring-2 ring-white/15"
+                            priority
+                        />
+                    </motion.div>
 
                     <header className="flex flex-col items-center space-y-4">
                         <h1 className="text-3xl font-semibold">
@@ -83,6 +101,24 @@ export default function IndexPage() {
                         <p className="text-lg text-white/80">
                             Toque na sua ala para agendar.
                         </p>
+
+                        {/* Escritura do Livro de Mórmon, sorteada a cada refresh (referência positiva). */}
+                        {escritura && (
+                            <motion.p
+                                key={escritura}
+                                initial={{ opacity: 0, y: 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6, ease: 'easeOut' }}
+                                className="max-w-sm text-balance text-base italic leading-relaxed text-white/70"
+                            >
+                                {verso}
+                                {referencia && (
+                                    <span className="mt-1 block text-sm not-italic text-secondary">
+                                        {referencia}
+                                    </span>
+                                )}
+                            </motion.p>
+                        )}
                     </header>
                 </div>
 
@@ -113,7 +149,9 @@ export default function IndexPage() {
                                 <motion.div
                                     key={ala.slug}
                                     variants={itemVariants}
-                                    whileTap={{ scale: 0.97 }}
+                                    whileHover={{ y: -3 }}
+                                    whileTap={{ scale: 0.97, rotateX: 10 }}
+                                    style={{ transformPerspective: 700 }}
                                 >
                                     <button
                                         type="button"
@@ -122,7 +160,7 @@ export default function IndexPage() {
                                             setLoadingSlug(ala.slug)
                                             router.push(`/${ala.slug}`)
                                         }}
-                                        className={`group flex w-full items-center justify-between gap-4 rounded-2xl border-l-4 border-secondary px-6 py-5 text-left text-xl font-medium shadow-sm transition cursor-pointer disabled:cursor-default
+                                        className={`group flex w-full items-center justify-between gap-4 rounded-2xl border-l-4 border-secondary px-6 py-5 text-left text-xl font-medium shadow-lg transition cursor-pointer disabled:cursor-default
                                             ${isLoading
                                                 ? 'bg-secondary text-white'
                                                 : 'bg-white text-primary hover:bg-secondary hover:text-white'}

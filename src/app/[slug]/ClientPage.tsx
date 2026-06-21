@@ -163,9 +163,10 @@ export default function ClientPage({ slug, alaId, ocupados }: Props) {
 
                     {/* CALENDÁRIO */}
                     <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, ease: 'easeOut' }}
+                        initial={{ opacity: 0, y: 16, rotateX: -10 }}
+                        animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                        transition={{ duration: 0.4, ease: 'easeOut' }}
+                        style={{ transformPerspective: 1000 }}
                         className="relative overflow-hidden bg-background text-secondary rounded-2xl p-2 sm:p-4 shadow-xl ring-1 ring-white/40 border border-muted/10"
                     >
                         {/* Fitinha de acento no topo (verde → rosa → verde). */}

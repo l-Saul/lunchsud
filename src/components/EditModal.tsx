@@ -16,9 +16,11 @@ type Props = {
     telefone: string;
 };
 
-// Estilo único para os três campos → mesma altura/aparência no celular.
+// Estilo único para os três campos → mesma altura/largura no celular.
+// `appearance-none` + `min-w-0` corrigem o <input type="date"> no iOS Safari, que
+// senão ignora o width:100% e fica mais largo que os demais (estoura o container).
 const campoBase =
-    'h-12 w-full box-border rounded-lg border px-3 text-base text-text ' +
+    'w-full min-w-0 min-h-12 box-border appearance-none rounded-lg border px-3 py-3 text-base text-text ' +
     'focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary';
 
 export default function EditModal({ id, data, nome, telefone }: Props) {

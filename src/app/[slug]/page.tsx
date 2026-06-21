@@ -2,13 +2,9 @@ import type { Metadata } from 'next'
 import { supabaseServer } from '@/lib/supabase/server'
 import ClientPage from './ClientPage'
 
-// Texto genérico do compartilhamento: escritura do Livro de Mórmon sobre Cristo
-// (2 Néfi 31:20) — serena e centrada em Jesus Cristo, no tom do público da ala.
-const ESCRITURA =
-    '«Prosseguir com firmeza em Cristo, tendo um perfeito esplendor de esperança e amor a Deus e a todos os homens.» — 2 Néfi 31:20'
-
-// Metadata por ala: ao compartilhar o link, o título é o NOME DA ALA e a descrição
-// é a escritura. Assim o membro que recebe o link já entende de qual ala é.
+// Metadata por ala: ao compartilhar o link, o preview mostra (só texto, sem imagem)
+// o título "Calendário de almoços da <ala>" e um convite. Assim o membro que recebe
+// já entende de qual ala é e o que fazer.
 export async function generateMetadata(
     { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
@@ -20,25 +16,26 @@ export async function generateMetadata(
         .eq('slug', slug)
         .single()
 
-    const titulo = ala?.nome ?? 'Almoço dos Missionários'
+    // Usa o nome (legível) da ala; o slug cru ficaria minúsculo/com hífen no título.
+    const nome = ala?.nome ?? 'sua ala'
+    const titulo = `Calendário de almoços da ${nome}`
+    const descricao = 'Agende seu almoço para nossos missionários ❤️'
 
     return {
-        // absolute = ignora o template "%s · ..." do layout; o título é só o nome da ala.
+        // absolute = ignora o template "%s · ..." do layout.
         title: { absolute: titulo },
-        description: ESCRITURA,
+        description: descricao,
+        // Sem `images`: o compartilhamento mostra apenas texto (título + descrição).
         openGraph: {
             type: 'website',
             locale: 'pt_BR',
             title: titulo,
-            description: ESCRITURA,
-            images: [
-                { url: '/lunchsud512x512.png', width: 512, height: 512, alt: titulo },
-            ],
+            description: descricao,
         },
         twitter: {
             card: 'summary',
             title: titulo,
-            description: ESCRITURA,
+            description: descricao,
         },
     }
 }
