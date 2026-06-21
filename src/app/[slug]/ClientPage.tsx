@@ -359,7 +359,7 @@ export default function ClientPage({ slug, alaId, ocupados }: Props) {
                                             onClick={agendar}
                                             disabled={loading}
                                             aria-busy={loading}
-                                            className="min-h-13 flex-1 rounded-xl bg-secondary px-4 text-lg font-semibold text-white shadow-md transition hover:opacity-90 disabled:opacity-60 cursor-pointer"
+                                            className="min-h-13 flex-1 rounded-xl bg-secondary px-4 text-lg font-semibold text-white shadow-md transition duration-200 hover:-translate-y-0.5 hover:opacity-95 hover:shadow-lg disabled:opacity-60 cursor-pointer"
                                         >
                                             {loading ? 'Confirmando…' : 'Confirmar'}
                                         </button>

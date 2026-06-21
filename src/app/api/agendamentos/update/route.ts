@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase/server';
-import { requireAdminSession } from '@/lib/auth';
+import { getContexto } from '@/lib/session';
 import { lerJson, parseEdicao, ValidationError } from '@/lib/validation';
 
-// Atualiza um agendamento (data/nome/telefone). Restrito ao líder autenticado.
+// Atualiza um agendamento (data/nome/telefone). Escopo = ala em foco do líder
+// (member: sua ala; owner: ala selecionada). O filtro por ala_id garante isso.
 export async function POST(req: Request) {
-    // Exige sessão admin; o filtro por ala_id abaixo garante que só edite a própria ala.
-    const session = await requireAdminSession();
+    const ctx = await getContexto();
+    if (!ctx || ctx.alaId === null) {
+        return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
 
     let id: number, data: string, nome: string, telefone: string;
     try {
@@ -22,7 +25,7 @@ export async function POST(req: Request) {
         .from('agendamento')
         .update({ data, nome, telefone })
         .eq('id', id)
-        .eq('ala_id', session.alaId)
+        .eq('ala_id', ctx.alaId)
         .select();
 
     if (error) {

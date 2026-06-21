@@ -1,5 +1,6 @@
 import { supabaseServer } from '@/lib/supabase/server'
 import { rateLimit, clientIp, tooManyRequests } from '@/lib/rate-limit'
+import { semAlaTesteEmProd } from '@/lib/alas'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Lista as alas (nome + slug) para a home montar os botões. Consumido via SWR.
@@ -17,5 +18,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Erro ao buscar alas' }, { status: 500 })
     }
 
-    return NextResponse.json(data)
+    // Esconde a ala de teste em produção (visível só em desenvolvimento).
+    return NextResponse.json(semAlaTesteEmProd(data ?? []))
 }

@@ -2,13 +2,16 @@
 // do cliente é hostil até prova em contrário — limita tamanho, formato e o
 // conjunto de caracteres ANTES de tocar no banco.
 
+import { gerarSlug, normalizarNomeAla } from '@/lib/alas';
+
 // Erro de validação: as rotas pegam com try/catch e respondem 400 genérico
 // (sem ecoar detalhes que ajudem um atacante a sondar a API).
 export class ValidationError extends Error {}
 
-const SLUG_RE = /^[a-z0-9-]{1,60}$/;
+// Slug aceita letras minúsculas, números, hífen e sublinhado (`_`). O `_` entra
+// pela convenção de nomes de ala ("Jardim Brasil" → "jardim_brasil").
+const SLUG_RE = /^[a-z0-9_-]{1,60}$/;
 const DATA_RE = /^\d{4}-\d{2}-\d{2}$/;
-const USERNAME_RE = /^[a-zA-Z0-9_.@-]{1,40}$/;
 
 function asString(v: unknown): string {
     return typeof v === 'string' ? v : '';
@@ -21,6 +24,17 @@ function nomeSaneado(v: unknown): string {
         throw new ValidationError('Nome inválido');
     }
     return nome;
+}
+
+// Endereço (rua/número) — texto livre opcional, só um campo do banco. Limita
+// tamanho e bloqueia < > e caracteres de controle. Vazio vira null.
+function enderecoSaneado(v: unknown): string | null {
+    const s = asString(v).replace(/\s+/g, ' ').trim();
+    if (!s) return null;
+    if (s.length > 200 || /[<>]/.test(s) || /\p{Cc}/u.test(s)) {
+        throw new ValidationError('Endereço inválido');
+    }
+    return s;
 }
 
 // Telefone: exatamente 11 dígitos (DDD + 9). Mantém o formato enviado ("DD NNNNN NNNN").
@@ -120,27 +134,27 @@ export function parseId(raw: unknown): number {
     return idSaneado(o.id);
 }
 
-export type LoginInput = { username: string; senha: string };
-
-// Valida o payload de /api/admin/login. Mensagens propositalmente genéricas:
-// nunca revela se foi o usuário ou a senha que falhou.
-export function parseLogin(raw: unknown): LoginInput {
-    const o = (raw ?? {}) as Record<string, unknown>;
-
-    const username = asString(o.username).trim();
-    if (!USERNAME_RE.test(username)) throw new ValidationError('Credenciais inválidas');
-
-    const senha = asString(o.senha);
-    if (senha.length < 1 || senha.length > 200) {
-        throw new ValidationError('Credenciais inválidas');
-    }
-
-    return { username, senha };
-}
-
 // Valida um slug vindo da URL (rota dinâmica). Normaliza para minúsculas.
 export function parseSlug(slug: string): string {
     const s = asString(slug).trim().toLowerCase();
     if (!SLUG_RE.test(s)) throw new ValidationError('Ala inválida');
     return s;
+}
+
+export type NovaAlaInput = { nome: string; slug: string; endereco: string | null };
+
+// Valida o payload de criação de ala (owner):
+//  - nome: saneado e normalizado ("Ala São Lourenço" — vira nome próprio com "Ala");
+//  - slug: SEMPRE gerado automaticamente a partir do nome (link público da ala);
+//  - endereco: texto livre opcional (rua/número) — só um campo do banco.
+export function parseNovaAla(raw: unknown): NovaAlaInput {
+    const o = (raw ?? {}) as Record<string, unknown>;
+    const nome = normalizarNomeAla(nomeSaneado(o.nome));
+
+    const slug = gerarSlug(nome);
+    if (!SLUG_RE.test(slug)) {
+        throw new ValidationError('Não foi possível gerar um link válido a partir desse nome');
+    }
+
+    return { nome, slug, endereco: enderecoSaneado(o.endereco) };
 }

@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import LoginForm from './LoginForm';
 import { Flor } from '@/components/Flor';
 
-export default function LoginCard() {
+export default function LoginCard({ erroInicial }: { erroInicial?: string }) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -30,7 +30,7 @@ export default function LoginCard() {
                 </p>
             </div>
 
-            <LoginForm />
+            <LoginForm erroInicial={erroInicial} />
         </motion.div>
     );
 }

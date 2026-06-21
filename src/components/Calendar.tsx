@@ -62,35 +62,33 @@ export function Calendar({
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between gap-2">
-                <motion.button
+                <button
                     onClick={onPrev}
                     disabled={!canPrev}
                     aria-label="Mês anterior"
-                    whileTap={{ scale: 0.94 }}
-                    className="flex flex-col items-center gap-0.5 rounded-xl bg-secondary px-2.5 py-2 text-white shadow-sm transition hover:opacity-90 disabled:opacity-30 disabled:cursor-default cursor-pointer"
+                    className="flex flex-col items-center gap-0.5 rounded-xl bg-secondary px-2.5 py-2 text-white shadow-sm transition duration-200 hover:opacity-90 enabled:hover:scale-105 enabled:active:scale-95 disabled:opacity-30 disabled:cursor-default cursor-pointer"
                 >
                     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M15 18l-6-6 6-6" />
                     </svg>
                     <span className="text-xs font-semibold uppercase tracking-wide">Voltar</span>
-                </motion.button>
+                </button>
 
                 <h2 className="text-center text-base sm:text-xl font-semibold text-text">
                     {formatMonthLabel(`${anoNum}-${String(mesNum + 1).padStart(2, '0')}`)}
                 </h2>
 
-                <motion.button
+                <button
                     onClick={onNext}
                     disabled={!canNext}
                     aria-label="Próximo mês"
-                    whileTap={{ scale: 0.94 }}
-                    className="flex flex-col items-center gap-0.5 rounded-xl bg-secondary px-2.5 py-2 text-white shadow-sm transition hover:opacity-90 disabled:opacity-30 disabled:cursor-default cursor-pointer"
+                    className="flex flex-col items-center gap-0.5 rounded-xl bg-secondary px-2.5 py-2 text-white shadow-sm transition duration-200 hover:opacity-90 enabled:hover:scale-105 enabled:active:scale-95 disabled:opacity-30 disabled:cursor-default cursor-pointer"
                 >
                     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M9 18l6-6-6-6" />
                     </svg>
                     <span className="text-xs font-semibold uppercase tracking-wide">Avançar</span>
-                </motion.button>
+                </button>
             </div>
 
             <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-sm font-semibold uppercase tracking-wide text-muted">
@@ -114,6 +112,7 @@ export function Calendar({
                     const ocupacao = getOcupacao(dia)
                     const ocupado = Boolean(ocupacao)
                     const selecionado = dia === selectedDay
+                    const disponivel = !pday && !ocupado && !selecionado
 
                     const ativar = () => {
                         if (pday) {
@@ -140,6 +139,7 @@ export function Calendar({
                             tabIndex={0}
                             aria-label={ariaLabel}
                             aria-pressed={selecionado}
+                            whileHover={disponivel ? { y: -2 } : undefined}
                             whileTap={{ scale: 0.92 }}
                             onClick={ativar}
                             onKeyDown={e => {
@@ -158,7 +158,7 @@ export function Calendar({
                                         ? 'bg-accent text-white'
                                         : selecionado
                                             ? 'bg-secondary text-white shadow-md'
-                                            : 'bg-white text-primary border border-slate-200 hover:border-secondary hover:bg-secondary/10'}
+                                            : 'bg-white text-primary border border-slate-200 hover:border-secondary hover:bg-secondary/10 hover:shadow-md'}
                             `}
                         >
                             {pday ? (

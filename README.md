@@ -16,68 +16,89 @@ contraste e poucos passos.
 - **Tailwind CSS 4**
 - **Supabase** (PostgreSQL) — fonte da verdade dos dados
 - **Vercel** — hospedagem
-- Autenticação admin com **JWT** (`jsonwebtoken`) + **bcrypt**
-- Exportação do calendário em **imagem** (`html-to-image`) e **PDF** (`jspdf` / `jspdf-autotable`)
+- Autenticação dos líderes com **Supabase Auth** (e-mail + senha, sessão em cookies
+  via `@supabase/ssr`)
+- Exportação do calendário em **imagem** (`html-to-image`) para compartilhar no WhatsApp
 - `framer-motion` (animações) e `swr` (data fetching no client)
 
 ## Supabase
-**Definição da tabela:**
-| column_name | data_type         | is_nullable | column_default                      |
-| ----------- | ----------------- | ----------- | ----------------------------------- |
-| id          | integer           | NO          | nextval('usuario_id_seq'::regclass) |
-| username    | character varying | NO          | null                                |
-| senha_hash  | text              | NO          | null                                |
-| ala_id      | integer           | NO          | null                                |
-| ativo       | boolean           | NO          | true                                |
 
-| column_name | data_type         | is_nullable | column_default |
-| ----------- | ----------------- | ----------- | -------------- |
-| id          | integer           | NO          | null           |
-| nome        | character varying | NO          | null           |
-| descricao   | character varying | YES         | null           |
-| endereco    | character varying | YES         | null           |
-| slug        | text              | NO          | null           |
+### Tabelas do app
 
-| column_name | data_type         | is_nullable | column_default |
-| ----------- | ----------------- | ----------- | -------------- |
-| id          | integer           | NO          | null           |
-| ala_id      | integer           | NO          | null           |
-| data        | date              | NO          | null           |
-| nome        | character varying | NO          | null           |
-| telefone    | character varying | NO          | null           |
+**`ala`** — uma por ala; controla o link público (slug) e dados de exibição.
+| column_name | data_type         | is_nullable | observação                     |
+| ----------- | ----------------- | ----------- | ------------------------------ |
+| id          | integer           | NO          | PK                             |
+| nome        | character varying | NO          | nome de exibição ("Ala …")     |
+| descricao   | character varying | YES         | opcional                       |
+| endereco    | text              | YES         | rua/número (campo livre)       |
+| slug        | text              | NO          | link público (`/[slug]`), único |
 
-**Todas as tabelas**
-| table_name  |
-| ----------- |
-| agendamento |
-| ala         |
-| usuario     |
+**`agendamento`** — um almoço por dia, por ala (constraint única em `ala_id, data`).
+| column_name | data_type         | is_nullable |
+| ----------- | ----------------- | ----------- |
+| id          | integer           | NO          |
+| ala_id      | integer           | NO          |
+| data        | date              | NO          |
+| nome        | character varying | NO          |
+| telefone    | character varying | NO          |
 
-**Chaves estrangeiras**
-| table_name  | column_name | foreign_table_name | foreign_column_name |
-| ----------- | ----------- | ------------------ | ------------------- |
-| agendamento | ala_id      | ala                | id                  |
-| usuario     | ala_id      | ala                | id                  |
+### Tabelas de autenticação/papéis
+
+A sessão é do **Supabase Auth** (`auth.users`). Duas tabelas ligam o usuário ao app:
+
+**`perfil`** — 1:1 com `auth.users` (criado por trigger no signup).
+| column_name | data_type   | is_nullable | observação                  |
+| ----------- | ----------- | ----------- | --------------------------- |
+| id          | uuid        | NO          | PK → `auth.users(id)`       |
+| nome        | text        | NO          | default `''`                |
+| email       | text        | YES         |                             |
+| is_owner    | boolean     | NO          | default `false` — acesso total |
+| criado_em   | timestamptz | NO          | default `now()`             |
+
+**`ala_membro`** — vínculo usuário ↔ ala (1 ala por member).
+| column_name  | data_type   | is_nullable | observação                          |
+| ------------ | ----------- | ----------- | ----------------------------------- |
+| id           | bigint      | NO          | PK (identity)                       |
+| ala_id       | integer     | NO          | → `ala(id)`                         |
+| user_id      | uuid        | NO          | → `auth.users(id)`                  |
+| status       | text        | NO          | `pendente` \| `aprovado`            |
+| aprovado_por | uuid        | YES         | → `auth.users(id)`                  |
+| criado_em    | timestamptz | NO          | default `now()`; único em (ala_id, user_id) |
+
+**Papéis**
+- **owner** (`perfil.is_owner = true`) — acessa **todas as alas**, aprova/remove
+  usuários, **cria novas alas** e troca a "ala em foco" no painel.
+- **member** — uma ala só (o `ala_membro` aprovado). Um member aprovado também pode
+  aprovar/remover usuários **da sua ala**.
 
 ## Funcionalidades
 
 ### Público
 
-- Página inicial com a lista de alas
+- Página inicial com a lista de alas (e uma **escritura do Livro de Mórmon** sorteada
+  a cada carregamento). A ala de **teste** só aparece em desenvolvimento.
 - Página por ala (`/[slug]`) com calendário do mês atual e do seguinte
 - Bloqueio automático de dias já ocupados e das segundas (P-day)
-- Criação de agendamento (backend como fonte da verdade, evita conflitos)
-- Ao compartilhar o link da ala, o preview mostra o **nome da ala** como título e
-  uma escritura sobre Cristo (2 Néfi 31:20) como descrição (metadata por ala)
+- Agendamento em **modal** (backend como fonte da verdade, evita conflitos)
+- Ao compartilhar o link da ala, o preview (só texto) mostra **"Calendário de almoços
+  da \<ala\>"** como título e um convite como descrição (metadata por ala). A **aba**
+  do navegador mostra só o nome da ala.
 
-### Administrativo
+### Administrativo (líderes)
 
-- Login do líder de ala (`/admin`) com sessão via cookie JWT
+- **Login/cadastro** do líder em `/admin` via Supabase Auth (e-mail + senha), com
+  **recuperação de senha** (link por e-mail → `/auth/confirmar` → `/redefinir-senha`)
+- Quem entra sem ala aprovada vai para **`/acesso`** pedir acesso a uma ala e
+  aguardar aprovação
 - Painel (`/dashboard`) com os agendamentos da ala, agrupados por mês
 - Cada mês **recolhe/expande** ao clicar no nome (evita rolar listas longas)
 - Histórico de almoços dos **3 meses anteriores**
 - Editar e excluir agendamentos (modal mobile-first, confirmação de remoção inline)
-- Exportar o calendário do mês como imagem (para compartilhar no WhatsApp) ou PDF
+- Exportar o calendário do mês como imagem (para compartilhar no WhatsApp)
+- Card **Usuários**: aprovar pendentes e remover acesso (escopo da ala em foco)
+- **Owner**: trocar a ala em foco e **criar novas alas** direto do painel (o slug é
+  gerado do nome; "Endereço" é um campo livre)
 
 ### Tempo real
 
@@ -109,7 +130,9 @@ contraste e poucos passos.
   (`--color-primary`/`--color-secondary` em [`globals.css`](src/app/globals.css)).
 - Tipografia **Source Sans** (corpo) + **Source Serif** (títulos) via `next/font`.
 - Base de fonte ~18px, foco visível, alvos de toque grandes, calendário operável
-  por teclado/leitor de tela e respeito a `prefers-reduced-motion`.
+  por teclado/leitor de tela.
+- **Hover e micro-animações** no desktop (via `transform`/`opacity`, leves) que
+  **respeitam `prefers-reduced-motion`** (CSS global + `MotionConfig reducedMotion="user"`).
 - A **imagem gerada** ([`CalendarMonthView`](src/components/CalendarMonthView.tsx))
   usa estilos inline + SVG (não depende do Tailwind) para renderizar igual em
   qualquer aparelho no `html-to-image`.
@@ -120,13 +143,17 @@ contraste e poucos passos.
 src/
 ├── app/                      # App Router (rotas + páginas)
 │   ├── [slug]/               # Página pública de uma ala (+ metadata por ala)
-│   ├── admin/                # Login do líder
+│   ├── admin/                # Login/cadastro do líder (Supabase Auth)
+│   ├── acesso/               # Pedir/aguardar acesso a uma ala
+│   ├── redefinir-senha/      # Definir nova senha (via link de e-mail)
 │   ├── dashboard/            # Painel administrativo da ala
+│   ├── auth/confirmar/       # Troca o link do e-mail por sessão
 │   ├── api/                  # Route handlers (backend)
-│   │   ├── admin/            # login, logout, dashboard (checagem de sessão)
+│   │   ├── acesso/           # solicitar, aprovar, remover (vínculos de ala)
 │   │   ├── agendamentos/     # consulta, update, delete por ala
 │   │   ├── agendar/          # criação de agendamento
-│   │   └── alas/             # lista de alas
+│   │   ├── ala-atual/        # owner troca a ala em foco
+│   │   └── alas/             # lista de alas + criar (owner)
 │   ├── layout.tsx            # metadados, fontes, footer
 │   ├── template.tsx          # transição suave entre páginas
 │   ├── manifest.ts           # web manifest (instalar na tela inicial)
@@ -135,38 +162,76 @@ src/
 │   └── globals.css           # tema (cores/fontes) + fundo celestial + acessibilidade
 ├── components/               # Componentes de UI reutilizáveis
 ├── hooks/                    # use-ocupados-realtime (atualização ao vivo via WebSocket)
-└── lib/                      # supabase/{client,server,admin}, auth, date,
-                              #   phone, validation (entrada), rate-limit
+├── lib/                      # supabase/{client,server,browser,auth-server}, session,
+│                             #   date, alas, escrituras, phone, validation, rate-limit
+└── proxy.ts                  # renova a sessão do Supabase Auth (convenção do Next 16)
 ```
 
 ## APIs
 
-| Método | Rota                          | Descrição                          | Auth  |
-| ------ | ----------------------------- | ---------------------------------- | ----- |
-| GET    | `/api/alas`                   | Lista as alas                      | —     |
-| GET    | `/api/agendamentos/[slug]`    | Dias ocupados de uma ala           | —     |
-| POST   | `/api/agendar`                | Cria um agendamento                | —     |
-| POST   | `/api/admin/login`            | Autentica o líder (gera cookie)    | —     |
-| POST   | `/api/admin/logout`           | Encerra a sessão                   | admin |
-| GET    | `/api/admin/dashboard`        | Checagem de sessão (guard de login)| admin |
-| POST   | `/api/agendamentos/update`    | Atualiza um agendamento            | admin |
-| POST   | `/api/agendamentos/delete`    | Remove um agendamento              | admin |
+| Método | Rota                          | Descrição                                  | Auth         |
+| ------ | ----------------------------- | ------------------------------------------ | ------------ |
+| GET    | `/api/alas`                   | Lista as alas (esconde a de teste em prod) | —            |
+| GET    | `/api/agendamentos/[slug]`    | Dias ocupados de uma ala                   | —            |
+| POST   | `/api/agendar`                | Cria um agendamento                        | —            |
+| POST   | `/api/agendamentos/update`    | Atualiza um agendamento                    | líder        |
+| POST   | `/api/agendamentos/delete`    | Remove um agendamento                      | líder        |
+| POST   | `/api/acesso/solicitar`       | Pede acesso a uma ala (vínculo pendente)   | logado       |
+| POST   | `/api/acesso/aprovar`         | Aprova um vínculo pendente                 | owner/member |
+| POST   | `/api/acesso/remover`         | Remove o acesso de um usuário              | owner/member |
+| POST   | `/api/ala-atual`              | Define a ala em foco                       | owner        |
+| POST   | `/api/alas/criar`             | Cria uma nova ala                          | owner        |
+| GET    | `/auth/confirmar`             | Troca o link do e-mail por sessão          | —            |
+
+> "líder" = owner **ou** member aprovado da ala em questão.
 
 ## Variáveis de ambiente
 
 Crie um arquivo `.env.local` na raiz:
 
 ```bash
-# Supabase (cliente público)
+# Supabase (cliente público / anon — usado no navegador e no Supabase Auth)
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 
 # Supabase (server / service role — nunca expor no client)
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
+```
 
-# Segredo para assinar os tokens JWT de sessão admin
-AUTH_SECRET=
+No painel do Supabase, em **Authentication**: habilite o provider **Email**, defina
+a **Site URL** (preenche o link dos e-mails) e adicione as **Redirect URLs**
+(`http://localhost:3000/**` e a URL de produção). Para a recuperação de senha ficar
+bonita, cole o template de [`supabase/email-templates/redefinir-senha.html`](supabase/email-templates/redefinir-senha.html)
+em **Email Templates → Reset Password**.
+
+## Banco e papéis (SQL de setup)
+
+Tabelas de papéis + trigger que cria o `perfil` no signup (rodar uma vez):
+
+```sql
+create table if not exists public.perfil (
+    id uuid primary key references auth.users(id) on delete cascade,
+    nome text not null default '', email text,
+    is_owner boolean not null default false,
+    criado_em timestamptz not null default now()
+);
+
+create table if not exists public.ala_membro (
+    id bigint generated always as identity primary key,
+    ala_id integer not null references public.ala(id) on delete cascade,
+    user_id uuid not null references auth.users(id) on delete cascade,
+    status text not null default 'pendente' check (status in ('pendente','aprovado')),
+    aprovado_por uuid references auth.users(id),
+    criado_em timestamptz not null default now(),
+    unique (ala_id, user_id)
+);
+
+-- coluna de endereço da ala (campo livre)
+alter table public.ala add column if not exists endereco text;
+
+-- promove o primeiro owner
+update public.perfil set is_owner = true where email = 'voce@exemplo.com';
 ```
 
 ## Realtime (Supabase)
@@ -189,11 +254,13 @@ alter table agendamento replica identity full;
 
 ## Segurança
 
+- **Autenticação** via Supabase Auth; o `proxy.ts` renova a sessão a cada requisição.
+  As rotas do painel resolvem papel/ala em foco em [`src/lib/session.ts`](src/lib/session.ts).
 - **Validação de entrada** em todas as rotas públicas (`src/lib/validation.ts`):
   teto de tamanho de corpo, formato e charset antes de tocar no banco.
 - **Rate limit por IP** (`src/lib/rate-limit.ts`, em memória): `/api/agendar` 6/min,
-  `/api/admin/login` 5/10min, GETs públicos 30/min. Ao escalar horizontalmente,
-  troque o `store` por Upstash/Vercel KV (mesma interface).
+  GETs públicos 30/min. Ao escalar horizontalmente, troque o `store` por
+  Upstash/Vercel KV (mesma interface).
 - Headers de segurança em `next.config.ts` (`X-Frame-Options`, `nosniff`, HSTS…).
 - As rotas nunca ecoam o erro do banco; respondem mensagens genéricas.
 
@@ -212,8 +279,11 @@ A aplicação sobe em http://localhost:3000.
 npm run dev     # ambiente de desenvolvimento
 npm run build   # build de produção
 npm run start   # serve o build de produção
-npm run lint    # ESLint
+npm run lint    # ESLint (= eslint src)
 ```
+
+> Não rode `npm run build` com o `npm run dev` aberto: os dois disputam o cache
+> `.next`. Para só checar tipos, use `npx tsc --noEmit`.
 
 ## Créditos
 

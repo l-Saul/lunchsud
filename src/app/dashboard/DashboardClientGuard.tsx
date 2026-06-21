@@ -1,10 +1,11 @@
 'use client';
 
-// Sincroniza logout entre abas: se o líder sai em uma aba, as outras voltam ao login
-// (via BroadcastChannel 'auth').
+// Sincroniza o logout entre abas: se a sessão do Supabase Auth cai (logout em
+// outra aba ou token expirado), volta para o login.
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { criarSupabaseBrowser } from '@/lib/supabase/browser';
 
 export default function DashboardClientGuard({
     children
@@ -12,18 +13,17 @@ export default function DashboardClientGuard({
     children: React.ReactNode;
 }) {
     const router = useRouter();
+    const [supabase] = useState(() => criarSupabaseBrowser());
 
     useEffect(() => {
-        const bc = new BroadcastChannel('auth');
-
-        bc.onmessage = msg => {
-            if (msg.data === 'logout') {
-                router.push('/admin');
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(event => {
+            if (event === 'SIGNED_OUT') {
+                router.replace('/admin');
             }
-        };
+        });
 
-        return () => bc.close();
-    }, [router]);
+        return () => subscription.unsubscribe();
+    }, [router, supabase]);
 
     return <>{children}</>;
 }

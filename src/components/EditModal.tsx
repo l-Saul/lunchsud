@@ -112,7 +112,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
             <button
                 onClick={() => setOpen(true)}
                 aria-label="Editar agendamento"
-                className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-secondary transition hover:bg-secondary/10 cursor-pointer"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-secondary transition hover:bg-secondary/10 hover:scale-110 active:scale-95 cursor-pointer"
             >
                 {/* Ícone de lápis (SVG inline em vez de /editar.png). */}
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

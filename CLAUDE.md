@@ -61,31 +61,55 @@ de data/fuso/P-day em componentes.
 ## Mapa de arquivos
 
 - `src/app/[slug]/` — página pública de agendamento (`ClientPage.tsx` é o cliente).
-  `page.tsx` tem `generateMetadata` por ala: **título do compartilhamento = nome
-  da ala**, descrição = escritura (2 Néfi 31:20). É a página que o membro recebe.
+  `page.tsx` tem `generateMetadata` por ala: **aba do navegador = nome da ala**;
+  **compartilhamento** = título "Calendário de almoços da \<ala\>" + convite (só
+  texto, sem imagem). É a página que o membro recebe. A escritura do Livro de Mórmon
+  é sorteada na **home** (`src/app/page.tsx`) a cada carregamento.
 - `src/app/dashboard/` — painel do líder (server component + guards client).
-  `MesColapsavel.tsx` deixa cada mês recolher/expandir ao clicar no nome.
-- `src/app/admin/` — login do líder.
+  `MesColapsavel.tsx` deixa cada mês recolher/expandir ao clicar no nome;
+  `TrocarAla.tsx` (owner) troca a ala em foco e cria novas alas.
+- `src/app/admin/` — login/cadastro do líder (Supabase Auth) + "esqueci a senha".
+- `src/app/acesso/` — quem entra sem ala aprovada pede/aguarda acesso a uma ala.
+- `src/app/redefinir-senha/` + `src/app/auth/confirmar/` — fluxo de nova senha
+  (link do e-mail → troca por sessão → define a senha).
 - `src/app/api/` — route handlers (ver tabela de APIs no README).
 - `src/components/Footer.tsx` — rodapé global; crédito do dev (link externo p/ portfólio).
 - `src/components/Calendar.tsx` — calendário interativo público.
 - `src/components/CalendarMonthView.tsx` — calendário da **imagem exportada**.
 - `src/components/CalendarExportImage.tsx` — gera a imagem (download no desktop;
   `navigator.share` no mobile → grupo do WhatsApp). **Preserve esse comportamento.**
-- `src/lib/` — `supabase/{client,server,admin}.ts` (clients agrupados),
-  `auth.ts` (JWT), `date.ts`, `phone.ts`, `validation.ts` (saneamento de entrada),
-  `rate-limit.ts` (limite por IP).
+- `src/lib/` — `supabase/{client,server,browser,auth-server}.ts` (clients agrupados:
+  `client` anon p/ Realtime, `server` service-role, `browser`/`auth-server` ligados à
+  sessão do Supabase Auth), `session.ts` (papel owner/member + ala em foco),
+  `date.ts`, `phone.ts`, `alas.ts` (visibilidade/slug das alas), `escrituras.ts`,
+  `validation.ts` (saneamento de entrada), `rate-limit.ts` (limite por IP).
 - `src/hooks/` — `use-ocupados-realtime.ts`: Realtime via **WebSocket**
   (Supabase Realtime, não polling). Usado no calendário público e no painel.
+
+## Autenticação e papéis (Supabase Auth)
+
+- Login/cadastro por **e-mail + senha** (`@supabase/ssr`); a sessão fica em cookies
+  e o `src/proxy.ts` (convenção "middleware" do Next 16) renova o token a cada request.
+  **Nunca** reintroduza JWT/bcrypt próprios — saíram na migração.
+- O contexto do usuário sai de `src/lib/session.ts`: `getContexto()`/`requireAcesso()`
+  resolvem papel + ala em foco; `podeEditarAla()` autoriza ações por ala.
+- **Papéis** (tabelas `perfil` + `ala_membro`, lidas via service-role no servidor):
+  - **owner** (`perfil.is_owner`) — todas as alas; aprova/remove usuários, cria alas e
+    troca a "ala em foco" (cookie `ala_atual` via `/api/ala-atual`).
+  - **member** — uma ala só (vínculo `ala_membro` aprovado).
+  - Sem ala aprovada → `/acesso`. Vínculo removido → volta a poder pedir acesso.
+- **Ala de teste** (slug `teste`) só aparece nas listas em desenvolvimento — filtre
+  sempre por `semAlaTesteEmProd()` de `src/lib/alas.ts`. O **slug** é gerado do nome
+  por `gerarSlug()` (minúsculo, sem "ala", espaços→`_`, sem acento) — não invente outro.
 
 ## Segurança (não enfraquecer)
 
 - **Toda rota pública valida a entrada** via `src/lib/validation.ts` (`lerJson` +
-  `parseAgendar`/`parseLogin`/`parseSlug`/`parseEdicao`/`parseId`): teto de tamanho
+  `parseAgendar`/`parseSlug`/`parseEdicao`/`parseId`/`parseNovaAla`): teto de tamanho
   de corpo, formato e charset. Não volte a ler `req.json()` cru nem a inserir
   campos sem sanear.
 - **Rate limit por IP** em `src/lib/rate-limit.ts` (em memória, janela fixa):
-  `/api/agendar` 6/min, `/api/admin/login` 5/10min, GETs públicos 30/min. É
+  `/api/agendar` 6/min, GETs públicos 30/min. É
   **por instância** (serverless) — ao escalar horizontalmente, troque só o `store`
   por Upstash/Vercel KV mantendo a mesma interface.
 - Rotas **nunca** ecoam `error.message` do banco (vaza detalhes); respondem genérico.
@@ -96,9 +120,14 @@ de data/fuso/P-day em componentes.
 
 ## Banco (Supabase)
 
-- `ala`: `id`, `nome`, `slug`.
+- `ala`: `id`, `nome`, `slug` (link público, gerado do nome), `endereco` (texto
+  livre, opcional), `descricao` (opcional).
 - `agendamento`: `id`, `ala_id`, `data` (`YYYY-MM-DD`), `nome`, `telefone`.
   Constraint única em (ala_id, data) → impõe 1 por dia.
+- `perfil`: 1:1 com `auth.users` (criado por trigger no signup) — `id`, `nome`,
+  `email`, `is_owner`.
+- `ala_membro`: vínculo usuário↔ala — `id`, `ala_id`, `user_id`, `status`
+  (`pendente`/`aprovado`), `aprovado_por`. Único em (ala_id, user_id).
 - **Realtime (uma vez, no SQL editor):** sem isso o WebSocket não atualiza ao vivo.
   ```sql
   alter publication supabase_realtime add table agendamento;
@@ -125,4 +154,6 @@ de data/fuso/P-day em componentes.
 - Animações em framer-motion respeitam `prefers-reduced-motion` via
   `MotionConfig reducedMotion="user"` no `template.tsx`; decorações em CSS são
   neutralizadas pelo bloco `@media (prefers-reduced-motion)` no `globals.css`.
-- Variáveis de ambiente: ver README. Falta `AUTH_SECRET` quebra o login admin.
+- Variáveis de ambiente: ver README (4 chaves do Supabase). **Não há mais
+  `AUTH_SECRET`** — a sessão é do Supabase Auth. O login depende, no painel do
+  Supabase, do provider **Email** ligado e das **Site URL / Redirect URLs** corretas.

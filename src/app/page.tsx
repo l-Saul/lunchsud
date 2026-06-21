@@ -154,10 +154,10 @@ export default function IndexPage() {
                                             setLoadingSlug(ala.slug)
                                             router.push(`/${ala.slug}`)
                                         }}
-                                        className={`group flex w-full items-center justify-between gap-4 rounded-2xl border-l-4 border-secondary px-6 py-5 text-left text-xl font-medium shadow-lg transition cursor-pointer disabled:cursor-default
+                                        className={`group flex w-full items-center justify-between gap-4 rounded-2xl border-l-4 border-secondary px-6 py-5 text-left text-xl font-medium shadow-lg transition duration-200 cursor-pointer disabled:cursor-default
                                             ${isLoading
                                                 ? 'bg-secondary text-white'
-                                                : 'bg-white text-primary hover:bg-secondary hover:text-white'}
+                                                : 'bg-white text-primary hover:bg-secondary hover:text-white hover:shadow-xl'}
                                         `}
                                     >
                                         <span>{isLoading ? 'Abrindo…' : ala.nome}</span>

@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase/server';
-import { requireAdminSession } from '@/lib/auth';
+import { getContexto } from '@/lib/session';
 import { lerJson, parseId, ValidationError } from '@/lib/validation';
 
-// Remove um agendamento por id. Restrito ao líder autenticado e à própria ala.
+// Remove um agendamento por id. Escopo = ala em foco do líder (member: sua ala;
+// owner: ala selecionada).
 export async function POST(req: Request) {
-    const session = await requireAdminSession();
+    const ctx = await getContexto();
+    if (!ctx || ctx.alaId === null) {
+        return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    }
 
     let id: number;
     try {
@@ -21,7 +25,7 @@ export async function POST(req: Request) {
         .from('agendamento')
         .delete()
         .eq('id', id)
-        .eq('ala_id', session.alaId) // trava: só apaga agendamento da própria ala
+        .eq('ala_id', ctx.alaId) // trava: só apaga agendamento da ala em foco
         .select();
 
     if (error) {

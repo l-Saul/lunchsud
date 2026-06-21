@@ -2,9 +2,10 @@ import type { Metadata } from 'next'
 import { supabaseServer } from '@/lib/supabase/server'
 import ClientPage from './ClientPage'
 
-// Metadata por ala: ao compartilhar o link, o preview mostra (só texto, sem imagem)
-// o título "Calendário de almoços da <ala>" e um convite. Assim o membro que recebe
-// já entende de qual ala é e o que fazer.
+// Metadata por ala:
+//  - título da ABA do navegador = só o nome da ala (curto, não estoura a aba);
+//  - preview de COMPARTILHAMENTO = "Calendário de almoços da <ala>" + convite
+//    (só texto, sem imagem), pra quem recebe já saber de qual ala é e o que fazer.
 export async function generateMetadata(
     { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
@@ -18,23 +19,23 @@ export async function generateMetadata(
 
     // Usa o nome (legível) da ala; o slug cru ficaria minúsculo/com hífen no título.
     const nome = ala?.nome ?? 'sua ala'
-    const titulo = `Calendário de almoços da ${nome}`
+    const tituloCompartilhar = `Calendário de almoços da ${nome}`
     const descricao = 'Agende seu almoço para nossos missionários ❤️'
 
     return {
-        // absolute = ignora o template "%s · ..." do layout.
-        title: { absolute: titulo },
+        // absolute = ignora o template "%s · ..." do layout. Aba = só o nome da ala.
+        title: { absolute: nome },
         description: descricao,
         // Sem `images`: o compartilhamento mostra apenas texto (título + descrição).
         openGraph: {
             type: 'website',
             locale: 'pt_BR',
-            title: titulo,
+            title: tituloCompartilhar,
             description: descricao,
         },
         twitter: {
             card: 'summary',
-            title: titulo,
+            title: tituloCompartilhar,
             description: descricao,
         },
     }
