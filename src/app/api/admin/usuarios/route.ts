@@ -1,5 +1,5 @@
 import { requireAdminSession } from '@/lib/auth';
-import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function GET() {
     const session = await requireAdminSession();

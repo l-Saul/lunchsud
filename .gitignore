@@ -32,7 +32,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-hash.js
+
+# local utility scripts
+scripts/hash.js
 
 # vercel
 .vercel

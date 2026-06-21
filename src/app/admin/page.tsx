@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdminSession } from '@/lib/auth';
-import LoginClientGuard from './loginClientGuard';
-import LoginForm from './loginForm';
+import LoginClientGuard from './LoginClientGuard';
+import LoginForm from './LoginForm';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;

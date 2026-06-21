@@ -2,7 +2,7 @@
 
 import { toPng } from 'html-to-image';
 import { useMemo, useState, useEffect } from 'react';
-import CalendarMonthView from '@/app/imagem/calendarioImg';
+import CalendarMonthView from '@/components/CalendarMonthView';
 import { createPortal } from 'react-dom';
 
 type Agendamento = {

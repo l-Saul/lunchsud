@@ -1,11 +1,11 @@
 import { redirect } from 'next/navigation';
 import { requireAdminSession } from '@/lib/auth';
-import DashboardClientGuard from './dashboardClientGuard';
-import { LogoutButton } from './logoutButton';
+import DashboardClientGuard from './DashboardClientGuard';
+import { LogoutButton } from './LogoutButton';
 import { supabaseServer } from '@/lib/supabase-server';
 import { formatDateBR } from '@/lib/date';
 import EditModal from '@/components/EditModal';
-import CalendarExportImage from '@/components/GerarImage';
+import CalendarExportImage from '@/components/CalendarExportImage';
 
 export default async function DashboardPage() {
     try {
