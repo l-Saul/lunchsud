@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { supabaseServer } from '@/lib/supabase/server'
 import ClientPage from './ClientPage'
 
@@ -46,14 +47,16 @@ export async function generateMetadata(
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
 
-    const { data: ala, error: alaError } = await supabaseServer
+    // Busca o nome real da ala (não dá pra derivar do slug — ele perde acentos e
+    // troca espaços por "_"). Slug inexistente → 404 (e não erro 500).
+    const { data: ala } = await supabaseServer
         .from('ala')
-        .select('id')
+        .select('id, nome')
         .eq('slug', slug)
         .single()
 
-    if (alaError || !ala) {
-        throw new Error('Ala não encontrada')
+    if (!ala) {
+        notFound()
     }
 
     const { data: ocupados, error } = await supabaseServer
@@ -67,9 +70,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 
     return (
         <ClientPage
-        slug={slug}
-        alaId={ala.id}
-        ocupados={ocupados ?? []}
+            slug={slug}
+            alaId={ala.id}
+            nomeAla={ala.nome}
+            ocupados={ocupados ?? []}
         />
     )
 }

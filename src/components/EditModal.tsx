@@ -6,6 +6,7 @@
 // por clique fora, tecla Esc ou botão X.
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatarTelefone } from '@/lib/phone';
 
@@ -24,6 +25,7 @@ const campoBase =
     'focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary';
 
 export default function EditModal({ id, data, nome, telefone }: Props) {
+    const router = useRouter();
     const [erroNome, setErroNome] = useState(false);
     const [erroTelefone, setErroTelefone] = useState(false);
 
@@ -64,7 +66,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
 
         if (res.ok) {
             fechar();
-            location.reload();
+            router.refresh(); // atualiza a lista sem recarregar a página toda
         } else {
             alert('Erro ao atualizar');
         }
@@ -84,7 +86,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
 
         if (res.ok) {
             fechar();
-            location.reload();
+            router.refresh(); // atualiza a lista sem recarregar a página toda
         } else {
             alert('Erro ao remover');
         }
@@ -94,7 +96,15 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
     useEffect(() => {
         if (!open) return;
 
-        document.body.style.overflow = 'hidden';
+        // Lock confiável no mobile (iOS ignora overflow:hidden no body para toque):
+        // fixa o body e restaura a posição ao fechar.
+        const scrollY = window.scrollY;
+        const { style } = document.body;
+        style.position = 'fixed';
+        style.top = `-${scrollY}px`;
+        style.left = '0';
+        style.right = '0';
+        style.width = '100%';
 
         const onKey = (e: KeyboardEvent) => {
             if (e.key === 'Escape') fechar();
@@ -102,7 +112,12 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
         window.addEventListener('keydown', onKey);
 
         return () => {
-            document.body.style.overflow = '';
+            style.position = '';
+            style.top = '';
+            style.left = '';
+            style.right = '';
+            style.width = '';
+            window.scrollTo(0, scrollY);
             window.removeEventListener('keydown', onKey);
         };
     }, [open]);
@@ -125,13 +140,18 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                 {open && (
                     <motion.div
                         key="backdrop"
-                        onClick={fechar}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-primary/40 p-4 backdrop-blur-sm"
+                        className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-primary/40 backdrop-blur-sm"
                     >
+                        {/* Container rolável: com o teclado aberto no mobile o modal pode
+                            passar da tela e ainda assim dá pra rolar até os botões. */}
+                        <div
+                            onClick={fechar}
+                            className="flex min-h-full items-center justify-center p-4"
+                        >
                         <motion.div
                             onClick={e => e.stopPropagation()}
                             role="dialog"
@@ -141,7 +161,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.96, y: 12 }}
                             transition={{ duration: 0.22, ease: 'easeOut' }}
-                            className="flex max-h-[90vh] w-full max-w-md flex-col overflow-y-auto rounded-2xl bg-background p-6 shadow-2xl"
+                            className="w-full max-w-md rounded-2xl bg-background p-6 shadow-2xl"
                         >
                             <div className="mb-5 flex items-center justify-between gap-3">
                                 <h3 className="text-xl font-semibold text-text">
@@ -265,6 +285,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                                 )}
                             </div>
                         </motion.div>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

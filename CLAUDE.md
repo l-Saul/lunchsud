@@ -82,7 +82,8 @@ de data/fuso/P-day em componentes.
   `client` anon p/ Realtime, `server` service-role, `browser`/`auth-server` ligados à
   sessão do Supabase Auth), `session.ts` (papel owner/member + ala em foco),
   `date.ts`, `phone.ts`, `alas.ts` (visibilidade/slug das alas), `escrituras.ts`,
-  `validation.ts` (saneamento de entrada), `rate-limit.ts` (limite por IP).
+  `site-url.ts` (URL pública p/ links de e-mail), `validation.ts` (saneamento de
+  entrada), `rate-limit.ts` (limite por IP).
 - `src/hooks/` — `use-ocupados-realtime.ts`: Realtime via **WebSocket**
   (Supabase Realtime, não polling). Usado no calendário público e no painel.
 
@@ -104,10 +105,10 @@ de data/fuso/P-day em componentes.
 
 ## Segurança (não enfraquecer)
 
-- **Toda rota pública valida a entrada** via `src/lib/validation.ts` (`lerJson` +
-  `parseAgendar`/`parseSlug`/`parseEdicao`/`parseId`/`parseNovaAla`): teto de tamanho
-  de corpo, formato e charset. Não volte a ler `req.json()` cru nem a inserir
-  campos sem sanear.
+- **Toda rota valida a entrada** via `src/lib/validation.ts` (`lerJson` +
+  `parseAgendar`/`parseSlug`/`parseEdicao`/`parseId`/`parseNovaAla`/`parseMembroId`/
+  `parseAlaId`): teto de tamanho de corpo, formato e charset. Não volte a ler
+  `req.json()` cru nem a inserir campos sem sanear.
 - **Rate limit por IP** em `src/lib/rate-limit.ts` (em memória, janela fixa):
   `/api/agendar` 6/min, GETs públicos 30/min. É
   **por instância** (serverless) — ao escalar horizontalmente, troque só o `store`
@@ -115,8 +116,15 @@ de data/fuso/P-day em componentes.
 - Rotas **nunca** ecoam `error.message` do banco (vaza detalhes); respondem genérico.
 - SQL injection: mitigado pelo query builder do Supabase (parametrizado). Não
   introduza SQL cru/`.rpc` com concatenação de string.
-- **PII:** a policy `leitura publica` (anon SELECT) expõe `telefone` via REST do
-  Supabase. O app nunca mostra telefone — avaliar restringir colunas/usar view.
+- **PII (ação recomendada):** a policy `leitura publica` (anon SELECT) expõe
+  `telefone` via REST do Supabase a qualquer um com a anon key. O app nunca usa
+  telefone no client e o GET `/api/agendamentos/[slug]` só devolve `data`+`nome`.
+  Para fechar de vez, restrinja as colunas do anon (não quebra o Realtime, que
+  ignora o payload e rebusca pelo servidor):
+  ```sql
+  revoke select on agendamento from anon;
+  grant select (id, ala_id, data, nome) on agendamento to anon;
+  ```
 
 ## Banco (Supabase)
 

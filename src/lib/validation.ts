@@ -134,6 +134,18 @@ export function parseId(raw: unknown): number {
     return idSaneado(o.id);
 }
 
+// Valida { membroId } (rotas de aprovar/remover acesso de usuário).
+export function parseMembroId(raw: unknown): number {
+    const o = (raw ?? {}) as Record<string, unknown>;
+    return idSaneado(o.membroId);
+}
+
+// Valida { alaId } (rotas de pedir acesso / trocar a ala em foco).
+export function parseAlaId(raw: unknown): number {
+    const o = (raw ?? {}) as Record<string, unknown>;
+    return idSaneado(o.alaId);
+}
+
 // Valida um slug vindo da URL (rota dinâmica). Normaliza para minúsculas.
 export function parseSlug(slug: string): string {
     const s = asString(slug).trim().toLowerCase();

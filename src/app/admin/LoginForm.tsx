@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { criarSupabaseBrowser } from '@/lib/supabase/browser';
+import { siteUrl } from '@/lib/site-url';
 
 export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
     const router = useRouter();
@@ -40,12 +41,14 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
 
         if (modo === 'entrar') {
             const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
-            setLoading(false);
 
             if (error) {
+                setLoading(false);
                 setErro('E-mail ou senha incorretos.');
                 return;
             }
+            // Mantém o loading LIGADO até a navegação trocar a tela (o componente
+            // desmonta no /dashboard) — senão o botão "descarrega" e parece travado.
             router.push('/dashboard');
             router.refresh();
             return;
@@ -73,19 +76,21 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
             password: senha,
             options: { data: { nome: nome.trim() } },
         });
-        setLoading(false);
 
         if (error) {
+            setLoading(false);
             setErro(error.message);
             return;
         }
 
-        // Com confirmação de e-mail desligada, já vem sessão → segue pro /acesso.
-        // Com confirmação ligada, não há sessão → orienta a confirmar o e-mail.
+        // Com confirmação de e-mail desligada, já vem sessão → segue pro /acesso
+        // (mantém o loading até navegar). Com confirmação ligada, não há sessão →
+        // para o loading e orienta a confirmar o e-mail.
         if (data.session) {
             router.push('/acesso');
             router.refresh();
         } else {
+            setLoading(false);
             setAviso('Conta criada! Confirme o e-mail que enviamos e depois faça login.');
             setModo('entrar');
         }
@@ -105,8 +110,10 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
 
         setLoading(true);
         // Ignora o retorno de propósito: respondemos igual com ou sem conta.
+        // Usa a URL pública do site (NEXT_PUBLIC_SITE_URL) para o link cair no
+        // domínio em produção, não no localhost.
         await supabase.auth.resetPasswordForEmail(email.trim(), {
-            redirectTo: `${window.location.origin}/auth/confirmar?next=/redefinir-senha`,
+            redirectTo: `${siteUrl()}/auth/confirmar?next=/redefinir-senha`,
         });
         setLoading(false);
 

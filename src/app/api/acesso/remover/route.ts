@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getContexto, podeEditarAla } from '@/lib/session';
 import { supabaseServer } from '@/lib/supabase/server';
+import { lerJson, parseMembroId } from '@/lib/validation';
 
 // Remove um vínculo (tira o acesso/autorização do usuário àquela ala). Quem pode:
 // owner (qualquer ala) ou member já aprovado da MESMA ala.
@@ -12,9 +13,7 @@ export async function POST(req: Request) {
 
     let membroId: number;
     try {
-        const body = await req.json();
-        membroId = Number(body?.membroId);
-        if (!Number.isInteger(membroId) || membroId <= 0) throw new Error();
+        membroId = parseMembroId(await lerJson(req));
     } catch {
         return NextResponse.json({ error: 'Dados inválidos' }, { status: 400 });
     }

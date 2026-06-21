@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getUsuario } from '@/lib/session';
 import { supabaseServer } from '@/lib/supabase/server';
+import { lerJson, parseAlaId } from '@/lib/validation';
 
 // Usuário logado pede acesso a UMA ala (cria vínculo pendente). Member = 1 ala,
 // então bloqueia se já houver qualquer vínculo.
@@ -12,9 +13,7 @@ export async function POST(req: Request) {
 
     let alaId: number;
     try {
-        const body = await req.json();
-        alaId = Number(body?.alaId);
-        if (!Number.isInteger(alaId) || alaId <= 0) throw new Error();
+        alaId = parseAlaId(await lerJson(req));
     } catch {
         return NextResponse.json({ error: 'Dados inválidos' }, { status: 400 });
     }

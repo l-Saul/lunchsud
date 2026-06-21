@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getContexto } from '@/lib/session';
 import { supabaseServer } from '@/lib/supabase/server';
+import { lerJson, parseAlaId } from '@/lib/validation';
 
 // Owner troca a ala em foco no painel (grava o cookie `ala_atual`, lido pelo
 // getContexto). Só owner — member tem uma ala só.
@@ -16,9 +17,7 @@ export async function POST(req: Request) {
 
     let alaId: number;
     try {
-        const body = await req.json();
-        alaId = Number(body?.alaId);
-        if (!Number.isInteger(alaId) || alaId <= 0) throw new Error();
+        alaId = parseAlaId(await lerJson(req));
     } catch {
         return NextResponse.json({ error: 'Dados inválidos' }, { status: 400 });
     }

@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { requireAcesso } from '@/lib/session';
 import DashboardClientGuard from './DashboardClientGuard';
 import { DashboardRealtime } from './DashboardRealtime';
 import { LogoutButton } from './LogoutButton';
+import { AbrirCalendarioButton } from './AbrirCalendarioButton';
 import { TrocarAla } from './TrocarAla';
 import { UsuariosCard, type Usuario } from './UsuariosCard';
 import { supabaseServer } from '@/lib/supabase/server';
@@ -127,19 +127,8 @@ export default async function DashboardPage() {
                         <TrocarAla alas={alasParaTroca} atualId={alaId} />
                     )}
 
-                    {/* Atalho para o calendário público desta ala */}
-                    {ala?.slug && (
-                        <Link
-                            href={`/${ala.slug}`}
-                            className="flex items-center justify-center gap-3 rounded-2xl bg-secondary px-5 py-4 text-base font-semibold text-white shadow-lg transition duration-200 hover:-translate-y-0.5 hover:opacity-95 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 sm:text-lg"
-                        >
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <rect x="3" y="4" width="18" height="18" rx="2" />
-                                <path d="M16 2v4M8 2v4M3 10h18" />
-                            </svg>
-                            Abrir calendário da ala
-                        </Link>
-                    )}
+                    {/* Atalho para o calendário público desta ala (com loading) */}
+                    {ala?.slug && <AbrirCalendarioButton slug={ala.slug} />}
 
                     {/* Card 1 — Agendamentos do mês */}
                     <AnimatedCard

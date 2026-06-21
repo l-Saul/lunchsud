@@ -163,7 +163,8 @@ src/
 ├── components/               # Componentes de UI reutilizáveis
 ├── hooks/                    # use-ocupados-realtime (atualização ao vivo via WebSocket)
 ├── lib/                      # supabase/{client,server,browser,auth-server}, session,
-│                             #   date, alas, escrituras, phone, validation, rate-limit
+│                             #   date, alas, escrituras, phone, site-url, validation,
+│                             #   rate-limit
 └── proxy.ts                  # renova a sessão do Supabase Auth (convenção do Next 16)
 ```
 

@@ -5,16 +5,19 @@
 //  2. Criar uma nova ala — seção separada, logo abaixo da troca. O link (slug) é
 //     gerado automático do nome; "Endereço" é um campo livre (rua/número) do banco.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { gerarSlug, normalizarNomeAla } from '@/lib/alas';
+import { LoadingOverlay } from '@/components/LoadingOverlay';
 
 type Ala = { id: number; nome: string };
 
 export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | null }) {
     const router = useRouter();
-    const [loading, setLoading] = useState(false);
+
+    // Texto do overlay de carregamento na tela toda (trocar de ala / entrar na nova).
+    const [transicao, setTransicao] = useState<string | null>(null);
 
     // Formulário de nova ala.
     const [criando, setCriando] = useState(false);
@@ -26,18 +29,29 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
     const nomePreview = normalizarNomeAla(nome);
     const linkPreview = gerarSlug(nomePreview); // slug automático (só leitura)
 
+    // Quando a ala em foco muda (após o refresh do servidor renderizar os dados
+    // novos), encerra o overlay de transição.
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setTransicao(null);
+    }, [atualId]);
+
     async function trocar(e: React.ChangeEvent<HTMLSelectElement>) {
         const alaId = Number(e.target.value);
-        if (!alaId || alaId === atualId || loading) return;
+        if (!alaId || alaId === atualId || transicao) return;
 
-        setLoading(true);
+        setTransicao('Trocando de ala…');
         const res = await fetch('/api/ala-atual', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ alaId }),
         });
-        setLoading(false);
-        if (res.ok) router.refresh();
+        if (!res.ok) {
+            setTransicao(null);
+            return;
+        }
+        // Mantém o overlay até o efeito de [atualId] limpar (dados novos na tela).
+        router.refresh();
     }
 
     async function criarAla(e: React.FormEvent) {
@@ -72,6 +86,7 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ alaId: novaId }),
             });
+            setTransicao('Abrindo a ala…');
         }
 
         resetForm();
@@ -87,7 +102,13 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
     }
 
     return (
-        <div className="relative rounded-2xl bg-linear-to-br from-white/15 to-white/5 p-px shadow-lg ring-1 ring-white/20">
+        <>
+            {/* Carregamento na tela toda durante a troca/criação de ala. */}
+            <AnimatePresence>
+                {transicao && <LoadingOverlay texto={transicao} />}
+            </AnimatePresence>
+
+            <div className="relative rounded-2xl bg-linear-to-br from-white/15 to-white/5 p-px shadow-lg ring-1 ring-white/20">
             <div className="flex flex-col gap-3 rounded-2xl bg-primary/40 px-4 py-4 backdrop-blur-sm">
                 {/* Cabeçalho — papel do usuário (owner) com ícone de pessoa */}
                 <div className="flex items-center gap-2.5">
@@ -113,7 +134,7 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
                             id="trocar-ala"
                             value={atualId ?? ''}
                             onChange={trocar}
-                            disabled={loading}
+                            disabled={transicao !== null}
                             className="min-h-12 w-full appearance-none rounded-xl border border-white/20 bg-white px-4 pr-11 text-base font-medium text-text shadow-sm transition hover:border-secondary/70 focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary disabled:opacity-60 cursor-pointer"
                         >
                             {atualId === null && <option value="">Selecione uma ala…</option>}
@@ -121,16 +142,12 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
                                 <option key={a.id} value={a.id}>{a.nome}</option>
                             ))}
                         </select>
-                        {/* appearance-none tira a setinha nativa; mostramos um chevron próprio
-                            (ou o spinner ao trocar) — a lista que abre continua a do sistema. */}
+                        {/* appearance-none tira a setinha nativa; mostramos um chevron
+                            próprio — a lista que abre continua a do sistema. */}
                         <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted">
-                            {loading ? (
-                                <span className="h-4 w-4 animate-spin rounded-full border-2 border-secondary/40 border-t-secondary" />
-                            ) : (
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                    <path d="m6 9 6 6 6-6" />
-                                </svg>
-                            )}
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="m6 9 6 6 6-6" />
+                            </svg>
                         </span>
                     </div>
                 </div>
@@ -230,6 +247,7 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
                     )}
                 </div>
             </div>
-        </div>
+            </div>
+        </>
     );
 }

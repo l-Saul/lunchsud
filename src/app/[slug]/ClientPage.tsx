@@ -23,17 +23,11 @@ type DiaOcupado = {
 type Props = {
     slug: string
     alaId: number
+    nomeAla: string   // nome real da ala (vem do banco)
     ocupados: DiaOcupado[]
 }
 
-// Converte o slug da URL ("ala-exemplo") no nome exibido ("Ala Exemplo").
-function formatarNomeAla(slug: string) {
-    return decodeURIComponent(slug)
-        .replace(/-/g, ' ')
-        .replace(/\b\w/g, l => l.toUpperCase())
-}
-
-export default function ClientPage({ slug, alaId, ocupados }: Props) {
+export default function ClientPage({ slug, alaId, nomeAla, ocupados }: Props) {
     const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null)
     const [nome, setNome] = useState('')
     const [telefone, setTelefone] = useState('')
@@ -56,7 +50,6 @@ export default function ClientPage({ slug, alaId, ocupados }: Props) {
     const canPrev = baseDate.getTime() !== mesAtual.getTime()
     const canNext = baseDate.getTime() !== mesSeguinte.getTime()
 
-    const nomeAla = formatarNomeAla(slug)
     const mesNomeBase = baseDate.toLocaleDateString('pt-BR', { month: 'long' })
 
     // Ao vivo: se outra pessoa agendar/editar/remover nesta ala, o WebSocket dispara
@@ -137,14 +130,29 @@ export default function ClientPage({ slug, alaId, ocupados }: Props) {
     useEffect(() => {
         if (!diaSelecionado) return
 
-        document.body.style.overflow = 'hidden'
+        // Trava o scroll de forma confiável no mobile: o iOS ignora `overflow:hidden`
+        // no body para toque, então fixamos o body e guardamos a posição (restaurada
+        // ao fechar). Sem isso, rolar dentro do modal mexia a página atrás.
+        const scrollY = window.scrollY
+        const { style } = document.body
+        style.position = 'fixed'
+        style.top = `-${scrollY}px`
+        style.left = '0'
+        style.right = '0'
+        style.width = '100%'
+
         const onKey = (e: KeyboardEvent) => {
             if (e.key === 'Escape') fecharModal()
         }
         window.addEventListener('keydown', onKey)
 
         return () => {
-            document.body.style.overflow = ''
+            style.position = ''
+            style.top = ''
+            style.left = ''
+            style.right = ''
+            style.width = ''
+            window.scrollTo(0, scrollY)
             window.removeEventListener('keydown', onKey)
         }
     }, [diaSelecionado, fecharModal])
@@ -166,7 +174,7 @@ export default function ClientPage({ slug, alaId, ocupados }: Props) {
                     {/* Conteúdo, acima das decorações */}
                     <div className="relative z-10 flex flex-col items-center gap-4">
                         <h1 className="text-4xl font-bold text-white drop-shadow-sm">
-                            Ala {nomeAla}
+                            {nomeAla}
                         </h1>
 
                         {/* Divisória com florzinha — toque delicado */}
@@ -257,13 +265,18 @@ export default function ClientPage({ slug, alaId, ocupados }: Props) {
                         {diaSelecionado && (
                             <motion.div
                                 key="agendar-backdrop"
-                                onClick={fecharModal}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: 0.2 }}
-                                className="fixed inset-0 z-50 flex items-center justify-center bg-primary/50 p-4 backdrop-blur-sm"
+                                className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-primary/50 backdrop-blur-sm"
                             >
+                                {/* Container rolável: com o teclado aberto no mobile o modal
+                                    pode passar da tela e ainda assim dá pra rolar até os botões. */}
+                                <div
+                                    onClick={fecharModal}
+                                    className="flex min-h-full items-center justify-center p-4"
+                                >
                                 <motion.div
                                     onClick={e => e.stopPropagation()}
                                     role="dialog"
@@ -273,7 +286,7 @@ export default function ClientPage({ slug, alaId, ocupados }: Props) {
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.96, y: 12 }}
                                     transition={{ duration: 0.2, ease: 'easeOut' }}
-                                    className="flex max-h-[90vh] w-full max-w-md flex-col overflow-y-auto rounded-2xl bg-background p-6 shadow-2xl"
+                                    className="w-full max-w-md rounded-2xl bg-background p-6 shadow-2xl"
                                 >
                                     <div className="mb-5 flex items-start justify-between gap-3">
                                         <h2 className="text-xl font-semibold text-text">
@@ -365,6 +378,7 @@ export default function ClientPage({ slug, alaId, ocupados }: Props) {
                                         </button>
                                     </div>
                                 </motion.div>
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
