@@ -230,6 +230,7 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
                                 </label>
                                 <input
                                     id="nova-ala-nome"
+                                    autoComplete="off"
                                     type="text"
                                     autoFocus
                                     placeholder="Ex.: São Lourenço"
@@ -288,6 +289,7 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
                                     <input
                                         id="nova-ala-estado"
                                         type="text"
+                                        autoComplete="off"
                                         placeholder="Ex.: Utah, Buenos Aires"
                                         value={estado}
                                         onChange={e => { setEstado(e.target.value); setErro(''); }}
@@ -303,6 +305,7 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
                                 </label>
                                 <input
                                     id="nova-ala-cidade"
+                                    autoComplete="off"
                                     type="text"
                                     placeholder="Ex.: Curitiba"
                                     value={cidade}
@@ -338,6 +341,7 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
                                 </label>
                                 <input
                                     id="nova-ala-endereco"
+                                    autoComplete="off"
                                     type="text"
                                     placeholder="Ex.: Rua das Flores, 123 — Centro"
                                     value={endereco}

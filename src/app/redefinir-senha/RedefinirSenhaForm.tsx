@@ -9,7 +9,7 @@ import { criarSupabaseBrowser } from '@/lib/supabase/browser';
 import { Flor } from '@/components/Flor';
 import { Spinner } from '@/components/Spinner';
 
-export default function RedefinirSenhaForm() {
+export default function RedefinirSenhaForm({ email }: { email: string }) {
     const router = useRouter();
     const [supabase] = useState(() => criarSupabaseBrowser());
 
@@ -76,6 +76,16 @@ export default function RedefinirSenhaForm() {
                     <p className="text-base text-muted">Escolha uma nova senha para a sua conta.</p>
 
                     <form onSubmit={handleSubmit} className="flex w-full flex-col gap-5 text-left">
+                        {/* Conta (escondido): diz ao gerenciador de senhas do celular de
+                            qual login é a senha nova, para ele atualizar a senha salva. */}
+                        <input
+                            type="email"
+                            name="username"
+                            autoComplete="username"
+                            value={email}
+                            readOnly
+                            hidden
+                        />
                         <div className="flex flex-col gap-1.5">
                             <label htmlFor="nova-senha" className="text-base font-medium text-text">
                                 Nova senha
@@ -83,6 +93,7 @@ export default function RedefinirSenhaForm() {
                             <div className="relative">
                                 <input
                                     id="nova-senha"
+                                    name="new-password"
                                     type={mostrar ? 'text' : 'password'}
                                     autoComplete="new-password"
                                     placeholder="Digite a nova senha"
@@ -122,6 +133,7 @@ export default function RedefinirSenhaForm() {
                             <div className="relative">
                                 <input
                                     id="confirmar-nova-senha"
+                                    name="new-password-confirm"
                                     type={mostrarConfirmar ? 'text' : 'password'}
                                     autoComplete="new-password"
                                     placeholder="Digite a senha novamente"

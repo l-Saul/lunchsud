@@ -176,6 +176,16 @@ servidor e no banco (validação, constraints, permissões), não travando a pes
   EUA/Canadá — outros países só com `+`, para erro de digitação não virar outro
   país. Brasil grava "41 99999 9999"/"41 3333 4444"; outros "+1 415 555 2671".
   Campo com `inputMode="tel"` (o teclado numérico não tem a tecla `+`).
+  **Sem máscara enquanto digita** (nem filtro de caractere): reescrever o valor a
+  cada tecla joga o cursor para o fim e impede corrigir um dígito no meio. O campo
+  guarda o que a pessoa escreveu e só é arrumado no `onBlur` (e no servidor).
+- **Preenchimento automático do celular:** todo formulário é um `<form>` de verdade
+  (com `type="submit"`, para a tecla "Ir" enviar) e cada campo tem `name` +
+  `autoComplete` certos: `name`, `tel`, `email`, `username` (e-mail no login),
+  `current-password`/`new-password`. E-mail com `autoCapitalize="none"`, sem
+  corretor, e `trim()` antes de enviar (a sugestão do teclado deixa espaço no
+  fim). Campo com dado de OUTRA pessoa ou da ala (editar agendamento, criar ala)
+  leva `autoComplete="off"` — senão o celular sugere o nome do próprio líder.
 - **Toda rota valida a entrada** via `src/lib/validation.ts` (`lerJson` +
   `parseAgendar`/`parseSlug`/`parseEdicao`/`parseId`/`parseNovaAla`/`parseMembroId`/
   `parseAlaId`): teto de tamanho de corpo, formato e charset. Não volte a ler

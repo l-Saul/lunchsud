@@ -13,6 +13,11 @@
 //
 // Grava: Brasil sem o 55 ("41 99999 9999" / "41 3333 4444", como os dados
 // antigos); os demais com o país na frente ("+1 415 555 2671", "+54 911 1234 5678").
+//
+// No formulário NÃO há máscara enquanto digita: com tantos formatos ela nunca
+// fica previsível, e reescrever o campo a cada tecla joga o cursor para o fim
+// (não dá para corrigir um dígito no meio). O campo guarda o que a pessoa
+// escreveu e só é arrumado ao sair dele (onBlur) — e de novo no servidor.
 
 // DDDs que existem no Brasil.
 const DDDS = new Set([
@@ -125,22 +130,4 @@ export function normalizarTelefone(valor: string): Telefone | null {
         if (br) return br;
     }
     return internacional(digitos, true);
-}
-
-// Máscara enquanto a pessoa digita. Não muda o sentido do que foi digitado (o
-// número final é decidido no fim, por normalizarTelefone): só mostra o formato
-// brasileiro "DD NNNNN NNNN" quando parece um número brasileiro sem país.
-export function mascaraTelefone(valor: string) {
-    const texto = valor.trimStart();
-    const todos = texto.replace(/\D/g, '');
-    // E.164 tem até 15 dígitos; com o prefixo "00" na frente, 17.
-    const digitos = todos.slice(0, todos.startsWith('00') ? 17 : 15);
-
-    // Internacional ou com zero na frente: só limpa, sem mexer na ordem.
-    if (texto.startsWith('+')) return `+${digitos}`;
-    if (digitos.startsWith('0') || digitos.length > 11) return digitos;
-
-    if (digitos.length <= 2) return digitos;
-    if (digitos.length <= 7) return `${digitos.slice(0, 2)} ${digitos.slice(2)}`;
-    return `${digitos.slice(0, 2)} ${digitos.slice(2, 7)} ${digitos.slice(7)}`;
 }

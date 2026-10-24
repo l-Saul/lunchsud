@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { mascaraTelefone, normalizarTelefone } from '@/lib/phone';
+import { normalizarTelefone } from '@/lib/phone';
 import { Spinner } from '@/components/Spinner';
 
 type Props = {
@@ -183,6 +183,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                                 </label>
                                 <input
                                     id={`nome-${id}`}
+                                    autoComplete="off"
                                     value={form.nome}
                                     aria-invalid={erroNome}
                                     onChange={e => {
@@ -204,13 +205,17 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                                 </label>
                                 <input
                                     id={`tel-${id}`}
+                                    autoComplete="off"
                                     type="tel"
                                     // "tel" (não "numeric"): o teclado de telefone tem a tecla "+".
                                     inputMode="tel"
+                                    maxLength={25}
                                     value={form.telefone}
                                     aria-invalid={erroTelefone}
+                                    // Sem máscara enquanto digita (o cursor ficava pulando para o
+                                    // fim); o número é arrumado ao sair do campo.
                                     onChange={e =>
-                                        setForm({ ...form, telefone: mascaraTelefone(e.target.value) })
+                                        setForm({ ...form, telefone: e.target.value })
                                     }
                                     onBlur={() => {
                                         const lido = normalizarTelefone(form.telefone);

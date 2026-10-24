@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Calendar } from '@/components/Calendar'
-import { mascaraTelefone, normalizarTelefone } from '@/lib/phone'
+import { normalizarTelefone } from '@/lib/phone'
 import { useOcupadosRealtime, type MudancaAgendamento } from '@/hooks/use-ocupados-realtime'
 import { Flor } from '@/components/Flor'
 import { Spinner } from '@/components/Spinner'
@@ -353,6 +353,17 @@ export default function ClientPage({ slug, alaId, nomeAla, ocupados, hoje, mesAt
                                     </button>
                                 </div>
 
+                                {/* <form> + name + autocomplete: é o que faz o celular oferecer
+                                    o nome e o telefone salvos (preenchimento automático) e a tecla
+                                    "Ir" do teclado enviar. noValidate: os erros são os nossos,
+                                    em português, embaixo de cada campo. */}
+                                <form
+                                    noValidate
+                                    onSubmit={e => {
+                                        e.preventDefault()
+                                        agendar()
+                                    }}
+                                >
                                 <div className="flex flex-col gap-4">
                                     <div className="flex flex-col gap-1.5">
                                         <label htmlFor="nome" className="text-base font-medium text-text">
@@ -360,8 +371,10 @@ export default function ClientPage({ slug, alaId, nomeAla, ocupados, hoje, mesAt
                                         </label>
                                         <input
                                             id="nome"
+                                            name="name"
                                             type="text"
                                             autoComplete="name"
+                                            autoCapitalize="words"
                                             maxLength={80}
                                             placeholder="Digite seu nome aqui"
                                             aria-invalid={erroNome}
@@ -385,16 +398,22 @@ export default function ClientPage({ slug, alaId, nomeAla, ocupados, hoje, mesAt
                                         </label>
                                         <input
                                             id="telefone"
+                                            name="tel"
                                             type="tel"
                                             autoComplete="tel"
                                             // "tel" (não "numeric"): o teclado de telefone tem a tecla "+".
                                             inputMode="tel"
                                             placeholder="Digite seu telefone aqui"
+                                            maxLength={25}
                                             aria-invalid={erroTelefone}
                                             className={`${campoBase} ${erroTelefone ? 'border-accent' : 'border-slate-300'}`}
                                             value={telefone}
+                                            // Sem máscara enquanto digita: o campo guarda exatamente o
+                                            // que a pessoa escreveu (com espaço, traço, + …). Reformatar
+                                            // a cada tecla jogava o cursor para o fim e impedia corrigir
+                                            // um dígito no meio.
                                             onChange={e => {
-                                                setTelefone(mascaraTelefone(e.target.value))
+                                                setTelefone(e.target.value)
                                                 if (erroTelefone) setErroTelefone(false)
                                             }}
                                             // Ao sair do campo mostra o número como foi entendido
@@ -427,6 +446,7 @@ export default function ClientPage({ slug, alaId, nomeAla, ocupados, hoje, mesAt
                                     ordem natural (nome → telefone → Confirmar). */}
                                 <div className="mt-6 flex flex-wrap-reverse gap-3">
                                     <button
+                                        type="button"
                                         onClick={fecharModal}
                                         disabled={loading}
                                         className="min-h-13 grow basis-28 rounded-xl border border-slate-300 px-4 text-lg font-medium text-text transition hover:bg-slate-100 disabled:opacity-50 cursor-pointer"
@@ -436,7 +456,7 @@ export default function ClientPage({ slug, alaId, nomeAla, ocupados, hoje, mesAt
                                     {/* Toque responde na hora; enquanto envia: travado, girando e
                                         dizendo "Confirmando…" — tocar de novo não faz nada. */}
                                     <button
-                                        onClick={agendar}
+                                        type="submit"
                                         disabled={loading}
                                         aria-busy={loading}
                                         className="flex min-h-13 grow basis-28 items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-lg font-semibold text-white shadow-md transition duration-100 hover:opacity-95 hover:shadow-lg enabled:active:scale-[0.98] disabled:opacity-70 cursor-pointer"
@@ -445,6 +465,7 @@ export default function ClientPage({ slug, alaId, nomeAla, ocupados, hoje, mesAt
                                         {loading ? 'Confirmando…' : 'Confirmar'}
                                     </button>
                                 </div>
+                                </form>
                             </div>
                             </div>
                         </div>

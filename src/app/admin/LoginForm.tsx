@@ -11,6 +11,17 @@ import { criarSupabaseBrowser } from '@/lib/supabase/browser';
 import { Spinner } from '@/components/Spinner';
 import { siteUrl } from '@/lib/site-url';
 
+// O Supabase responde em inglês; o líder precisa entender e saber o que fazer.
+function mensagemDeCadastro(original: string) {
+    const msg = original.toLowerCase();
+    if (msg.includes('already registered')) {
+        return 'Já existe uma conta com esse e-mail. Toque em "Já tem conta? Entrar" ou em "Esqueci minha senha".';
+    }
+    if (msg.includes('password')) return 'Escolha uma senha mais forte (pelo menos 6 caracteres).';
+    if (msg.includes('email')) return 'Confira o e-mail digitado.';
+    return 'Não foi possível criar a conta. Tente de novo.';
+}
+
 export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
     const router = useRouter();
     const [supabase] = useState(() => criarSupabaseBrowser());
@@ -39,8 +50,13 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
         setAviso('');
         setLoading(true);
 
+        // A sugestão do teclado do celular deixa um espaço no fim do e-mail, e o
+        // iPhone pode pôr a 1ª letra maiúscula: sem limpar, a senha certa dava
+        // "E-mail ou senha incorretos".
+        const emailLimpo = email.trim().toLowerCase();
+
         if (modo === 'entrar') {
-            const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+            const { error } = await supabase.auth.signInWithPassword({ email: emailLimpo, password: senha });
 
             if (error) {
                 setLoading(false);
@@ -72,14 +88,14 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
         }
 
         const { data, error } = await supabase.auth.signUp({
-            email,
+            email: emailLimpo,
             password: senha,
             options: { data: { nome: nome.trim() } },
         });
 
         if (error) {
             setLoading(false);
-            setErro(error.message);
+            setErro(mensagemDeCadastro(error.message));
             return;
         }
 
@@ -131,8 +147,10 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
                     </label>
                     <input
                         id="nome"
+                        name="name"
                         type="text"
                         autoComplete="name"
+                        autoCapitalize="words"
                         placeholder="Digite seu nome aqui"
                         value={nome}
                         onChange={e => setNome(e.target.value)}
@@ -146,10 +164,18 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
                 <label htmlFor="email" className="text-base font-medium text-text">
                     E-mail
                 </label>
+                {/* Entrar: "username" puxa o login salvo no gerenciador de senhas.
+                    Criar conta: "email" puxa o e-mail do próprio celular. Sem
+                    maiúscula automática nem corretor — e-mail não é frase. */}
                 <input
                     id="email"
+                    name="email"
                     type="email"
-                    autoComplete="email"
+                    inputMode="email"
+                    autoComplete={modo === 'entrar' ? 'username' : 'email'}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     placeholder="Digite seu e-mail aqui"
                     value={email}
                     onChange={e => setEmail(e.target.value)}
@@ -166,6 +192,7 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
                 <div className="relative">
                     <input
                         id="senha"
+                        name="password"
                         type={mostrarSenha ? 'text' : 'password'}
                         autoComplete={modo === 'entrar' ? 'current-password' : 'new-password'}
                         placeholder="Digite sua senha aqui"
@@ -207,6 +234,7 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
                     <div className="relative">
                         <input
                             id="confirmar-senha"
+                            name="password-confirm"
                             type={mostrarConfirmar ? 'text' : 'password'}
                             autoComplete="new-password"
                             placeholder="Digite a senha novamente"

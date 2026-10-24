@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { getUsuario } from '@/lib/session';
 import RedefinirSenhaForm from './RedefinirSenhaForm';
 
 export const dynamic = 'force-dynamic';
@@ -10,12 +11,15 @@ export const metadata: Metadata = {
 };
 
 // Página onde o usuário chega pelo link do e-mail (após /auth/confirmar trocar o
-// código pela sessão) para definir uma nova senha.
-export default function RedefinirSenhaPage() {
+// código pela sessão) para definir uma nova senha. O e-mail da conta vai para o
+// formulário para o gerenciador de senhas saber qual senha salva atualizar.
+export default async function RedefinirSenhaPage() {
+    const usuario = await getUsuario();
+
     return (
         <main className="flex min-h-screen items-center justify-center px-4 py-12">
             <section className="w-full max-w-md">
-                <RedefinirSenhaForm />
+                <RedefinirSenhaForm email={usuario?.email ?? ''} />
             </section>
         </main>
     );
