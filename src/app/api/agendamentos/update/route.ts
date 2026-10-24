@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase/server';
-import { getContexto } from '@/lib/session';
-import { lerJson, parseEdicao, ValidationError } from '@/lib/validation';
+import { supabaseServer } from '@/lib/supabase/service-role';
+import { getContexto } from '@/lib/server/session';
+import { lerJson, parseEdicao, ValidationError } from '@/lib/server/validation';
 
 // Atualiza um agendamento (data/nome/telefone). Escopo = ala em foco do líder
 // (member: sua ala; owner: ala selecionada). O filtro por ala_id garante isso.

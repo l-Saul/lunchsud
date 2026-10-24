@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase/server';
-import { getContexto } from '@/lib/session';
-import { lerJson, parseId, ValidationError } from '@/lib/validation';
+import { supabaseServer } from '@/lib/supabase/service-role';
+import { getContexto } from '@/lib/server/session';
+import { lerJson, parseId, ValidationError } from '@/lib/server/validation';
 
 // Remove um agendamento por id. Escopo = ala em foco do líder (member: sua ala;
 // owner: ala selecionada).

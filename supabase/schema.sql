@@ -29,7 +29,7 @@ create table public.ala (
     descricao    varchar(150),
     endereco     varchar(200),
     slug         text not null unique, -- link público, gerado do nome por gerarSlug()
-    -- Localização (src/lib/localizacao.ts). O fuso define o "hoje" (dia passado
+    -- Localização (src/lib/location.ts). O fuso define o "hoje" (dia passado
     -- bloqueado), a janela de 2 meses e a virada do mês DESSA ala.
     pais         char(2) not null,     -- ISO 3166-1: 'BR', 'AR', 'US'…
     estado       varchar(60) not null, -- Brasil: UF ('PR'); outros países: texto livre
@@ -59,7 +59,7 @@ create table public.agendamento (
     -- Regra de negócio: um almoço por dia, por ala (a API trata o 23505). Este
     -- índice também atende todas as consultas por ala (+ intervalo de datas).
     constraint agendamento_ala_data_unique unique (ala_id, data),
-    -- Espelham src/lib/validation.ts. P-day (segunda) NÃO é barrado aqui: o
+    -- Espelham src/lib/server/validation.ts. P-day (segunda) NÃO é barrado aqui: o
     -- líder pode mover um almoço para segunda; só /api/agendar recusa.
     -- Telefone: Brasil (celular/fixo) ou internacional "+país …"; o formato é
     -- decidido por normalizarTelefone (src/lib/phone.ts). 7–15 dígitos = E.164.

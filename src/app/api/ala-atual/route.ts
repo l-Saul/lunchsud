@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getContexto } from '@/lib/session';
-import { supabaseServer } from '@/lib/supabase/server';
-import { lerJson, parseAlaId } from '@/lib/validation';
+import { getContexto } from '@/lib/server/session';
+import { supabaseServer } from '@/lib/supabase/service-role';
+import { lerJson, parseAlaId } from '@/lib/server/validation';
 
 // Owner troca a ala em foco no painel (grava o cookie `ala_atual`, lido pelo
 // getContexto). Só owner — member tem uma ala só.

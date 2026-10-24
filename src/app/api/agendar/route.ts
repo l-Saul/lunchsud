@@ -1,7 +1,7 @@
-import { supabaseServer } from '@/lib/supabase/server'
+import { supabaseServer } from '@/lib/supabase/service-role'
 import { isPday, getDashboardRange } from '@/lib/date'
-import { lerJson, parseAgendar, ValidationError } from '@/lib/validation'
-import { buscarAlaPorSlug } from '@/lib/ala-publica'
+import { lerJson, parseAgendar, ValidationError } from '@/lib/server/validation'
+import { buscarAlaPorSlug } from '@/lib/server/public-ward'
 import { NextResponse } from 'next/server'
 
 // Cria um agendamento público (sem conta). É a fonte da verdade: validação

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getContexto, podeEditarAla } from '@/lib/session';
-import { supabaseServer } from '@/lib/supabase/server';
-import { lerJson, parseMembroId } from '@/lib/validation';
+import { getContexto, podeEditarAla } from '@/lib/server/session';
+import { supabaseServer } from '@/lib/supabase/service-role';
+import { lerJson, parseMembroId } from '@/lib/server/validation';
 
 // Aprova um vínculo pendente. Quem pode: owner (qualquer ala) ou member já
 // aprovado da MESMA ala do pedido.

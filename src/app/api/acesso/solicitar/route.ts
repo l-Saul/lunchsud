@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getUsuario } from '@/lib/session';
-import { supabaseServer } from '@/lib/supabase/server';
-import { lerJson, parseAlaId } from '@/lib/validation';
+import { getUsuario } from '@/lib/server/session';
+import { supabaseServer } from '@/lib/supabase/service-role';
+import { lerJson, parseAlaId } from '@/lib/server/validation';
 
 // Usuário logado pede acesso a UMA ala (cria vínculo pendente). Member = 1 ala,
 // então bloqueia se já houver qualquer vínculo.

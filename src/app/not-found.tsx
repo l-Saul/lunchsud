@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Flor } from '@/components/Flor'
+import { Flower } from '@/components/Flower'
 
 // 404 do site inteiro — na prática, link de ala digitado errado ou de uma ala
 // que não existe mais. Em vez da tela padrão do Next (em inglês), leva à lista
@@ -9,7 +9,7 @@ export default function NaoEncontrada() {
         <main className="flex min-h-screen items-center justify-center px-4 py-12">
             <section className="relative flex w-full max-w-md flex-col items-center gap-6 overflow-hidden rounded-3xl bg-background px-6 py-10 text-center shadow-2xl ring-1 ring-white/40 sm:px-10">
                 <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-secondary via-accent to-secondary" />
-                <Flor size={26} />
+                <Flower size={26} />
 
                 <h1 className="text-2xl font-semibold text-text">
                     Não encontramos essa página

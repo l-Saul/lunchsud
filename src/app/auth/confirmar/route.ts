@@ -1,6 +1,6 @@
 import { type EmailOtpType } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import { criarSupabaseServidor } from '@/lib/supabase/auth-server';
+import { criarSupabaseServidor } from '@/lib/supabase/server-session';
 
 // Destino do link enviado por e-mail (redefinição de senha). Cria a sessão a
 // partir do link e segue para a página indicada em `next` (por padrão,

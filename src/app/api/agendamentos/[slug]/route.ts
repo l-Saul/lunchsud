@@ -1,4 +1,4 @@
-import { buscarAlaPorSlug, buscarOcupados } from '@/lib/ala-publica'
+import { buscarAlaPorSlug, buscarOcupados } from '@/lib/server/public-ward'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Dias ocupados (data + nome) de uma ala pelo slug, só na janela agendável.

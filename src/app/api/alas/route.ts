@@ -1,4 +1,4 @@
-import { supabaseServer } from '@/lib/supabase/server'
+import { supabaseServer } from '@/lib/supabase/service-role'
 import { NextResponse } from 'next/server'
 
 // Sempre consulta o banco: sem isto o Next poderia congelar a lista no build.

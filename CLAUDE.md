@@ -46,8 +46,8 @@ passos, sem aglomerar informação.
    vêm do banco e são bloqueados no calendário.
 2. **Segunda = P-day** (não agendável pelo membro). Travado em 3 lugares, todos via
    `isPday()` de `src/lib/date.ts`:
-   - `src/components/Calendar.tsx` (calendário público)
-   - `src/components/CalendarMonthView.tsx` (imagem gerada)
+   - `MonthCalendar.tsx` (calendário público, em `(member)/[slug]/_components/`)
+   - `MonthImage.tsx` (imagem gerada, em `(leader)/dashboard/_components/month-image/`)
    - `src/app/api/agendar/route.ts` (backend, fonte da verdade)
    O **banco não barra** segunda de propósito: o líder pode mover um almoço para
    segunda pelo painel (`/api/agendamentos/update`).
@@ -56,14 +56,14 @@ passos, sem aglomerar informação.
    mês são os da ala (Manaus vira o dia 1h depois de SP; o servidor é UTC). Nunca
    chame sem o fuso quando houver uma ala em contexto. A página
    pública e `/api/agendamentos/[slug]` **só carregam essa janela**
-   (`src/lib/ala-publica.ts`), e o mês base chega à `ClientPage` pela prop
+   (`src/lib/server/public-ward.ts`), e o mês base chega à `WardBooking` pela prop
    `mesAtual` — não calcule o mês com o relógio do celular.
 4. **Agendar não exige conta.** O membro (público idoso) abre o link da ala e
    marca o dia; só os líderes fazem login.
-5. **Dia que já passou não é agendável pelo membro** (hoje em diante, fuso de
-   SP). Igual ao P-day: o `Calendar` esmaece o dia e, ao tocar, só mostra a
-   mensagem embaixo (não abre o agendamento); `/api/agendar` recusa. O `hoje`
-   chega à `ClientPage` pela prop vinda do servidor. O líder edita qualquer data.
+5. **Dia que já passou não é agendável pelo membro** (hoje em diante, no fuso
+   da ala). Igual ao P-day: o `MonthCalendar` esmaece o dia e, ao tocar, só mostra
+   a mensagem embaixo (não abre o agendamento); `/api/agendar` recusa. O `hoje`
+   chega à `WardBooking` pela prop vinda do servidor. O líder edita qualquer data.
 6. Painel mostra "X de Y dias agendados", `Y = dias do mês − segundas`
    (`diasDisponiveisNoMes`).
 7. **Histórico = só os 3 meses anteriores** ao atual (`getHistoricoRange(3)`);
@@ -74,11 +74,17 @@ de data/fuso/P-day em componentes.
 
 ## Convenções
 
-- **Nomes de arquivo:** componentes em PascalCase (`Calendar.tsx`); utilitários
-  de `lib/` e hooks em kebab-case (`date.ts`, `use-ocupados-realtime.ts`).
-  Mantenha o padrão.
-- **Idioma:** termos de domínio em português (`alas`, `agendar`, `agendamento`,
-  `usuarios`). **Nunca** renomeie pastas de rota da API — são contrato público/URLs.
+- **Nomes em inglês:** pastas, arquivos, componentes e hooks (`WardBooking.tsx`,
+  `use-bookings-realtime.ts`). Componentes em PascalCase; `lib/` e hooks em
+  kebab-case. **Ficam em português, porque são contrato:** pastas de rota (= URL:
+  `admin`, `acesso`, `dashboard`, `redefinir-senha`), rotas de API (`/api/agendar`)
+  e nomes do banco (`ala`, `agendamento`). Textos da tela, sempre em português.
+  (Funções internas antigas em português, como `normalizarTelefone`, ainda não
+  foram traduzidas.)
+- **Onde colocar cada coisa:** componente usado por UMA página fica na pasta dela,
+  em `_components/` (o `_` faz o Next não criar rota). `src/components/` é só para
+  o que 2+ páginas usam. Código só de servidor vai em `src/lib/server/` (tem
+  `import 'server-only'`: se o navegador importar, o build falha).
 - **Cores:** use os tokens do tema (`bg-primary`, `text-secondary`, etc.),
   definidos em `src/app/globals.css`. Azul `#143157` / verde `#1fb9a0` / branco.
 - **Fontes:** Source Sans (corpo) + Source Serif (títulos) via `next/font` no layout;
@@ -101,37 +107,46 @@ de data/fuso/P-day em componentes.
 
 ## Mapa de arquivos
 
-- `src/app/[slug]/` — página pública de agendamento (`ClientPage.tsx` é o cliente).
-  `page.tsx` tem `generateMetadata` por ala: **aba do navegador = nome da ala**;
-  **compartilhamento** = título "Calendário de almoços da \<ala\>" + convite (só
-  texto, sem imagem). É a página que o membro recebe. `error.tsx` (falha ao
-  carregar → "Tentar de novo") e `src/app/not-found.tsx` (link errado → lista de
-  alas) substituem as telas padrão do Next, que são em inglês. A escritura do
-  Livro de Mórmon é sorteada na **home** (`src/app/page.tsx`) a cada carregamento.
-- `src/app/dashboard/` — painel do líder (server component + guards client).
-  `MesColapsavel.tsx` deixa cada mês recolher/expandir ao clicar no nome;
-  `TrocarAla.tsx` (owner) troca a ala em foco e cria novas alas.
-- `src/app/admin/` — login/cadastro do líder (Supabase Auth) + "esqueci a senha".
-- `src/app/acesso/` — quem entra sem ala aprovada pede/aguarda acesso a uma ala.
-- `src/app/redefinir-senha/` + `src/app/auth/confirmar/` — fluxo de nova senha
-  (link do e-mail → troca por sessão → define a senha).
-- `src/app/api/` — route handlers (ver tabela de APIs no README).
-- `src/components/Footer.tsx` — rodapé global; crédito do dev (link externo p/ portfólio).
-- `src/components/Calendar.tsx` — calendário interativo público.
-- `src/components/CalendarMonthView.tsx` — calendário da **imagem exportada**.
-- `src/components/CalendarExportImage.tsx` — gera a imagem (download no desktop;
-  `navigator.share` no mobile → grupo do WhatsApp). **Preserve esse comportamento.**
-- `src/lib/` — `supabase/{client,server,browser,auth-server}.ts` (clients agrupados:
-  `client` = só o `RealtimeClient` com a chave anon — não troque pelo supabase-js
-  completo, que põe ~57 KB de login/storage na página do membro; `server`
-  service-role; `browser`/`auth-server` ligados à
-  sessão do Supabase Auth), `session.ts` (papel owner/member + ala em foco),
-  `date.ts`, `phone.ts`, `alas.ts` (nome/slug ao criar ala; também usado no client),
-  `ala-publica.ts` (servidor: ala por slug + dias ocupados da janela, p/ a página
-  pública), `localizacao.ts` (países do foco, UFs → fuso, `fusoValido`; usado no
-  formulário de nova ala e na validação), `escrituras.ts`, `site-url.ts` (URL pública p/ links de e-mail),
-  `validation.ts` (saneamento de entrada).
-- `src/hooks/` — `use-ocupados-realtime.ts`: Realtime via **WebSocket**
+`(member)` e `(leader)` são grupos de rota: **não aparecem na URL**, só separam
+as duas áreas na árvore.
+
+```
+src/app/
+  (member)/                       sem login
+    page.tsx                      /          home: lista de alas + escritura sorteada
+    [slug]/                       /ecoville  calendário da ala (a página que o membro recebe)
+      page.tsx · error.tsx
+      _components/ WardBooking (estado, ao vivo, modal de agendar) · MonthCalendar (grade do mês)
+  (leader)/                       área do líder (login)
+    admin/            /admin            _components/ LoginCard · LoginForm
+    acesso/           /acesso           _components/ RequestAccess
+    redefinir-senha/  /redefinir-senha  _components/ ResetPasswordForm
+    dashboard/        /dashboard        _components/ WardSwitcher · UsersCard · EditBookingModal ·
+                                        CollapsibleMonth · OpenCalendarButton · LogoutButton ·
+                                        DashboardClientGuard · DashboardRealtime ·
+                                        month-image/ (MonthImageExport · MonthImage · MonthSelect)
+  api/ · auth/confirmar/          URLs em português (contrato) — não mexer
+  layout · globals.css · not-found · manifest · robots
+src/components/   Spinner · Flower · Footer · LoadingOverlay   (usados por 2+ páginas)
+src/hooks/        use-bookings-realtime
+src/lib/          date · phone · location · wards · scriptures · site-url   (rodam em qualquer lugar)
+src/lib/server/   public-ward · session · validation                        (só servidor)
+src/lib/supabase/ realtime · service-role · browser-session · server-session
+```
+
+- `[slug]/page.tsx` tem `generateMetadata` por ala: **aba do navegador = nome da
+  ala**; **compartilhamento** = título "Calendário de almoços da \<ala\>" + convite
+  (só texto, sem imagem). `error.tsx` (falha ao carregar → "Tentar de novo") e
+  `not-found.tsx` (link errado → lista de alas) substituem as telas do Next em inglês.
+- `MonthImageExport` gera a imagem do mês (download no desktop; `navigator.share`
+  no mobile → grupo do WhatsApp). **Preserve esse comportamento.**
+- `lib/supabase/`: `realtime` = só o `RealtimeClient` com a chave anon (não troque
+  pelo supabase-js completo, que põe ~57 KB de login/storage na página do membro);
+  `service-role` = ignora RLS, só servidor; `browser-session`/`server-session` =
+  ligados à sessão do Supabase Auth (login do líder).
+- `lib/location.ts`: países do foco, UFs → fuso, `fusoValido` (formulário de nova
+  ala + validação). `lib/wards.ts`: nome/slug ao criar ala (também no client).
+- `src/hooks/` — `use-bookings-realtime.ts`: Realtime via **WebSocket**
   (Supabase Realtime, não polling) que **entrega a mudança pronta** (id, data,
   nome; DELETE só o id). O calendário público aplica direto no estado, sem
   requisição por evento; só busca a lista (`/api/agendamentos/[slug]`) ao
@@ -147,7 +162,7 @@ de data/fuso/P-day em componentes.
   rotas do líder** (lista no `matcher`). O caminho do membro não passa pelo proxy;
   rota nova que leia sessão (`getUsuario`/`getContexto`) precisa entrar no matcher.
   **Nunca** reintroduza JWT/bcrypt próprios — saíram na migração.
-- O contexto do usuário sai de `src/lib/session.ts`: `getContexto()`/`requireAcesso()`
+- O contexto do usuário sai de `src/lib/server/session.ts`: `getContexto()`/`requireAcesso()`
   resolvem papel + ala em foco; `podeEditarAla()` autoriza ações por ala.
 - **Papéis** (tabelas `perfil` + `ala_membro`, lidas via service-role no servidor):
   - **owner** (`perfil.is_owner`) — todas as alas; aprova/remove usuários, cria alas e
@@ -186,7 +201,7 @@ servidor e no banco (validação, constraints, permissões), não travando a pes
   corretor, e `trim()` antes de enviar (a sugestão do teclado deixa espaço no
   fim). Campo com dado de OUTRA pessoa ou da ala (editar agendamento, criar ala)
   leva `autoComplete="off"` — senão o celular sugere o nome do próprio líder.
-- **Toda rota valida a entrada** via `src/lib/validation.ts` (`lerJson` +
+- **Toda rota valida a entrada** via `src/lib/server/validation.ts` (`lerJson` +
   `parseAgendar`/`parseSlug`/`parseEdicao`/`parseId`/`parseNovaAla`/`parseMembroId`/
   `parseAlaId`): teto de tamanho de corpo, formato e charset. Não volte a ler
   `req.json()` cru nem a inserir campos sem sanear.
@@ -217,7 +232,7 @@ usuário; depois de aplicada, ele pede para apagar o arquivo.
 - `ala`: `id`, `nome`, `slug` (link público, gerado do nome; check de formato),
   `endereco` (texto livre, até 200), `descricao` (opcional), `pais` (ISO 2 letras),
   `estado` (UF no Brasil; texto livre fora), `cidade`, `fuso_horario` (IANA). No
-  Brasil o fuso sai da UF (`UFS` em `localizacao.ts`); fora, o owner escolhe.
+  Brasil o fuso sai da UF (`UFS` em `location.ts`); fora, o owner escolhe.
 - `agendamento`: `id`, `ala_id`, `data` (`YYYY-MM-DD`), `nome`, `telefone`,
   `criado_em` (NULL nas linhas anteriores a 2026-10-24). Único em (ala_id, data)
   → 1 por dia; esse índice atende todas as consultas. Checks espelham a
@@ -235,7 +250,7 @@ usuário; depois de aplicada, ele pede para apagar o arquivo.
 
 ## Armadilhas
 
-- **Imagem gerada** (`CalendarMonthView`): usa **estilos inline + SVG** de
+- **Imagem gerada** (`MonthImage`): usa **estilos inline + SVG** de
   propósito, para o `html-to-image` renderizar igual em qualquer aparelho. Não
   troque por classes Tailwind nem por emojis. Grade com
   `repeat(7, minmax(0, 1fr))` — só `1fr` deixa um nome sem espaço esticar a coluna
@@ -253,7 +268,7 @@ usuário; depois de aplicada, ele pede para apagar o arquivo.
 - **Fundo celestial:** o "céu" (gradiente + auroras) vive em `body::before` no
   `globals.css`. As páginas usam fundo **transparente** de propósito para deixá-lo
   aparecer — **não** volte a pôr `bg-primary` nos `main`/`section` das páginas.
-- **EditModal:** a remoção usa confirmação **inline** (não `window.confirm`, que
+- **EditBookingModal:** a remoção usa confirmação **inline** (não `window.confirm`, que
   falha em vários celulares) e fecha por clique fora / Esc / X. Mantenha os alvos
   de toque ≥48px e a cor de remoção em **rosa** (`accent`), não vermelho.
 - `prefers-reduced-motion`: o bloco no fim do `globals.css` zera animações e

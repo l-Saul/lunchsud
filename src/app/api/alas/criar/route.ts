@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getContexto } from '@/lib/session';
-import { supabaseServer } from '@/lib/supabase/server';
-import { lerJson, parseNovaAla, ValidationError, type NovaAlaInput } from '@/lib/validation';
+import { getContexto } from '@/lib/server/session';
+import { supabaseServer } from '@/lib/supabase/service-role';
+import { lerJson, parseNovaAla, ValidationError, type NovaAlaInput } from '@/lib/server/validation';
 
 // Cria uma nova ala na tabela `ala` (nome + slug gerado do nome + localização e
 // fuso). Só owner. Pensado para o owner cadastrar alas rapidamente pelo painel.
