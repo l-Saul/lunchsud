@@ -1,6 +1,6 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Referência: https://git-scm.com/docs/gitignore
 
-# dependencies
+# ─── Dependências ──────────────────────────────────────────
 /node_modules
 /.pnp
 .pnp.*
@@ -10,35 +10,56 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-
-# next.js
+# ─── Next.js / build ───────────────────────────────────────
 /.next/
 /out/
-
-# production
 /build
+*.tsbuildinfo
+next-env.d.ts
 
-# misc
-.DS_Store
-*.pem
+# ─── Variáveis de ambiente ─────────────────────────────────
+# Nunca versione segredos. Só o modelo (.env.example) entra no git.
+.env*
+!.env.example
 
-# debug
+# ─── Deploy ────────────────────────────────────────────────
+.vercel
+
+# ─── Supabase CLI (estado local) ───────────────────────────
+supabase/.branches
+supabase/.temp
+
+# ─── Testes ────────────────────────────────────────────────
+/coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# ─── Logs ──────────────────────────────────────────────────
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# ─── Certificados / chaves ─────────────────────────────────
+*.pem
+*.key
 
-# local utility scripts
-scripts/hash.js
+# ─── Sistema operacional ───────────────────────────────────
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
 
-# vercel
-.vercel
+# ─── Editores ──────────────────────────────────────────────
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*~
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# ─── Claude Code (config pessoal) ──────────────────────────
+.claude/settings.local.json

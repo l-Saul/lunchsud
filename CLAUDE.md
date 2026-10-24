@@ -23,6 +23,16 @@ passos, sem aglomerar informação.
   diretório `.next` e corrompem o cache (erro `ENOENT … build-manifest.json`).
   Pare um antes do outro; para só checar tipos, use `npx tsc --noEmit`.
 
+## Git & branches (regras de funcionamento)
+
+- **`master` = produção.** É o build que os usuários acessam (branch de produção
+  na Vercel). Só recebe código pronto, vindo da `dev`.
+- **`dev` = desenvolvimento.** Todo ajuste é feito aqui; trabalhe sempre nela.
+- Não existe mais `main` — não recrie.
+- **Proibido `git commit` e `git merge` sem pedido explícito do usuário**, em
+  qualquer branch. O mesmo vale para `git push`. Por padrão, deixe as mudanças no
+  working tree e diga o que foi alterado.
+
 ## Regras de negócio (CRÍTICO — não quebrar)
 
 1. **Um almoço por dia, por ala.** Garantido por constraint única no Postgres;
