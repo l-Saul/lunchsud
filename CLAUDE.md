@@ -116,12 +116,14 @@ src/app/
     page.tsx                      /          home: lista de alas + escritura sorteada
     [slug]/                       /ecoville  calendário da ala (a página que o membro recebe)
       page.tsx · error.tsx
-      _components/ WardBooking (estado, ao vivo, modal de agendar) · MonthCalendar (grade do mês)
+      _components/ WardBooking (estado, ao vivo) · BookingModal (agendar) · MonthCalendar (grade do mês)
   (leader)/                       área do líder (login)
     admin/            /admin            _components/ LoginCard · LoginForm
     acesso/           /acesso           _components/ RequestAccess
     redefinir-senha/  /redefinir-senha  _components/ ResetPasswordForm
-    dashboard/        /dashboard        _components/ WardSwitcher · UsersCard · EditBookingModal ·
+    dashboard/        /dashboard        page.tsx busca os dados; os cards só exibem.
+                                        _components/ BookingsCard · HistoryCard · UsersCard ·
+                                        WardSwitcher · CreateWardForm (owner) · EditBookingModal ·
                                         CollapsibleMonth · OpenCalendarButton · LogoutButton ·
                                         DashboardClientGuard · DashboardRealtime ·
                                         month-image/ (MonthImageExport · MonthImage · MonthSelect)
