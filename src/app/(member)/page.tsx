@@ -6,12 +6,11 @@
 
 import Image from 'next/image'
 import useSWR from 'swr'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Flower } from '@/components/Flower'
 import { HeaderBand } from '@/components/HeaderBand'
 import { Spinner } from '@/components/Spinner'
-import { escrituraAleatoria } from '@/lib/scriptures'
 
 type Ala = {
     nome: string
@@ -36,13 +35,6 @@ export default function IndexPage() {
     const { data: alas, error, isLoading } = useSWR<Ala[]>('/api/alas', fetcher)
     const [loadingSlug, setLoadingSlug] = useState<string | null>(null)
     const router = useRouter()
-
-    const [escritura, setEscritura] = useState<string | null>(null)
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setEscritura(escrituraAleatoria())
-    }, [])
-    const [verso, referencia] = (escritura ?? '').split(' — ')
 
     return (
         <>
@@ -72,22 +64,9 @@ export default function IndexPage() {
                     className="w-full max-w-xl px-5 py-10 space-y-8"
                     aria-busy={isLoading}
                 >
-                    <div className="flex flex-col items-center gap-5 text-center">
-                        <p className="text-lg text-text">
-                            Toque na sua ala para agendar.
-                        </p>
-
-                        {escritura && (
-                            <p className="max-w-sm animate-aparecer text-balance text-base leading-relaxed text-text">
-                                {verso}
-                                {referencia && (
-                                    <span className="mt-1 block text-base text-secondary">
-                                        {referencia}
-                                    </span>
-                                )}
-                            </p>
-                        )}
-                    </div>
+                    <p className="text-center text-lg text-text">
+                        Toque na sua ala para agendar.
+                    </p>
 
                     <div className="grid gap-4">
                         {isLoading && (

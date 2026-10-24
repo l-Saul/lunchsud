@@ -2,7 +2,7 @@
 
 | Pasta | Roda onde | Conteúdo |
 |---|---|---|
-| `src/lib/` | servidor **e** navegador | `date`, `phone`, `location`, `wards`, `scriptures`, `site-url`, `email-preferences` |
+| `src/lib/` | servidor **e** navegador | `date`, `phone`, `location`, `wards`, `site-url`, `email-preferences`, `calendar-event` |
 | `src/lib/server/` | **só servidor** | `public-ward`, `session`, `validation`, `mailer`, `email-templates`, `notifications` |
 | `src/lib/supabase/` | depende do cliente | `realtime`, `service-role`, `browser-session`, `server-session` |
 
@@ -165,17 +165,6 @@ formato.**
 Ex.: "Ala Jardim Brasil" → `jardim_brasil`. Sai no formato aceito pela validação
 (`[a-z0-9_-]`). **Pode dar texto vazio** se o nome não tiver letras ou números:
 quem chama trata (o servidor recusa).
-
----
-
-## `scriptures.ts`: escrituras
-
-`ESCRITURAS`: seis passagens do Livro de Mórmon de **força e esperança**, para
-fortalecer os membros, no formato `«texto» — Referência`. Texto conferido na
-versão oficial em português da Igreja.
-
-`escrituraAleatoria()` sorteia uma. A home mostra uma a cada carregamento (ver
-[routes_home.md](routes_home.md)).
 
 ---
 

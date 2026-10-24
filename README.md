@@ -145,7 +145,7 @@ src/
     layout.tsx  globals.css  not-found.tsx  manifest.ts  robots.ts
   components/            usados por 2+ páginas (Spinner, Flower, Footer, LoadingOverlay)
   hooks/                 use-bookings-realtime (WebSocket)
-  lib/                   date, phone, location, wards, scriptures, site-url, email-preferences
+  lib/                   date, phone, location, wards, site-url, email-preferences, calendar-event
   lib/server/            public-ward, session, validation,       (só servidor)
                          mailer, email-templates, notifications,
                          email/aviso.html (modelo dos avisos por e-mail)

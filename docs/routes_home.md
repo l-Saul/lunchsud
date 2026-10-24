@@ -1,14 +1,13 @@
 # `/`: home (lista de alas)
 
 Porta de entrada para quem não tem o link da ala. Mostra o logo, o título
-"Almoço dos Missionários", uma escritura do Livro de Mórmon sorteada e **um botão
-por ala**. Tocar leva a `/[slug]` (ver [routes_slug.md](routes_slug.md)).
+"Almoço dos Missionários" e **um botão por ala**. Tocar leva a `/[slug]` (ver [routes_slug.md](routes_slug.md)).
 
 ## Arquivo
 
 `src/app/(member)/page.tsx`: a página inteira é um componente client
-(`'use client'`). Dependências: `swr`, `src/lib/scriptures.ts`,
-`src/components/{Flower,Spinner}`, `GET /api/alas` (ver [routes_api.md](routes_api.md)).
+(`'use client'`). Dependências: `swr`,
+`src/components/{Flower,Spinner,HeaderBand}`, `GET /api/alas` (ver [routes_api.md](routes_api.md)).
 
 ## Renderização e dados
 
@@ -39,25 +38,13 @@ por ala**. Tocar leva a `/[slug]` (ver [routes_slug.md](routes_slug.md)).
   (`secondary`) à esquerda, texto marinho, `text-xl` (20px: é a ação principal da página); hover azul com texto branco. Divisória do título: linhas douradas
   (`gold`) com a florzinha.
 
-## Escritura sorteada
-
-- `escrituraAleatoria()` (`src/lib/scriptures.ts`) roda **no navegador, ao
-  montar** (`useEffect`), e varia a cada carregamento.
-- Como a home é pré-renderizada no build, sortear no render daria uma escritura
-  diferente no servidor e no navegador (erro de hidratação). Por isso o sorteio
-  fica no efeito, com a exceção pontual `eslint-disable-next-line
-  react-hooks/set-state-in-effect`: é uma inicialização única e intencional.
-- O texto é dividido em verso e referência pelo separador ` — `. A referência
-  aparece embaixo, em azul (`text-secondary`, `text-base`). Verso em texto
-  escuro, **sem itálico** (itálico longo é difícil de ler). O bloco entra com
-  `animate-aparecer`.
-
 ## Layout
 
 - `HeaderBand` (faixa azul): logo `public/lds.jpg` (160×160, `priority`, branca,
   por isso fica na faixa), título `h1` e divisória com florzinha.
 - `<main>` no fundo creme, largura máxima `max-w-xl`: "Toque na sua ala para
-  agendar." (`text-lg`, texto escuro), escritura (`text-base`) e a lista de alas.
+  agendar." (`text-lg`, texto escuro) e a lista de alas. **Sem escritura**: o
+  dono tirou em 24/10/2026 (não use de novo).
 - Com letra grande em tela estreita, o título e o nome das alas **hifenizam**
   (`hyphens-auto` + `wrap-break-word`, o `lang="pt-BR"` hifeniza certo) em vez
   de empurrar a página para o lado. Testado em 320px com letra a 200%.
