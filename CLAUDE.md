@@ -170,14 +170,24 @@ de data/fuso/P-day em componentes. Detalhes: [`docs/src_lib.md`](docs/src_lib.md
   completa em [`docs/src_app.md`](docs/src_app.md).
 - **Fontes:** Source Sans (corpo) + Source Serif (títulos) via `next/font` no layout;
   `h1/h2/h3` já recebem serifa por regra base no CSS.
-- **Tamanho da letra (decisão do dono, 24/10/2026):** base de **15,4px no
-  celular e 15,8px a partir de 640px** (`globals.css`). 18px (e a letra que
-  crescia até 22px no computador) foi testado e achado grande demais: não
-  aumente sem pedido. Menor texto: `text-sm` (~13,5px), só para legenda,
-  rodapé e dica. **Campo de formulário sempre `text-lg`** (≥ 16px): abaixo
-  disso o iPhone dá zoom sozinho ao tocar. Sem `text-xs`, sem `text-[Npx]`,
-  sem MAIÚSCULAS (`uppercase`) e sem itálico. Nome e e-mail quebram a linha
-  (`wrap-anywhere`), nunca "…" (`truncate`).
+- **Tamanho da letra: escala por papel** (base 16px, `html { font-size: 100% }`;
+  conferida no Chromium em 24/10/2026). O dono achou 18px e a letra que crescia
+  com a tela grandes demais, e 13,5px pequeno: **não mude a base**; ajuste o
+  papel do texto.
+
+  | Papel | Classe | Tamanho |
+  |---|---|---|
+  | Título da página pública (home, ala) | `text-3xl` | 30px |
+  | Título de página com cartão (login, acesso, nova senha, 404, erro) e do painel | `text-2xl` | 24px |
+  | Título de cartão do painel e de modal; nome do site na faixa; nome da ala na home | `text-xl` | 20px |
+  | Subtítulo de seção; instrução principal ("Toque em…"); mensagem de resposta; botão principal; campo de formulário; abas do mês; número do dia | `text-lg` | 18px |
+  | Texto, rótulo, botão do painel, legenda, dica, erro, rodapé | `text-base` | **16px, o mínimo** |
+
+  **Nada abaixo de 16px** que precise ser lido: sem `text-sm`, `text-xs`,
+  `text-[Npx]`. **Campo de formulário sempre `text-lg`**: abaixo de 16px o
+  iPhone dá zoom sozinho ao tocar. Sem MAIÚSCULAS (`uppercase`) e sem itálico.
+  Nome e e-mail quebram a linha (`wrap-anywhere`), nunca "…" (`truncate`).
+  Mudou tela? Meça de novo (ver `docs/src_app.md`).
 - **Acessibilidade:** foco visível, alvos ≥44px,
   `aria-label` em ícones, respeito a `prefers-reduced-motion`. Não reduza isso.
 - **Animação = feedback, não enfeite.** Só CSS (sem biblioteca; a `framer-motion`

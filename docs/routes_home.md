@@ -36,7 +36,7 @@ por ala**. Tocar leva a `/[slug]` (ver [routes_slug.md](routes_slug.md)).
   ala abrir. O loading não é desligado de propósito: a navegação desmonta a tela.
 - `aria-busy` no botão tocado; `active:scale-[0.98]` ao tocar.
 - Visual: cartão branco com contorno fino (`ring-primary/10`), borda azul
-  (`secondary`) à esquerda, texto marinho, `text-xl`; hover azul com texto branco. Divisória do título: linhas douradas
+  (`secondary`) à esquerda, texto marinho, `text-xl` (20px: é a ação principal da página); hover azul com texto branco. Divisória do título: linhas douradas
   (`gold`) com a florzinha.
 
 ## Escritura sorteada
@@ -48,7 +48,7 @@ por ala**. Tocar leva a `/[slug]` (ver [routes_slug.md](routes_slug.md)).
   fica no efeito, com a exceção pontual `eslint-disable-next-line
   react-hooks/set-state-in-effect`: é uma inicialização única e intencional.
 - O texto é dividido em verso e referência pelo separador ` — `. A referência
-  aparece embaixo, em azul (`text-secondary`, `text-sm`). Verso em texto
+  aparece embaixo, em azul (`text-secondary`, `text-base`). Verso em texto
   escuro, **sem itálico** (itálico longo é difícil de ler). O bloco entra com
   `animate-aparecer`.
 
@@ -57,7 +57,7 @@ por ala**. Tocar leva a `/[slug]` (ver [routes_slug.md](routes_slug.md)).
 - `HeaderBand` (faixa azul): logo `public/lds.jpg` (160×160, `priority`, branca,
   por isso fica na faixa), título `h1` e divisória com florzinha.
 - `<main>` no fundo creme, largura máxima `max-w-xl`: "Toque na sua ala para
-  agendar." (`text-xl`, texto escuro), escritura e a lista de alas.
+  agendar." (`text-lg`, texto escuro), escritura (`text-base`) e a lista de alas.
 - Com letra grande em tela estreita, o título e o nome das alas **hifenizam**
   (`hyphens-auto` + `wrap-break-word`, o `lang="pt-BR"` hifeniza certo) em vez
   de empurrar a página para o lado. Testado em 320px com letra a 200%.

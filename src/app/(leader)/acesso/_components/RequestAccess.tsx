@@ -119,7 +119,7 @@ export default function RequestAccess({
                     </div>
 
                     {erro && (
-                        <p role="alert" className="text-sm font-medium text-accent">{erro}</p>
+                        <p role="alert" className="text-base font-medium text-accent">{erro}</p>
                     )}
 
                     <button
@@ -137,7 +137,7 @@ export default function RequestAccess({
             <button
                 onClick={sair}
                 disabled={saindo}
-                className="flex min-h-11 items-center gap-2 text-sm text-muted underline underline-offset-4 transition hover:text-secondary disabled:no-underline cursor-pointer"
+                className="flex min-h-11 items-center gap-2 text-base text-muted underline underline-offset-4 transition hover:text-secondary disabled:no-underline cursor-pointer"
             >
                 {saindo && <Spinner className="h-4 w-4" />}
                 {saindo ? 'Saindo…' : 'Sair'}

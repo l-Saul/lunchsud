@@ -118,7 +118,7 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
                 <div className="flex flex-col gap-5">
                     {pendentes.length > 0 && (
                         <div className="flex flex-col gap-3">
-                            <h3 className="text-base font-semibold text-text">
+                            <h3 className="text-lg font-semibold text-text">
                                 Aguardando aprovação
                             </h3>
                             <ul className="flex flex-col gap-3">
@@ -128,7 +128,7 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
                     )}
 
                     <div className="flex flex-col gap-3">
-                        <h3 className="text-base font-semibold text-text">Com acesso</h3>
+                        <h3 className="text-lg font-semibold text-text">Com acesso</h3>
                         {aprovados.length === 0 ? (
                             <p className="text-base text-muted">Ninguém com acesso ainda.</p>
                         ) : (

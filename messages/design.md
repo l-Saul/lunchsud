@@ -266,7 +266,8 @@ Arquivos em `src/app/(member)/[slug]/_components/`.
 - ✅ **Já feito:** margens enxutas no celular. Em 360px os dias chegam a 44px; em
   320px ficam com **37×37px** (passa o mínimo WCAG de 24px, abaixo do ideal).
 
-**Troca de mês.** Hoje são dois botões "VOLTAR" / "AVANÇAR" (13,5px, em
+**Troca de mês.** ✅ Feito (24/10/2026): abas "Outubro" / "Novembro", a
+escolhida em azul cheio com ✓. Antes eram dois botões "VOLTAR" / "AVANÇAR" (13,5px, em
 maiúsculas, linhas 74–105). "Voltar" pode ser confundido com "voltar à página
 anterior", e o botão desabilitado fica quase invisível (`opacity-30`). Além
 disso, o nome que o leitor de tela anuncia ("Mês anterior") **não contém o
@@ -522,7 +523,7 @@ Pastas: `(m)` = `src/app/(member)/[slug]/_components/`, `(d)` = `src/app/(leader
 | A10 | Modais sem gestão de foco. **Medido:** o foco fica no dia tocado (fora do modal); o Tab sai para os dias do fundo; o fundo não é inerte; ao fechar, o foco vai para o `body` | `(m)BookingModal.tsx:127`, `(d)EditBookingModal.tsx:126`, `(d)UsersCard.tsx:143` | L M | `<dialog>` com `showModal()`: foco, fundo inerte e Esc vêm do navegador. **Continua precisando** da trava de rolagem do `body` (o `<dialog>` não trava) e de devolver o foco ao dia ao fechar. iOS ≥ 15.4 | 2.4.3, 2.1.2 |
 | A11 | Erro não ligado ao campo. **Medido:** `aria-invalid="true"` com `aria-describedby` vazio nos dois campos | `(m)BookingModal.tsx:167,194`, `(d)EditBookingModal.tsx:170,195` | L | `aria-describedby` → id do erro | 1.3.1, 3.3.1 |
 | A12 | Dia é `<div role="button">` e o leitor diz só "Dia 24, disponível" (sem mês nem dia da semana). **Medido** na árvore de acessibilidade | `(m)MonthCalendar.tsx:156–158` | L | `<button>` nativo + "Quinta-feira, 12 de novembro, livre" | 2.4.6 |
-| A13 | Troca de mês não é anunciada | `(m)MonthCalendar.tsx` | L | Dois `<button aria-pressed>` com o nome do mês (seção 6.3); **não** o padrão "abas" do ARIA | 4.1.2 |
+| A13 ✅ | Troca de mês não é anunciada | `(m)MonthCalendar.tsx` | L | Dois `<button aria-pressed>` com o nome do mês (seção 6.3); **não** o padrão "abas" do ARIA | 4.1.2 |
 | A14 | Erros do painel em `alert()` (texto do sistema, some com um toque, confunde) | `(d)EditBookingModal.tsx:69,72`, `(d)UsersCard.tsx:37,46` | C V | Mensagem dentro do modal/cartão, com o que fazer | 3.3.1 |
 | A15 | Regra da senha só aparece depois do erro | `LoginForm.tsx:74`, `ResetPasswordForm.tsx:36` | C | Dica visível antes | 3.3.2 |
 | A16 | Formato do telefone não é mostrado antes | `(m)BookingModal.tsx`, `(d)EditBookingModal.tsx` | C | "Exemplo: (41) 99999-9999" | 3.3.2 |
@@ -532,7 +533,7 @@ Pastas: `(m)` = `src/app/(member)/[slug]/_components/`, `(d)` = `src/app/(leader
 | A20 | No iPhone, o Safari não segue o tamanho de letra do sistema | `globals.css:35` | V | Ver nota técnica na seção 8.1 | 1.4.4 |
 | A21 | `backdrop-blur` em 5 telas: pesado em Android simples (tela trava, toque "não responde") | `(m)BookingModal.tsx:120`, `(d)EditBookingModal.tsx:119`, `(d)UsersCard.tsx:143`, `(d)WardSwitcher.tsx:55`, `LoadingOverlay.tsx:13` | A M | Fundo sólido semitransparente, sem desfoque | — |
 | A22 | Dias de 37×37px em 320px (medido): passa o mínimo WCAG (24px), abaixo do ideal para tremor | `(m)MonthCalendar.tsx` | V M | Lista de dias livres (seção 6.3) | 2.5.8 ✅ / 2.5.5 |
-| A23 | Botões desabilitados com `opacity-30`: a pessoa não entende se é botão | `(m)MonthCalendar.tsx:81,100` | V C | Some com os botões de mês; regra geral: desabilitado em cinza legível | — |
+| A23 ✅ | Botões desabilitados com `opacity-30`: a pessoa não entende se é botão | `(m)MonthCalendar.tsx:81,100` | V C | Some com os botões de mês; regra geral: desabilitado em cinza legível | — |
 | A24 | Botão fechar do modal só com "X" | modais | C | Manter "Cancelar" sempre visível ao lado da ação (já é assim no agendar) | — |
 | A25 | Base fixa em 18px em qualquer tela (**medido: 18px a 1366px**): no computador o painel fica pequeno, e o `text-sm` vira 15,8px | `globals.css:35`, `(leader)/dashboard/*` | V | Letra que cresce com a tela (8.1) + painel (8.2) | boa prática |
 | A26 ✅ | Nomes e e-mails cortados com "…" (`truncate`): a informação some | `(leader)/dashboard/page.tsx:119`, `(d)BookingsCard.tsx:65`, `(d)UsersCard.tsx:76,77` | V C | Quebrar a linha | 1.4.4, 1.4.10 (sem perda de conteúdo) |
@@ -596,12 +597,12 @@ computador a 1366px.
 
 ## 8. Tamanhos de letra
 
-> ✅ **Fase 2 feita em 24/10/2026, com uma decisão do dono que muda esta seção:**
+> ✅ **Fase 2 feita em 24/10/2026, com decisões do dono que mudam esta seção:**
 > a letra que cresce com a tela (8.1) e a base de 18px foram testadas e
-> **achadas grandes demais**. Ficou: base **15,4px no celular e 15,8px a partir
-> de 640px**; menor texto `text-sm` (~13,5px, só legenda/rodapé/dica); campos
-> em `text-lg` (≥ 16px, sem zoom no iPhone); painel com mínimo `text-base`. Os
-> números abaixo eram a proposta e ficam só como registro.
+> **achadas grandes demais**. Ficou a **base 16px com escala por papel**
+> (títulos 30/24/20px, instruções e botões 18px, todo o resto 16px, nada
+> abaixo), medida tela por tela no Chromium. A tabela vale no `CLAUDE.md` e em
+> `docs/src_app.md`; os números abaixo eram a proposta e ficam como registro.
 
 Base em `%`, que já acompanha a letra do navegador. **Nada em `px` fixo para
 texto.** Os tamanhos abaixo são os do celular; no computador tudo cresce junto

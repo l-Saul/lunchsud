@@ -73,7 +73,7 @@ export default function IndexPage() {
                     aria-busy={isLoading}
                 >
                     <div className="flex flex-col items-center gap-5 text-center">
-                        <p className="text-xl text-text">
+                        <p className="text-lg text-text">
                             Toque na sua ala para agendar.
                         </p>
 
@@ -81,7 +81,7 @@ export default function IndexPage() {
                             <p className="max-w-sm animate-aparecer text-balance text-base leading-relaxed text-text">
                                 {verso}
                                 {referencia && (
-                                    <span className="mt-1 block text-sm text-secondary">
+                                    <span className="mt-1 block text-base text-secondary">
                                         {referencia}
                                     </span>
                                 )}

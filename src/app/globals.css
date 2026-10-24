@@ -37,13 +37,9 @@
 
 @layer base {
     html {
-        font-size: 96.25%;
+        font-size: 100%;
         scroll-behavior: smooth;
         color-scheme: only light;
-
-        @media (min-width: 40rem) {
-            font-size: 99%;
-        }
     }
 
     h1, h2, h3 {

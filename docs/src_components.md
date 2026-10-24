@@ -52,8 +52,8 @@ A **faixa azul do cabeçalho**, no topo de toda página. É o "céu" do site
   "Painel da ala" + Sair) e `className` (ex.: `sm:px-6` no painel).
 - **Sem `children`**: mostra a identidade do site, o ícone
   `lunchsud180x180.png` (56px, `alt=""`, porque o nome vem logo ao lado) e
-  "Almoço dos Missionários" em serifa (`<p>`, não título: o `h1` é o do cartão
-  da página). Usado no login, acesso, redefinir senha, 404 e erro da ala.
+  "Almoço dos Missionários" em serifa, `text-xl` (`<p>`, não título: o `h1`,
+  maior, é o do cartão da página). Usado no login, acesso, redefinir senha, 404 e erro da ala.
 - Altura contida: na página da ala o calendário precisa começar na primeira
   tela do celular, sem rolar.
 

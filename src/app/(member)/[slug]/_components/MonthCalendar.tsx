@@ -5,7 +5,7 @@
 'use client'
 
 import { useState } from 'react'
-import { isPday, formatMonthLabel } from '@/lib/date'
+import { isPday, formatMonthLabel, nomeDoMes } from '@/lib/date'
 
 type DiaOcupado = {
     data: string
@@ -25,10 +25,8 @@ type Props = {
     onSelectOcupado: (nome: string) => void
     onSelectPday?: () => void
     onSelectPassado?: () => void
-    onNext?: () => void
-    onPrev?: () => void
-    canNext?: boolean
-    canPrev?: boolean
+    meses: string[]
+    onSelectMonth: (ym: string) => void
 }
 
 export function MonthCalendar({
@@ -40,13 +38,12 @@ export function MonthCalendar({
     onSelectOcupado,
     onSelectPday,
     onSelectPassado,
-    onNext,
-    onPrev,
-    canNext,
-    canPrev
+    meses,
+    onSelectMonth,
 }: Props) {
     const anoNum = baseDate.getFullYear()
     const mesNum = baseDate.getMonth()
+    const mesAtivo = `${anoNum}-${String(mesNum + 1).padStart(2, '0')}`
 
     const [trocouDeMes, setTrocouDeMes] = useState(false)
 
@@ -70,43 +67,39 @@ export function MonthCalendar({
 
     return (
         <div className="@container space-y-4">
-            <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 @max-[15rem]:grid-cols-2">
-                <button
-                    onClick={() => {
-                        setTrocouDeMes(true)
-                        onPrev?.()
-                    }}
-                    disabled={!canPrev}
-                    aria-label="Mês anterior"
-                    className="flex flex-col items-center gap-0.5 rounded-xl bg-secondary px-2.5 py-2 text-white shadow-sm transition duration-200 hover:opacity-90 enabled:active:scale-95 disabled:opacity-30 disabled:cursor-default cursor-pointer @max-[15rem]:order-2"
-                >
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M15 18l-6-6 6-6" />
-                    </svg>
-                    <span className="text-sm font-semibold">Voltar</span>
-                </button>
+            <h2 className="sr-only">{formatMonthLabel(mesAtivo)}</h2>
 
-                <h2 className="text-center text-xl font-semibold text-text @max-[15rem]:order-1 @max-[15rem]:col-span-2">
-                    {formatMonthLabel(`${anoNum}-${String(mesNum + 1).padStart(2, '0')}`)}
-                </h2>
-
-                <button
-                    onClick={() => {
-                        setTrocouDeMes(true)
-                        onNext?.()
-                    }}
-                    disabled={!canNext}
-                    aria-label="Próximo mês"
-                    className="flex flex-col items-center gap-0.5 rounded-xl bg-secondary px-2.5 py-2 text-white shadow-sm transition duration-200 hover:opacity-90 enabled:active:scale-95 disabled:opacity-30 disabled:cursor-default cursor-pointer @max-[15rem]:order-3"
-                >
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M9 18l6-6-6-6" />
-                    </svg>
-                    <span className="text-sm font-semibold">Avançar</span>
-                </button>
+            <div role="group" aria-label="Mês do calendário" className="grid grid-cols-2 gap-2 @max-[15rem]:grid-cols-1">
+                {meses.map(ym => {
+                    const ativo = ym === mesAtivo
+                    return (
+                        <button
+                            key={ym}
+                            type="button"
+                            aria-pressed={ativo}
+                            onClick={() => {
+                                if (ativo) return
+                                setTrocouDeMes(true)
+                                onSelectMonth(ym)
+                            }}
+                            className={`flex min-h-13 items-center justify-center gap-2 rounded-xl border-2 border-secondary px-3 py-2 text-lg font-semibold transition duration-100 active:scale-[0.98] ${
+                                ativo
+                                    ? 'bg-secondary text-white shadow-md cursor-default'
+                                    : 'bg-white text-secondary hover:bg-secondary/10 cursor-pointer'
+                            }`}
+                        >
+                            {ativo && (
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+                                    <path d="M20 6 9 17l-5-5" />
+                                </svg>
+                            )}
+                            {nomeDoMes(ym)}
+                        </button>
+                    )
+                })}
             </div>
 
-            <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-sm font-semibold text-muted">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-base font-semibold text-muted">
                 {SEMANA.map(([abrev, inicial]) => (
                     <div key={abrev}>
                         <span className="@max-[15rem]:hidden">{abrev}</span>
@@ -185,7 +178,7 @@ export function MonthCalendar({
                 })}
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-1 text-sm text-text">
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-1 text-base text-text">
                 <span className="flex items-center gap-2">
                     <span className="h-5 w-5 rounded border border-slate-300 bg-white" />
                     Disponível

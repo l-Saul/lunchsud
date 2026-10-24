@@ -59,7 +59,7 @@ export function BookingsCard({ mesAtual, mesSeguinte, agendamentos }: Props) {
                                             >
                                                 <div className="flex size-14 shrink-0 flex-col items-center justify-center rounded-xl bg-primary text-white">
                                                     <span className="text-lg font-bold leading-none">{dia}</span>
-                                                    <span className="mt-1 text-sm leading-none text-white/85">{semana}</span>
+                                                    <span className="mt-1 text-base leading-none text-white/85">{semana}</span>
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <p className="wrap-anywhere font-medium text-text">{row.nome}</p>

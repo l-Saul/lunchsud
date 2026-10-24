@@ -17,7 +17,7 @@ export function HeaderBand({ children, className = '' }: { children?: React.Reac
                         height={56}
                         className="rounded-xl"
                     />
-                    <p className="font-serif text-2xl font-semibold">Almoço dos Missionários</p>
+                    <p className="font-serif text-xl font-semibold">Almoço dos Missionários</p>
                 </div>
             )}
         </header>

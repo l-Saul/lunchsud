@@ -257,19 +257,19 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
                     type="button"
                     onClick={recuperarSenha}
                     disabled={loading}
-                    className="-mt-2 self-end text-sm text-muted underline underline-offset-4 transition hover:text-secondary disabled:opacity-60 cursor-pointer"
+                    className="-mt-2 self-end text-base text-muted underline underline-offset-4 transition hover:text-secondary disabled:opacity-60 cursor-pointer"
                 >
                     Esqueci minha senha
                 </button>
             )}
 
             {erro && (
-                <p role="alert" className="text-center text-sm font-medium text-accent">
+                <p role="alert" className="text-center text-base font-medium text-accent">
                     {erro}
                 </p>
             )}
             {aviso && (
-                <p role="status" className="text-center text-sm font-medium text-secondary">
+                <p role="status" className="text-center text-base font-medium text-secondary">
                     {aviso}
                 </p>
             )}
@@ -294,7 +294,7 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
                     setErro('');
                     setAviso('');
                 }}
-                className="text-center text-sm text-muted transition hover:text-secondary cursor-pointer"
+                className="text-center text-base text-muted transition hover:text-secondary cursor-pointer"
             >
                 {modo === 'entrar'
                     ? 'Não tem conta? Criar conta'

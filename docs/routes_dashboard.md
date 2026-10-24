@@ -95,9 +95,10 @@ Do item 3 em diante tudo fica no `<main>`, sobre o fundo creme, em
 `max-w-3xl`. Os cartões são brancos com `ring-1 ring-primary/10` e
 `shadow-md`.
 
-**Letra no painel:** nada menor que `text-base` (nem `text-sm`): o líder lê
-nomes, telefones e e-mails, muitas vezes no computador. Título da faixa
-`text-3xl`, título de cartão `text-xl`, sem `sm:text-*` para "compensar".
+**Letra no painel** (escala do `CLAUDE.md`): título da faixa `text-2xl`,
+título de cartão `text-xl`, subtítulo de seção (`h3`: mês, "Aguardando
+aprovação", "Com acesso", "Nova ala") `text-lg`, todo o resto `text-base`
+(16px). Sem `sm:text-*` para "compensar".
 Nome da ala na faixa, nomes e e-mails nos cartões quebram a linha
 (`wrap-anywhere`), nunca "…".
 

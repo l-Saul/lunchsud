@@ -118,7 +118,7 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
     return (
         <form onSubmit={criarAla} className="flex animate-aparecer flex-col gap-3">
             <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold text-text">Nova ala</h3>
+                <h3 className="text-lg font-semibold text-text">Nova ala</h3>
                 <button
                     type="button"
                     onClick={resetForm}

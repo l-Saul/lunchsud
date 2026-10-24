@@ -89,14 +89,31 @@ Regras completas de animação no `CLAUDE.md`.
 
 ### Base
 
-- **Tamanho da letra:** `html { font-size: 96.25% }` (**15,4px**) no celular e
-  `99%` (**15,8px**) a partir de 640px (`@media (min-width: 40rem)`, aninhado).
-  Em **%** para respeitar o zoom e o tamanho de letra do sistema. Decisão do
-  dono em 24/10/2026, depois de testar 18px fixo e a letra que crescia com a
-  tela (18px → 22px): os dois ficaram grandes demais. Com essa base,
-  `text-sm` ≈ 13,5px (só legendas, rodapé e dicas) e `text-lg` ≈ 17,3px (todo
-  campo de formulário: abaixo de 16px o iPhone dá zoom ao tocar).
-  `scroll-behavior: smooth`.
+- **Tamanho da letra:** `html { font-size: 100% }` (**16px**, em % para
+  respeitar o zoom e o tamanho de letra do sistema), igual no celular e no
+  computador. `scroll-behavior: smooth`.
+
+  **Escala por papel** (o que vale é o papel do texto, não a tela):
+
+  | Papel | Classe | Tamanho |
+  |---|---|---|
+  | Título da página pública (home, ala) | `text-3xl` | 30px |
+  | Título de página com cartão (login, acesso, nova senha, 404, erro) e do painel | `text-2xl` | 24px |
+  | Título de cartão do painel e de modal; nome do site na faixa; nome da ala na home | `text-xl` | 20px |
+  | Subtítulo de seção; instrução principal ("Toque em…"); mensagem de resposta; botão principal; campo de formulário; abas do mês; número do dia | `text-lg` | 18px |
+  | Texto, rótulo, botão do painel, legenda, dica, erro, rodapé | `text-base` | **16px, o mínimo** |
+
+  Histórico (24/10/2026): 18px fixo e a letra que crescia com a tela (até
+  22px) ficaram grandes demais para o dono; reduzir tudo junto (base 15,4px)
+  deixou legenda, rodapé e erros com 13,5px. A medição no Chromium mostrou o
+  problema: títulos grandes demais e textos pequenos demais ao mesmo tempo. A
+  saída foi a base 16px com a escala acima: títulos e instruções diminuíram,
+  textos pequenos subiram para 16px.
+
+  **Como medir de novo:** Playwright/Chromium a 390×844, percorrendo cada
+  tela (inclusive modais e mensagens) e listando `getComputedStyle().fontSize`
+  de todo texto visível, agrupado pelo papel (título, botão, rótulo, campo,
+  erro, rodapé). Nada pode sair abaixo de 16px.
 - `h1, h2, h3` com serifa (estética serena, como o site da Igreja).
 - `body`: suavização de fonte e `text-rendering: optimizeLegibility`.
 - `html { color-scheme: only light }` (e a meta do layout): o site é só claro.

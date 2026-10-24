@@ -20,7 +20,7 @@ export default function LoginCard({ erroInicial }: { erroInicial?: string }) {
                     <Flower size={20} />
                     <span className="h-px w-8 bg-linear-to-l from-transparent to-gold/70" />
                 </div>
-                <p className="text-sm text-muted">
+                <p className="text-base text-muted">
                     Entre para gerenciar os almoços da sua ala.
                 </p>
             </div>

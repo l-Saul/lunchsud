@@ -7,12 +7,12 @@ export function Footer() {
     return (
         <footer className="mt-16 w-full border-t border-primary/10 px-4 py-7 text-muted sm:mt-24">
             <div className="mx-auto flex max-w-2xl flex-col items-center gap-3 text-center">
-                <p className="text-sm">
+                <p className="text-base">
                     Site independente, sem vínculo institucional ou oficial com a Igreja de
                     Jesus Cristo dos Santos dos Últimos Dias.
                 </p>
 
-                <p className="text-sm">
+                <p className="text-base">
                     Desenvolvido por{' '}
                     <a
                         href="https://luishsaul.com.br/#contato"

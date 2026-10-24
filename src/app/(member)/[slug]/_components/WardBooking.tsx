@@ -44,8 +44,7 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
 
     const [baseDate, setBaseDate] = useState(inicioMesAtual)
 
-    const canPrev = baseDate.getTime() !== inicioMesAtual.getTime()
-    const canNext = baseDate.getTime() !== inicioMesSeguinte.getTime()
+    const mesSeguinte = `${inicioMesSeguinte.getFullYear()}-${pad(inicioMesSeguinte.getMonth() + 1)}`
 
     const mesNomeBase = baseDate.toLocaleDateString('pt-BR', { month: 'long' })
 
@@ -115,7 +114,7 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
                 </span>
 
                 <div className="relative mx-auto flex max-w-2xl flex-col items-center gap-4 pt-9 pb-7">
-                    <h1 className="wrap-anywhere text-4xl font-bold drop-shadow-sm">
+                    <h1 className="wrap-anywhere text-3xl font-bold drop-shadow-sm">
                         {nomeAla}
                     </h1>
 
@@ -130,27 +129,20 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
             <main className="flex justify-center text-text">
                 <div className="w-full max-w-2xl">
                     <div className="px-2 sm:px-6 py-6 space-y-6">
-                        <p className="px-2 text-center text-xl leading-relaxed text-text">
+                        <p className="px-2 text-center text-lg leading-relaxed text-text">
                             Toque em um dia livre para agendar o almoço.
                         </p>
 
-                        <div className="relative overflow-hidden bg-background text-secondary rounded-2xl p-1.5 sm:p-4 shadow-md ring-1 ring-primary/10">
+                        <div className="relative overflow-hidden bg-background text-secondary rounded-2xl p-1.5 pt-4 sm:p-4 sm:pt-6 shadow-md ring-1 ring-primary/10">
                             <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-accent via-gold to-accent" />
                             <MonthCalendar
                                 ocupados={diasOcupados}
                                 baseDate={baseDate}
                                 hoje={hoje}
                                 selectedDay={diaSelecionado}
-                                canPrev={canPrev}
-                                canNext={canNext}
-                                onPrev={() => {
-                                    setBaseDate(inicioMesAtual)
-                                    setDiaSelecionado(null)
-                                    setOcupadoPor(null)
-                                    setAviso(null)
-                                }}
-                                onNext={() => {
-                                    setBaseDate(inicioMesSeguinte)
+                                meses={[mesAtual, mesSeguinte]}
+                                onSelectMonth={ym => {
+                                    setBaseDate(ym === mesAtual ? inicioMesAtual : inicioMesSeguinte)
                                     setDiaSelecionado(null)
                                     setOcupadoPor(null)
                                     setAviso(null)

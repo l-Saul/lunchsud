@@ -159,7 +159,7 @@ export function BookingModal({
                             }}
                         />
                         {erroNome && (
-                            <p role="alert" className="text-sm text-accent">
+                            <p role="alert" className="text-base text-accent">
                                 Informe seu nome.
                             </p>
                         )}
@@ -190,7 +190,7 @@ export function BookingModal({
                             }}
                         />
                         {erroTelefone && (
-                            <p role="alert" className="text-sm text-accent">
+                            <p role="alert" className="text-base text-accent">
                                 Confira o telefone, com DDD. De outro país? Comece com + e o código do país.
                             </p>
                         )}
@@ -198,7 +198,7 @@ export function BookingModal({
                 </div>
 
                 {erro && (
-                    <p key={erro} role="alert" className="mt-4 animate-aparecer text-center text-sm font-medium text-accent">
+                    <p key={erro} role="alert" className="mt-4 animate-aparecer text-center text-base font-medium text-accent">
                         {erro}
                     </p>
                 )}

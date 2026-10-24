@@ -104,9 +104,9 @@ Dono do estado da página. Recebe do servidor `slug`, `alaId`, `nomeAla`,
 
 ### Janela navegável
 
-`inicioMesAtual` e `inicioMesSeguinte` saem de `mesAtual` (servidor). `canPrev`
-e `canNext` só deixam alternar entre esses dois meses, a mesma janela que o
-`/api/agendar` aceita.
+`inicioMesAtual` e `inicioMesSeguinte` saem de `mesAtual` (servidor). As abas
+do calendário recebem só esses dois meses (`meses={[mesAtual, mesSeguinte]}`),
+a mesma janela que o `/api/agendar` aceita.
 
 Para filtrar o que chega ao vivo há também a janela em texto: `inicioJanela =
 hoje` e `fimJanela` = dia 1 do mês após o seguinte (exclusivo).
@@ -139,7 +139,7 @@ na tela.
 | Dia ocupado | mostra "Este dia já foi agendado por **\<nome\>**." |
 | Segunda | mostra "Segunda-feira é dia de **P-day**. Escolha outro dia." |
 | Dia passado | mostra "Esse dia **já passou**. Escolha outro dia." |
-| Voltar/Avançar | troca o mês e limpa seleção, `ocupadoPor` e `aviso` |
+| Aba de mês (`onSelectMonth`) | troca o mês e limpa seleção, `ocupadoPor` e `aviso` |
 
 Cada toque limpa as outras mensagens, então só uma aparece por vez.
 
@@ -171,12 +171,12 @@ conflito aparecia de novo no modal seguinte).
 
 ### Layout
 
-- `HeaderBand` (faixa azul): nome da ala (`h1`, 4xl, branco, `wrap-anywhere`) e
+- `HeaderBand` (faixa azul): nome da ala (`h1`, `text-3xl`, branco, `wrap-anywhere`) e
   divisória com florzinha. Duas florzinhas decorativas estáticas nos cantos
   (opacidade baixa, `aria-hidden`). Altura contida: em 390×844 o calendário
   começa a ~290px e os dias livres ficam na primeira tela.
 - Abaixo, no `<main>` sobre o creme: "Toque em um dia livre para agendar o
-  almoço." (`text-xl`, texto escuro), o calendário e as mensagens (ocupado,
+  almoço." (`text-lg`, texto escuro), o calendário e as mensagens (ocupado,
   P-day, já passou), todas em texto escuro.
 - Margens enxutas no celular (`px-2`): cada pixel vira largura dos 7 dias. Em
   360px os dias chegam a 44px, o alvo de toque recomendado (WCAG 2.5.5).
@@ -281,8 +281,27 @@ Grade de um mês. **Só apresentação**: quem busca os dados e decide o mês é
 
 `ocupados` (`{ data, nome }[]`), `baseDate`, `hoje` (`YYYY-MM-DD` no fuso da ala;
 antes disso o dia está bloqueado), `selectedDay`, `onSelectDay`,
-`onSelectOcupado(nome)`, `onSelectPday`, `onSelectPassado`, `onPrev`, `onNext`,
-`canPrev`, `canNext`.
+`onSelectOcupado(nome)`, `onSelectPday`, `onSelectPassado`, `meses` (os dois
+`YYYY-MM` da janela) e `onSelectMonth(ym)`.
+
+### Abas de mês
+
+No lugar de "Voltar"/"Avançar", duas **abas com o nome do mês**: o atual à
+esquerda, o seguinte à direita (`nomeDoMes`). Como só existem dois meses, a
+pessoa vê os dois de uma vez e toca no que quer, sem adivinhar para onde
+"Voltar" leva.
+
+- **Escolhida:** azul cheio (`bg-secondary`), texto branco, ✓ antes do nome e
+  sombra. **A outra:** branca com contorno azul de 2px e texto azul. Três sinais
+  além da cor (fundo cheio × contorno, ✓, sombra).
+- `<button aria-pressed>` dentro de `role="group"` "Mês do calendário" (não o
+  padrão "abas" do ARIA, que exige setas e foco móvel; para duas opções é
+  complexidade sem ganho). O nome acessível é o texto visível ("Novembro"):
+  comando de voz funciona.
+- `text-lg`, `min-h-13` (52px). Tocar na aba já escolhida não faz nada.
+- O mês com o ano ("Outubro 2026") fica num `h2` só para leitor de tela
+  (`sr-only`): na tela, a aba escolhida já diz o mês.
+- Modo compacto (`@max-[15rem]`): as abas empilham (uma por linha).
 
 ### Estados do dia (em ordem de prioridade)
 
@@ -306,11 +325,8 @@ as listrinhas).
   disponível".
 - Enter e Espaço ativam o dia.
 - `active:scale-95` ao tocar ("recebi seu toque").
-- Botões **Voltar**/**Avançar** com ícone + texto (`text-sm`, caixa normal),
-  `aria-label` "Mês anterior" / "Próximo mês". Desativados fora da janela
-  (`opacity-30`).
-- Mês em `text-xl`; dias da semana "Dom Seg Ter…" (`text-sm`, sem maiúsculas;
-  iniciais no modo compacto); número do dia em `text-lg`.
+- Dias da semana "Dom Seg Ter…" (`text-base`, sem maiúsculas; iniciais no
+  modo compacto); número do dia em `text-lg`.
 - Legenda: Disponível / Ocupado / P-day, quadradinhos de `h-5 w-5` com o mesmo
   visual dos dias (o do P-day com listrinhas).
 
@@ -319,12 +335,12 @@ as listrinhas).
 O calendário é um `@container`. Com `@max-[15rem]` (calendário estreito **para
 o tamanho da letra**):
 
-- o nome do mês sobe para cima dos botões (grade de 2 colunas);
+- as abas de mês empilham;
 - os dias da semana viram iniciais (D S T Q Q S S, como no calendário de papel).
 
 O limite é em **rem**, então cresce junto com a letra do sistema: com fonte 130%
-o modo compacto entra antes. Sem isso, com letra grande o "Avançar" saía da tela
-e "SEG TER QUA" se encavalavam.
+o modo compacto entra antes. Sem isso, com letra grande as abas saíam da tela
+e os dias da semana se encavalavam. Testado em 320px com letra a 200%.
 
 ### Troca de mês
 

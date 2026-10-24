@@ -188,7 +188,7 @@ export default function ResetPasswordForm({ email }: { email: string | null }) {
                         </div>
 
                         {erro && (
-                            <p role="alert" className="text-sm font-medium text-accent">{erro}</p>
+                            <p role="alert" className="text-base font-medium text-accent">{erro}</p>
                         )}
 
                         <button
