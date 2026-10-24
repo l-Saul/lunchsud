@@ -47,5 +47,6 @@ export const config = {
         '/api/agendamentos/delete',
         '/api/ala-atual',
         '/api/alas/criar',
+        '/api/avisos/:path*',
     ],
 };

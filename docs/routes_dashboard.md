@@ -1,8 +1,9 @@
 # `/dashboard`: painel do líder
 
 Onde o líder **confere, edita e remove** os almoços da ala, vê o **histórico**,
-**aprova ou remove** outros líderes e **gera a imagem do mês** para mandar no
-grupo do WhatsApp. O owner também **troca de ala** e **cria alas**.
+escolhe os **avisos por e-mail**, **aprova ou remove** outros líderes e **gera a
+imagem do mês** para mandar no grupo do WhatsApp. O owner também **troca de
+ala** e **cria alas**.
 
 ## Arquivos
 
@@ -14,6 +15,7 @@ src/app/(leader)/dashboard/
     CollapsibleMonth.tsx            um mês recolhível dentro do BookingsCard
     EditBookingModal.tsx            lápis + modal de editar/remover um almoço
     HistoryCard.tsx                 card "Histórico de almoços" (3 meses anteriores)
+    NotificationsCard.tsx           card "Notificações" (avisos por e-mail)
     UsersCard.tsx                   card "Usuários" (aprovar/remover acesso)
     WardSwitcher.tsx                card do owner: trocar a ala em foco
     CreateWardForm.tsx              "Criar nova ala" (dentro do WardSwitcher)
@@ -70,6 +72,8 @@ Sem login → `/admin`; logado sem ala aprovada → `/acesso` (`requireAcesso`).
 | Histórico | `agendamento`: `data`, `histInicio ≤ data < histFim`; contado por mês (`YYYY-MM`), do mais recente ao mais antigo, com `disponiveis` de cada mês | `[]` |
 | Usuários | `ala_membro`: `id, status, user_id` da ala em foco (por status), depois `perfil`: `id, nome, email` desses usuários | `[]` |
 | Alas para troca (só owner) | `ala`: `id, nome, slug`, por nome | — |
+| E-mail do líder | `perfil`: `email` do usuário logado | não busca |
+| Avisos por e-mail | `buscarPreferenciasEmail(userId, alaId)`: a linha de `email_preferencia` do usuário **nesta ala** (sem linha: tudo desligado) | não busca (card escondido) |
 
 Os usuários são **sempre os da ala em foco** (member: a sua; owner: a
 selecionada). Como todos são da mesma ala, o card não mostra o nome da ala em
@@ -82,7 +86,7 @@ cada um.
    e o `LogoutButton`.
 3. `WardSwitcher`: só owner, e só se houver alas.
 4. `OpenCalendarButton`: se a ala tem slug.
-5. `BookingsCard` → `HistoryCard` → `UsersCard`.
+5. `BookingsCard` → `HistoryCard` → `NotificationsCard` (só com ala em foco) → `UsersCard`.
 
 `main` sem fundo (o "céu" do `body` aparece); conteúdo em `max-w-3xl`.
 
@@ -172,6 +176,75 @@ Exporta `HistoryCard` e o tipo `MesHistorico = { ym, total, disponiveis }`.
   "total/disponíveis".
 - A barra é `role="img"` com `aria-label="X de Y dias"`.
 - Vazio: "Ainda não há almoços anteriores."
+
+## `NotificationsCard.tsx` (client)
+
+Card **"Notificações"**, antes de Usuários. O líder escolhe quais **avisos por
+e-mail desta ala** quer receber. Os avisos só informam (sem botão nem link; o
+rodapé deles diz para desligar aqui, em Notificações). Como os avisos são montados e
+enviados está em [src_lib.md](src_lib.md) ("Avisos por e-mail"); a rota, em
+[routes_api.md](routes_api.md).
+
+**A notificação é sempre usuário + ala.** O card vale só para a **ala em foco**.
+O owner não tem nada diferente: ele liga o que quiser em cada ala, trocando de
+ala no painel. O `page.tsx` só mostra o card com uma ala em foco e usa
+`key={alaId}`: ao trocar de ala o card recomeça com as preferências da ala nova.
+
+Props: `alaId`, `email` (do `perfil`; `null` → "Esta conta não tem e-mail
+cadastrado.") e `preferenciasIniciais`.
+
+### Topo
+
+- Linha do título: "Notificações" à esquerda e, à direita, o estado do
+  salvamento (`role="status"`, `aria-live`): "Salvando…" com Spinner →
+  **"Salvo."** (verde). Fica na mesma linha do título para não deixar um espaço
+  vazio entre o texto e as chaves.
+- "Escolha quais e-mails quer receber sobre esta ala. Eles chegam em
+  **\<e-mail\>**." (`wrap-anywhere`; sem e-mail: "Esta conta ainda não tem
+  e-mail cadastrado.").
+- Erro de salvamento: linha rosa (`role="alert"`) entre o topo e as chaves, só
+  quando há erro.
+- Espaçamento: 20px entre o topo e as chaves, 12px entre uma chave e outra.
+
+### Avisos (todos desligados por padrão)
+
+Uma lista só, sem títulos de grupo. Cada chave tem um título curto e **uma frase
+completa** dizendo quando o e-mail chega e o que vem nele. Curto não pode virar
+vago: "Quando alguém agenda um almoço" dava a entender que qualquer mudança no
+calendário manda e-mail.
+
+| Chave | Título | Frase |
+|---|---|---|
+| `novo_almoco` | Novo almoço neste mês | "Quando alguém agenda um almoço para um dia deste mês, chega um e-mail com o nome, o dia e o telefone." |
+| `dia_sem_almoco` | Dia sem almoço | "Quando faltam dois dias e o dia ainda está sem almoço, chega um e-mail avisando qual é o dia." |
+| `semana` | Almoços da semana | "Toda segunda-feira, chega um e-mail com os almoços de terça a domingo, com nome e telefone." |
+| `proximo_mes` | Almoços do mês seguinte | "Um dia antes do fim do mês, chega um e-mail avisando que o mês seguinte já pode ser agendado, com quem já agendou e quais dias ainda estão livres." |
+| `pedido_acesso` | Pedido para entrar no painel | "Quando outro líder cria uma conta e pede para usar o painel desta ala, chega um e-mail com um botão para abrir o painel e aprovar o pedido." |
+
+As frases não falam em link: os avisos não têm. Só o e-mail de pedido tem um
+botão, e a frase dele diz isso. "Almoços do mês seguinte" já é o aviso de que o
+mês abriu: não há outro aviso no dia 1.
+
+- Nada vem ligado: o líder escolhe o que quer receber.
+- Cada chave é um `<button role="switch" aria-checked>` do tamanho da linha
+  (≥ 56px), com título, frase e o interruptor (verde ligado / cinza desligado,
+  bolinha muda de lado: não depende só da cor).
+- A lista está em `AVISOS`, no próprio componente.
+- Não há aviso de almoço editado ou removido: quem faz isso é o próprio líder.
+- O e-mail "Pedido aprovado" **sempre** é enviado à pessoa aprovada e não aparece aqui.
+
+### Salvar ao tocar
+
+Sem botão "Salvar" (menos passos). Cada toque atualiza a tela na hora e manda
+**todas** as chaves + o `alaId` para `POST /api/avisos/preferencias`.
+
+- Toques rápidos entram numa **fila**: só um envio por vez, e ao terminar manda
+  o estado mais recente.
+- Se um envio falhar, a tela **volta ao último estado salvo** e mostra o erro:
+  "Não foi possível salvar. Tente de novo.", "Sem internet. Verifique a conexão e
+  tente de novo." ou,
+  se a ala em foco mudou em outra aba (409), "A página está desatualizada.
+  Atualize a página."
 
 ## `UsersCard.tsx` (client)
 

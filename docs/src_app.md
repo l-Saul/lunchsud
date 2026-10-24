@@ -142,12 +142,13 @@ função: roda antes da requisição). Aqui ela **renova a sessão do Supabase A
 ```
 /dashboard/:path*  /admin/:path*  /acesso/:path*  /redefinir-senha/:path*  /auth/:path*
 /api/acesso/:path*  /api/agendamentos/update  /api/agendamentos/delete
-/api/ala-atual  /api/alas/criar
+/api/ala-atual  /api/alas/criar  /api/avisos/:path*
 ```
 
 O caminho do membro (home, calendário da ala, `/api/agendar`,
 `/api/agendamentos/[slug]`, `/api/alas`) **não tem login**, então vai direto para
-a rota, sem esse passo extra. **Rota nova que use sessão
+a rota, sem esse passo extra. O cron (`/api/cron/avisos`) também fica fora: não
+tem sessão, é protegido pelo `CRON_SECRET`. **Rota nova que use sessão
 (`getUsuario`/`getContexto`) precisa entrar no matcher.**
 
 ## Configuração
@@ -155,6 +156,10 @@ a rota, sem esse passo extra. **Rota nova que use sessão
 ### `next.config.ts`
 
 - `reactStrictMode: true`.
+- `outputFileTracingIncludes`: `"/api/**"` leva junto `./messages/email/**/*`.
+  O modelo dos avisos por e-mail (`messages/email/aviso.html`) é lido do disco
+  em tempo de execução; sem isso ele poderia ficar fora do pacote das funções na
+  Vercel. Ver [src_lib.md](src_lib.md).
 - **Headers de segurança** em todas as respostas (`/:path*`):
 
 | Header | Valor | Por quê |
@@ -186,6 +191,13 @@ sem `tailwind.config`).
 `"regions": ["gru1"]`: as funções rodam em **São Paulo**, junto do banco
 (Supabase `sa-east-1`). Com a função nos EUA, cada consulta cruzava o continente
 (~1 s por página). Mantenha os dois juntos.
+
+`"crons"`: um **Vercel Cron** por dia, `"0 11 * * *"` em `/api/cron/avisos`
+(lembretes e resumos por e-mail). O horário do cron é **UTC**: 11:00 UTC = 08:00
+em São Paulo (o Brasil não tem horário de verão). No plano Hobby a Vercel roda
+o cron uma vez por dia e pode atrasar até ~1 hora. A Vercel chama a rota com
+`Authorization: Bearer <CRON_SECRET>`; a variável precisa existir no projeto.
+Ver [routes_api.md](routes_api.md).
 
 ### `tsconfig.json`
 

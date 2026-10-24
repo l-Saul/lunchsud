@@ -66,6 +66,35 @@ create unique index ala_membro_user_unico on public.ala_membro using btree (user
 create index idx_ala_membro_ala_status on public.ala_membro using btree (ala_id, status);
 create index idx_ala_membro_aprovado_por on public.ala_membro using btree (aprovado_por);
 
+create table public.email_preferencia (
+    user_id        uuid not null references auth.users (id) on delete cascade,
+    ala_id         integer not null references public.ala (id) on delete cascade,
+    novo_almoco    boolean not null default false,
+    dia_sem_almoco boolean not null default false,
+    proximo_mes    boolean not null default false,
+    semana         boolean not null default false,
+    pedido_acesso  boolean not null default false,
+    atualizado_em  timestamptz not null default now(),
+    primary key (user_id, ala_id)
+);
+
+create index idx_email_preferencia_ala on public.email_preferencia using btree (ala_id);
+
+create table public.email_envio (
+    id         bigint generated always as identity primary key,
+    tipo       text not null,
+    user_id    uuid not null references auth.users (id) on delete cascade,
+    ala_id     integer not null references public.ala (id) on delete cascade,
+    referencia text not null,
+    enviado_em timestamptz not null default now(),
+    constraint email_envio_tipo check (tipo in ('dia_sem_almoco', 'proximo_mes', 'semana')),
+    constraint email_envio_unico unique (tipo, user_id, ala_id, referencia)
+);
+
+create index idx_email_envio_user on public.email_envio using btree (user_id);
+create index idx_email_envio_ala on public.email_envio using btree (ala_id);
+create index idx_email_envio_enviado_em on public.email_envio using btree (enviado_em);
+
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -87,10 +116,33 @@ create trigger on_auth_user_created
     after insert on auth.users
     for each row execute function public.handle_new_user();
 
+create or replace function public.handle_user_email_change()
+returns trigger
+language plpgsql
+security definer
+set search_path to ''
+as $function$
+begin
+    update public.perfil set email = new.email where id = new.id;
+    return new;
+end;
+$function$;
+
+revoke execute on function public.handle_user_email_change() from public, anon, authenticated;
+grant execute on function public.handle_user_email_change() to supabase_auth_admin;
+
+create trigger on_auth_user_email_changed
+    after update of email on auth.users
+    for each row
+    when (old.email is distinct from new.email)
+    execute function public.handle_user_email_change();
+
 alter table public.ala         enable row level security;
 alter table public.agendamento enable row level security;
 alter table public.perfil      enable row level security;
 alter table public.ala_membro  enable row level security;
+alter table public.email_preferencia enable row level security;
+alter table public.email_envio       enable row level security;
 
 revoke all on all tables in schema public from anon, authenticated;
 revoke all on all sequences in schema public from anon, authenticated;

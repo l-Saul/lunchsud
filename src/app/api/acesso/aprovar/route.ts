@@ -3,10 +3,11 @@
  * Mudou o comportamento? Atualize o doc na mesma mudança.
  */
 
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { getContexto, podeEditarAla } from '@/lib/server/session';
 import { supabaseServer } from '@/lib/supabase/service-role';
 import { lerJson, parseMembroId } from '@/lib/server/validation';
+import { avisarAcessoAprovado } from '@/lib/server/notifications';
 
 export async function POST(req: Request) {
     const ctx = await getContexto();
@@ -23,7 +24,7 @@ export async function POST(req: Request) {
 
     const { data: membro } = await supabaseServer
         .from('ala_membro')
-        .select('id, ala_id')
+        .select('id, ala_id, user_id, status')
         .eq('id', membroId)
         .maybeSingle();
 
@@ -44,5 +45,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Erro ao aprovar' }, { status: 500 });
     }
 
+    if (membro.status === 'pendente') {
+        after(() => avisarAcessoAprovado(membro.ala_id, membro.user_id));
+    }
     return NextResponse.json({ ok: true });
 }

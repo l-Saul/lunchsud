@@ -5,12 +5,13 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { criarSupabaseBrowser } from '@/lib/supabase/browser-session';
 import { Flower } from '@/components/Flower';
 import { Spinner } from '@/components/Spinner';
 
-export default function ResetPasswordForm({ email }: { email: string }) {
+export default function ResetPasswordForm({ email }: { email: string | null }) {
     const router = useRouter();
     const [supabase] = useState(() => criarSupabaseBrowser());
 
@@ -45,7 +46,13 @@ export default function ResetPasswordForm({ email }: { email: string }) {
         setLoading(false);
 
         if (error) {
-            setErro('O link expirou. Peça um novo link de redefinição na tela de login.');
+            if (error.code === 'same_password') {
+                setErro('A nova senha precisa ser diferente da senha antiga.');
+            } else if (error.code === 'weak_password') {
+                setErro('Escolha uma senha mais forte, com pelo menos 6 caracteres.');
+            } else {
+                setErro('O link expirou. Peça um novo na tela de entrar, em "Esqueci minha senha".');
+            }
             return;
         }
 
@@ -66,15 +73,30 @@ export default function ResetPasswordForm({ email }: { email: string }) {
                 <span className="h-px w-8 bg-linear-to-l from-transparent to-secondary/70" />
             </div>
 
-            {pronto ? (
+            {!email ? (
+                <>
+                    <h1 className="text-2xl font-semibold text-text">Link expirado</h1>
+                    <p className="text-base text-muted">
+                        O link para criar uma nova senha expirou ou já foi usado. Peça um novo na tela de entrar, em &quot;Esqueci minha senha&quot;.
+                    </p>
+                    <Link
+                        href="/admin"
+                        className="flex min-h-13 w-full items-center justify-center rounded-xl bg-secondary px-4 text-lg font-semibold text-white transition duration-100 hover:opacity-90 active:scale-[0.98]"
+                    >
+                        Ir para a tela de entrar
+                    </Link>
+                </>
+            ) : pronto ? (
                 <>
                     <h1 className="text-2xl font-semibold text-text">Senha atualizada!</h1>
-                    <p className="text-base text-muted">Redirecionando para o painel…</p>
+                    <p className="text-base text-muted">Abrindo o painel…</p>
                 </>
             ) : (
                 <>
                     <h1 className="text-2xl font-semibold text-text">Nova senha</h1>
-                    <p className="text-base text-muted">Escolha uma nova senha para a sua conta.</p>
+                    <p className="wrap-anywhere text-base text-muted">
+                        Escolha uma nova senha para a conta <strong className="text-text">{email}</strong>.
+                    </p>
 
                     <form onSubmit={handleSubmit} className="flex w-full flex-col gap-5 text-left">
                         <input

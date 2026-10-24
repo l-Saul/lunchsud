@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-    title: 'Redefinir senha',
+    title: 'Nova senha',
     robots: { index: false, follow: false },
 };
 
@@ -21,7 +21,7 @@ export default async function RedefinirSenhaPage() {
     return (
         <main className="flex min-h-screen items-center justify-center px-4 py-12">
             <section className="w-full max-w-md">
-                <ResetPasswordForm email={usuario?.email ?? ''} />
+                <ResetPasswordForm email={usuario?.email ?? null} />
             </section>
         </main>
     );

@@ -2,8 +2,8 @@
 
 | Pasta | Roda onde | Conteúdo |
 |---|---|---|
-| `src/lib/` | servidor **e** navegador | `date`, `phone`, `location`, `wards`, `scriptures`, `site-url` |
-| `src/lib/server/` | **só servidor** | `public-ward`, `session`, `validation` |
+| `src/lib/` | servidor **e** navegador | `date`, `phone`, `location`, `wards`, `scriptures`, `site-url`, `email-preferences` |
+| `src/lib/server/` | **só servidor** | `public-ward`, `session`, `validation`, `mailer`, `email-templates`, `notifications` |
 | `src/lib/supabase/` | depende do cliente | `realtime`, `service-role`, `browser-session`, `server-session` |
 
 Os arquivos de `src/lib/server/` (e o `service-role.ts`) importam
@@ -32,8 +32,13 @@ mês "viraria" perto da meia-noite, e Manaus vira o dia 1 h depois de São Paulo
 | `diaTile('2026-06-07')` | `{ dia: '7', mesAbrev: 'jun' }` | o medalhão de data do painel |
 | `isPday('2026-06-08')` | `true` | segunda-feira? Calcula em UTC (`T00:00:00Z`), então não depende do fuso do servidor |
 | `diasDisponiveisNoMes('2026-06')` | `26` | dias do mês menos as segundas (o "Y" do "X de Y dias") |
+| `nomeDoMes('2026-12')` | `'Dezembro'` | só o nome do mês |
+| `somarDias('2026-10-30', 3)` | `'2026-11-02'` | soma dias em texto `YYYY-MM-DD` (conta em UTC, ao meio-dia, sem efeito de fuso) |
+| `dataPorExtenso('2026-04-16')` | `'quinta-feira, 16 de abril'` | data por extenso dos e-mails |
+| `diaDaSemanaEDia('2026-10-27')` | `'terça-feira, 27'` | linha do e-mail da semana |
 
-`isPday` é usado no calendário público, na imagem do mês e no `/api/agendar`.
+`isPday` é usado no calendário público, na imagem do mês, no `/api/agendar` e
+nos avisos do cron.
 
 ---
 
@@ -259,6 +264,10 @@ Evita payloads gigantes e corpos malformados.
 | `parseAlaId` | `/api/acesso/solicitar`, `/api/ala-atual` | `alaId` |
 | `parseSlug` | slug da URL (`buscarAlaPorSlug`) | slug minúsculo |
 | `parseNovaAla` | `/api/alas/criar` | `{ nome, slug, endereco, pais, estado, cidade, fuso }` |
+| `parsePreferencias` | `/api/avisos/preferencias` | `{ novo_almoco, dia_sem_almoco, proximo_mes, semana, pedido_acesso }` |
+
+`parsePreferencias`: as cinco chaves de `TIPOS_AVISO` precisam ser booleanos de
+verdade (nada de `"true"`). A ala vem à parte, por `parseAlaId`.
 
 `parseNovaAla`: nome saneado e normalizado (`normalizarNomeAla`); **slug sempre
 gerado do nome** (`gerarSlug`); país da lista `PAISES`; no Brasil o estado é uma
@@ -269,6 +278,186 @@ horário.", "Informe a cidade.", "Não foi possível gerar um link válido a par
 desse nome") são escritas para o owner e devolvidas pela rota.
 
 Os checks do banco espelham estas regras (ver [database.md](database.md)).
+
+---
+
+## Avisos por e-mail
+
+O líder recebe avisos do calendário da ala no e-mail do perfil e escolhe quais
+no card Notificações do painel ([routes_dashboard.md](routes_dashboard.md)).
+Envio pelo **Gmail (SMTP)**, direto do Next, sem o Supabase. Os e-mails de login
+(cadastro, senha…) são outra coisa: são do Supabase Auth ([database.md](database.md)).
+
+**Regra central: a notificação é sempre usuário + ala.** Cada pessoa liga os
+avisos que quer **em cada ala** a que tem acesso. O owner não tem regra especial:
+recebe só das alas em que ligou algo, como qualquer líder. **Tudo vem desligado.**
+
+**Os avisos só informam**, como uma notificação: **sem botão, sem link, sem
+anexo**, e o telefone vai como texto comum. A única exceção são os dois e-mails
+de pedido para usar o painel, que têm **um botão para o painel** (`/dashboard`):
+quem recebe precisa entrar para aprovar ou para começar a usar.
+
+| Aviso no card (chave) | Quando | Gatilho |
+|---|---|---|
+| **Novo almoço neste mês** (`novo_almoco`) | alguém agenda, pela página da ala, um almoço para um dia **do mês atual** (no fuso da ala). Agendamento para o mês seguinte não avisa | na hora |
+| **Dia sem almoço** (`dia_sem_almoco`) | o dia daqui a **2 dias** ainda está livre; pula segunda (P-day) e dia fora da janela | cron 8h |
+| **Almoços da semana** (`semana`) | segunda-feira: almoços de terça a domingo | cron 8h |
+| **Almoços do mês seguinte** (`proximo_mes`) | um dia antes do último dia do mês (29/04 se abril tem 30 dias): avisa que o mês seguinte **já pode ser agendado** e mostra quem já agendou e os dias livres. É o único aviso de mês: não há outro no dia 1 | cron 8h |
+| **Pedido para entrar no painel** (`pedido_acesso`) | outra pessoa criou conta de líder e pediu para usar o painel desta ala (com botão para o painel) | na hora |
+| **Pedido aprovado** (sem chave) | o pedido da pessoa foi aprovado; vai **sempre**, para ela (com botão para o painel) | na hora |
+
+**Não há aviso de almoço editado ou removido:** quem edita ou remove é o próprio
+líder, no painel.
+
+Quem recebe um aviso de uma ala: quem tem a chave ligada **naquela ala**, tem
+`perfil.email` e **ainda tem acesso** a ela (member aprovado da ala, ou owner).
+Quem perdeu o acesso para de receber, mesmo com a chave ligada. Quem pediu para
+entrar no painel não recebe o próprio pedido.
+
+**Linguagem:** o público não é de tecnologia. Frases simples e **completas**,
+dizendo **quem** fez **o quê** e **quando**; nada de "acesso", "card",
+"notificação", "usuário" nos e-mails. Sem enrolação, mas sem cortar o que faz
+entender. Ex.: "Rita (rita@gmail.com) criou uma conta de líder e pediu para usar
+o painel da Ala X", não "Novo pedido de acesso".
+
+"Almoços do mês seguinte" levaria a **imagem do calendário**; sai **sem imagem**,
+com o mês em lista: um dia por linha ("Terça-feira, 3 — Maria" e o telefone
+embaixo, ou "… — sem almoço"), todos os dias do mês menos as segundas sem almoço
+(segunda **com** almoço aparece: o líder pode mover para segunda).
+
+### `email-preferences.ts`
+
+Tipos e padrão, usados no card (navegador) e no servidor:
+`PreferenciasEmail` (as cinco chaves acima, todas `boolean`), `TipoAviso` (o nome
+de uma chave), `TIPOS_AVISO` (a lista, na ordem) e `PREFERENCIAS_PADRAO` (**tudo
+`false`**). Sem linha em `email_preferencia` = padrão.
+
+### `server/mailer.ts`
+
+`enviarEmails(emails)` / `enviarEmail(email)`, com `Email = { para, assunto,
+html, texto }`. Devolve, para cada e-mail, `'enviado' | 'falhou' | 'desligado'`.
+**Nunca lança erro**: falha vai para o log (`[email] …`) e quem chama segue.
+
+- SMTP do Gmail: `smtp.gmail.com`, porta 465 (TLS), com `GMAIL_USER` e
+  `GMAIL_APP_PASSWORD` (senha de app do Google, não a senha da conta; os espaços
+  com que o Google a mostra são tirados antes de usar). Uma conexão por chamada,
+  fechada no fim; os e-mails saem um por vez.
+- Remetente: `EMAIL_FROM` ou `"Almoço dos Missionários" <GMAIL_USER>` (o Gmail
+  só aceita a própria conta ou um alias verificado nela). Limite do Gmail: ~500
+  e-mails/dia (conta comum).
+- **Trava de ambiente:** só em produção (`VERCEL_ENV === 'production'`) o
+  e-mail vai para o destinatário real. Fora dela (local, preview), **todo e-mail
+  vai para `EMAIL_TESTE_PARA`**, com o assunto `[teste → <destinatário real>] …`;
+  sem essa variável, **nada é enviado** (`'desligado'`). O `.env` local aponta
+  para o banco de produção: sem essa trava, testar mandaria e-mail aos líderes
+  reais.
+- Sem `GMAIL_USER`/`GMAIL_APP_PASSWORD` → `'desligado'`.
+- `emailsLigados()`: `true` em produção ou com `EMAIL_TESTE_PARA`. Os avisos na
+  hora nem consultam o banco quando está desligado.
+
+### Modelo `messages/email/aviso.html`
+
+O **padrão visual de todo aviso** fica em `messages/email/aviso.html`, com o
+mesmo visual dos e-mails do Supabase (`supabase/email/`): fundo azul em degradê,
+ícone e nome do site, cartão branco com fitinha verde→rosa, florzinha, título
+com serifa e o rodapé "Site independente…". Estilos **inline**, sem Tailwind.
+Para mudar o visual de todos os avisos, edite esse arquivo.
+
+Marcadores que o código preenche:
+
+| Marcador | Conteúdo |
+|---|---|
+| `{{titulo}}` | título (no `<title>` e no `<h1>`) |
+| `{{previa}}` | texto escondido que aparece na lista da caixa de entrada |
+| `{{site}}` | endereço do site (ícone do cabeçalho) |
+| `{{conteudo}}` | destaque, parágrafos e lista, já em HTML |
+| `{{botao_texto}}`, `{{botao_url}}` | o botão verde (só nos e-mails de pedido) |
+
+Blocos que o código mantém ou tira inteiros:
+
+| Bloco | Fica quando |
+|---|---|
+| `<!--botao-->…<!--/botao-->` | o e-mail tem botão (só os de pedido para usar o painel) |
+| `<!--parar-->…<!--/parar-->` | o aviso pode ser desligado no card: "Para parar de receber este aviso, desligue-o no painel, em Notificações." (sem link). Sai no "Pedido aprovado" |
+
+O arquivo é lido do disco na primeira vez (`process.cwd()/messages/email/aviso.html`)
+e fica em memória. Para ele ir junto no deploy, o `next.config.ts` inclui
+`./messages/email/**/*` em todas as rotas `/api/**` (`outputFileTracingIncludes`).
+O iCloud já apagou essa pasta uma vez (ver "Armadilhas" no `CLAUDE.md`): se o
+e-mail falhar com "arquivo não encontrado", confira se ela existe.
+
+### `server/email-templates.ts`
+
+Monta cada aviso (assunto, HTML pelo modelo e texto puro) a partir dos dados.
+
+Regras de texto:
+
+- **Letra grande:** corpo 20px, botão 22px, título 30px, nada menor que 16px.
+- Texto formal e direto, **sem "você"** (usa "seu/sua" e o imperativo).
+- **Assunto diz o que aconteceu e sempre traz o nome da ala.**
+- Datas por extenso com dia da semana ("terça-feira, 27 de outubro").
+- **Sem link** (nem no telefone, que vai como texto: "Telefone: 41 99999 9999"),
+  menos o botão dos e-mails de pedido. O texto puro também não leva endereço.
+- **Tudo que vem do usuário é escapado** (`&`, `<`, `>`, aspas): um nome com
+  `<script>` aparece como texto.
+- Blocos do conteúdo com 20px entre um e outro; sem botão, o cartão termina no
+  último bloco.
+
+| Função | Assunto (sem o " — Ala X" do fim) | Conteúdo | Botão |
+|---|---|---|---|
+| `emailNovoAlmoco` | "Novo almoço no dia 12" | título "Novo almoço agendado" + destaque rosa: "Maria Souza agendou o almoço dos missionários para quinta-feira, 12 de novembro." e "Telefone: …" | — |
+| `emailDiaSemAlmoco` | "Depois de amanhã ainda não tem almoço" | "Quarta-feira, 28 de outubro, ainda não tem ninguém para dar o almoço aos missionários na Ala X." + "Ainda dá tempo de alguém agendar pelo calendário da ala." | — |
+| `emailSemana` | "Almoços desta semana" | "Estes são os almoços dos missionários da Ala X, de terça a domingo:" e a lista | — |
+| `emailProximoMes` | "Almoços de novembro" | "Os membros da Ala X já podem agendar os almoços de novembro." + "Novembro já tem 1 almoço agendado e ainda tem 24 dias livres." (ou "…ainda não tem nenhum almoço agendado.") + "Dias de novembro:" em lista | — |
+| `emailPedidoAcesso` | "Rita de Cássia pediu para entrar no painel" | "Rita de Cássia (rita@gmail.com) criou uma conta de líder e pediu para usar o painel da Ala X." + "Para aceitar, abra o painel e toque em "Aprovar", na parte Usuários." | Abrir o painel |
+| `emailAcessoAprovado` | "Pedido aprovado" | "O seu pedido para usar o painel da Ala X foi aprovado." + "Toque no botão abaixo para entrar." | Entrar no painel |
+
+`urlDoSite(caminho)` monta o endereço do botão e do ícone: `siteUrl()`
+(`NEXT_PUBLIC_BASE_URL`) ou, sem ela, `https://lunchsud.vercel.app`.
+
+### `server/notifications.ts`
+
+Quem recebe o quê. Lê pelo service-role.
+
+- `buscarPreferenciasEmail(userId, alaId)` → as chaves do usuário **naquela ala**
+  (sem linha, ou se a tabela ainda não existir: tudo desligado).
+- `inscritos({ alaId?, tipo? })` (interno): linhas de `email_preferencia` (da ala
+  e/ou com a chave ligada), cruzadas com `perfil` (e-mail, owner) e `ala_membro`
+  (vínculo aprovado). Descarta quem não tem e-mail ou perdeu o acesso à ala.
+- Avisos na hora, chamados com `after()` pelas rotas; engolem qualquer erro
+  (log) e não fazem nada com os e-mails desligados:
+  - `avisarNovoAlmoco(alaId, almoco)`: chamado pelo `/api/agendar`; só segue se
+    a data é do mês atual da ala;
+  - `avisarPedidoDeAcesso(alaId, solicitanteId)`;
+  - `avisarAcessoAprovado(alaId, userId)`: sempre, sem chave.
+- `planejarAvisos(ala, { hoje, fim, mesSeguinte }, almocos, destinatarios)`:
+  **função pura** que decide os avisos do cron de uma ala. Para cada pessoa com a
+  chave ligada:
+  - **almoços do mês seguinte**: se `hoje` = dia 1 do mês seguinte − 2 dias →
+    referência = `mesSeguinte`;
+  - **semana**: se `hoje` é segunda (`isPday`) → dias `hoje+1` a `hoje+6`,
+    referência = `hoje`;
+  - **dia sem almoço**: alvo = `hoje + 2` (`DIAS_ANTES_DIA_SEM_ALMOCO`); avisa se
+    o alvo **não é segunda**, está **antes de `fim`** e **não tem almoço**;
+    referência = o alvo.
+- `rodarAvisosDoDia()` (o cron):
+  1. lê quem ligou algum aviso de cron (`inscritos({})`) e as alas dessas pessoas;
+  2. para cada ala: `hoje`/`fim`/`mesSeguinte` **no fuso da ala**
+     (`getDashboardRange(ala.fuso_horario)`; o cron roda em UTC), os almoços de
+     `hoje+1` até `fim` (cobre a semana, o dia sem almoço e o mês seguinte
+     inteiro) e `planejarAvisos`;
+  3. **em produção**, registra cada aviso em `email_envio` antes de mandar
+     (`upsert … ignoreDuplicates`): se a linha já existe, o e-mail já saiu e é
+     pulado (cron rodando de novo no mesmo dia não repete). Fora de produção não
+     grava nada;
+  4. envia tudo numa conexão; o que **não** foi enviado tem o registro apagado
+     (pode sair numa nova execução);
+  5. apaga registros com mais de 90 dias;
+  6. devolve só contagens (`planejados`, `repetidos`, `enviados`, `falharam`,
+     `desligados`).
+
+Fuso: com o cron às 11:00 UTC, uma ala em São Paulo recebe às 8h e uma em
+Manaus às 7h (hora local), cada uma com o "hoje" certo.
 
 ---
 

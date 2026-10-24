@@ -22,6 +22,7 @@ alto contraste, poucos passos, sem conta para agendar.
 | Tempo real | Supabase Realtime (WebSocket, `postgres_changes`) via `@supabase/realtime-js` |
 | Dados no cliente | SWR (só a lista de alas da home) |
 | Imagem do mês | `html-to-image` (PNG) + Web Share API |
+| E-mail ao líder | `nodemailer` 10 pelo SMTP do Gmail; Vercel Cron diário |
 | Hospedagem | Vercel, funções em `gru1` (São Paulo) |
 | Node | `>= 20.11` |
 
@@ -37,6 +38,8 @@ Sem framer-motion, sem biblioteca de UI: animações só em CSS.
                 ◀─────── WebSocket (anon, só id/ala_id/data/nome) ──────────────── Realtime  unique)
  painel líder   ──GET /dashboard (SSR)─────▶ proxy.ts (renova sessão) → Server Component
                 ──POST /api/... ───────────▶ route handler (getContexto + escopo por ala)
+                                                │ after(): novo almoço, pedido para entrar no painel
+ Vercel Cron 11:00 UTC ──GET /api/cron/avisos─▶ lembretes e resumos ──SMTP──▶ Gmail ──▶ e-mail do líder
 ```
 
 - **Toda leitura e escrita passa pelo servidor com o service-role.** O navegador
@@ -48,6 +51,14 @@ Sem framer-motion, sem biblioteca de UI: animações só em CSS.
   consulta cruzava o continente (~1 s por página).
 - **Regras de data no fuso da ala**: o servidor roda em UTC; "hoje", a janela e
   a virada do mês vêm de `getDashboardRange(ala.fuso_horario)`.
+- **Avisos por e-mail ao líder**: cada pessoa liga, **por ala**, os avisos que
+  quer (tudo vem desligado). O que nasce de uma ação (novo almoço agendado no mês,
+  pedido para entrar no painel, pedido aprovado) sai **na hora**, em `after()`, sem a
+  resposta esperar; o que depende de olhar o calendário (dia sem almoço,
+  almoços do mês seguinte, semana) sai no **cron diário das 8h**. Os avisos só
+  informam (sem botão nem link), menos os de pedido para usar o painel. O
+  modelo do e-mail fica em `messages/email/aviso.html`. Fora de produção, todo
+  e-mail vai só para `EMAIL_TESTE_PARA`. Detalhes em [`docs/src_lib.md`](docs/src_lib.md).
 
 ### Rotas
 
@@ -76,6 +87,8 @@ Sem framer-motion, sem biblioteca de UI: animações só em CSS.
 | `POST /api/acesso/remover` | owner / member aprovado da ala | remove vínculo |
 | `POST /api/ala-atual` | owner | troca a ala em foco (cookie `ala_atual`) |
 | `POST /api/alas/criar` | owner | cria ala (slug gerado do nome) |
+| `POST /api/avisos/preferencias` | líder (ala em foco) | grava os avisos por e-mail escolhidos para a ala |
+| `GET /api/cron/avisos` | Vercel Cron (`CRON_SECRET`) | lembretes e resumos do dia |
 
 Contratos, validações e respostas em [`docs/routes_api.md`](docs/routes_api.md).
 
@@ -97,8 +110,9 @@ Detalhes e onde cada regra é garantida: [`CLAUDE.md`](CLAUDE.md) e `docs/`.
 ## Banco
 
 Tabelas `ala`, `agendamento`, `perfil` (1:1 com `auth.users`, criado por
-trigger) e `ala_membro` (vínculo usuário↔ala, único por usuário). RLS ligada em
-todas; o navegador só lê `id, ala_id, data, nome` de `agendamento`. Schema
+trigger, e-mail sincronizado por outro trigger), `ala_membro` (vínculo
+usuário↔ala, único por usuário) e, dos avisos por e-mail, `email_preferencia`
+(usuário + ala) e `email_envio`. RLS ligada em todas; o navegador só lê `id, ala_id, data, nome` de `agendamento`. Schema
 completo, checks, permissões, Realtime, migrations e templates de e-mail:
 [`docs/database.md`](docs/database.md). Fonte da verdade: [`supabase/schema.sql`](supabase/schema.sql).
 
@@ -113,6 +127,8 @@ completo, checks, permissões, Realtime, migrations e templates de e-mail:
   `nosniff`, `Referrer-Policy`, `Permissions-Policy`); CSP pendente.
 - **Sem limite por IP**: muitas pessoas usam o mesmo IP (Wi-Fi da igreja). Abuso
   se trata no Firewall da Vercel, não travando o usuário.
+- Cron protegido por `CRON_SECRET` (fecha se a variável não existir). E-mail
+  nunca segura nem desfaz uma ação (`after()`, falha só no log).
 
 ---
 
@@ -128,13 +144,17 @@ src/
     layout.tsx  globals.css  not-found.tsx  manifest.ts  robots.ts
   components/            usados por 2+ páginas (Spinner, Flower, Footer, LoadingOverlay)
   hooks/                 use-bookings-realtime (WebSocket)
-  lib/                   date, phone, location, wards, scriptures, site-url
-  lib/server/            public-ward, session, validation        (só servidor)
+  lib/                   date, phone, location, wards, scriptures, site-url, email-preferences
+  lib/server/            public-ward, session, validation,       (só servidor)
+                         mailer, email-templates, notifications
   lib/supabase/          realtime, service-role, browser-session, server-session
   proxy.ts               renova a sessão nas rotas do líder
+messages/
+  email/aviso.html       modelo (layout) dos avisos por e-mail ao líder
+  design.md · emails-do-lider.txt   planos
 supabase/
   schema.sql             estrutura completa do banco
-  migrations/            mudanças pendentes (o usuário roda e apaga)
+  migrations/            só quando há mudança pendente (o usuário roda e apaga)
   email/                 templates dos e-mails do Supabase Auth
 docs/                    routes_<rota>.md · src_app/components/hooks/lib.md · database.md
 ```
@@ -151,10 +171,13 @@ de código diz no cabeçalho qual é o seu doc; o mapa por pasta está no
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | navegador + servidor | chave `anon` / publishable |
 | `SUPABASE_URL` | servidor (service-role) | a mesma Project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | **só servidor** | chave `service_role`. **Nunca exponha** |
-| `NEXT_PUBLIC_BASE_URL` | `siteUrl()` (link do e-mail de senha) | `https://lunchsud.vercel.app` em produção |
+| `NEXT_PUBLIC_BASE_URL` | `siteUrl()` (links dos e-mails) | `https://lunchsud.vercel.app` em produção |
+| `GMAIL_USER` | **só servidor** (avisos por e-mail) | conta do Gmail que envia |
+| `GMAIL_APP_PASSWORD` | **só servidor** | senha de app do Google (não a senha da conta) |
+| `EMAIL_FROM` | opcional | remetente, ex. `"Almoço dos Missionários" <conta@gmail.com>`; padrão: esse nome + `GMAIL_USER` |
+| `CRON_SECRET` | **só servidor**; a Vercel envia no cron | texto aleatório longo (ex. `openssl rand -hex 32`). Sem ela o cron recusa tudo |
+| `EMAIL_TESTE_PARA` | **só fora de produção** (local, preview) | seu e-mail: todo aviso vai só para ele. Sem ela, nada é enviado fora de produção |
 
-`GMAIL_USER` e `GMAIL_APP_PASSWORD` estão reservadas para os avisos por e-mail
-ao líder (plano em `messages/emails-do-lider.txt`); o código ainda não usa.
 Arquivos `.env*` são ignorados pelo git.
 
 **Atenção:** o `.env` local aponta para o banco de **produção**. Agendar no
@@ -172,9 +195,11 @@ Pré-requisitos: Node 20.11+, um projeto no Supabase e (para publicar) conta na 
 2. **Banco**: no SQL Editor do Supabase, rode **todo** o
    [`supabase/schema.sql`](supabase/schema.sql) (tabelas, trigger, RLS,
    permissões e Realtime).
-3. **Auth**: em *Authentication*, ligue o provider **Email**; em *URL
-   Configuration*, defina **Site URL** = `http://localhost:3000` e a mesma URL em
-   **Redirect URLs**. Cole os templates de `supabase/email/` em *Email Templates*.
+3. **Auth**: em *Authentication*, ligue o provider **Email** e **desligue
+   "Confirm email"** (o líder é aprovado por outro líder, não pelo e-mail); em
+   *URL Configuration*, defina **Site URL** = `http://localhost:3000` e a mesma
+   URL em **Redirect URLs**. Cole os templates de `supabase/email/` em *Email
+   Templates* e configure um **SMTP próprio** em *Emails → SMTP Settings*.
 4. **Variáveis**: crie `.env.local` com as variáveis da tabela acima
    (*Project Settings → API*).
 5. **Rodar**
@@ -208,8 +233,13 @@ build-manifest.json`).
 - **Branches:** `master` = produção (Vercel), `dev` = desenvolvimento. Código
   chega na `master` só vindo da `dev`.
 - **Vercel:** importe o repositório, configure as variáveis de ambiente e faça o
-  deploy. `vercel.json` fixa a região `gru1`. Cada push na branch de produção
-  republica.
+  deploy. `vercel.json` fixa a região `gru1` e cria o cron diário
+  (`0 11 * * *` = 8h em São Paulo; no plano Hobby pode atrasar até ~1 hora).
+  Cada push na branch de produção republica.
+- **Avisos por e-mail:** no Google, ative a verificação em duas etapas da conta
+  e crie uma **senha de app** (`GMAIL_APP_PASSWORD`). Na Vercel, defina
+  `GMAIL_USER`, `GMAIL_APP_PASSWORD`, `CRON_SECRET` (e, se quiser, `EMAIL_FROM`).
+  **Não** defina `EMAIL_TESTE_PARA` em produção.
 - **Supabase:** troque a **Site URL** e as **Redirect URLs** pela URL da Vercel,
   senão o login e os links de e-mail não funcionam em produção.
 - **Mudança no banco:** migration em `supabase/migrations/`, aplicada à mão no
@@ -221,6 +251,7 @@ build-manifest.json`).
   escondida por 30 s solta o canal; o WebSocket fecha ~50 s depois.
 - Sem backup automático.
 - Projeto pausa após 7 dias sem uso.
+- Gmail: ~500 e-mails por dia numa conta comum (sobra para o tamanho do projeto).
 
 ---
 

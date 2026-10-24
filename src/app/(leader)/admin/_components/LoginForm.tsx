@@ -54,7 +54,9 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
 
             if (error) {
                 setLoading(false);
-                setErro('E-mail ou senha incorretos.');
+                setErro(error.code === 'email_not_confirmed'
+                    ? 'Esta conta ainda não foi confirmada. Abra o e-mail que enviamos no cadastro e toque no botão para confirmar.'
+                    : 'E-mail ou senha incorretos.');
                 return;
             }
             router.push('/dashboard');
@@ -95,7 +97,7 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
             router.refresh();
         } else {
             setLoading(false);
-            setAviso('Conta criada! Confirme o e-mail que enviamos e depois faça login.');
+            setAviso('Conta criada! Agora entre com o seu e-mail e a sua senha.');
             setModo('entrar');
         }
     }
@@ -105,18 +107,23 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
         setErro('');
         setAviso('');
 
-        if (!email.trim()) {
-            setErro('Digite seu e-mail acima para receber o link de redefinição.');
+        const emailLimpo = email.trim().toLowerCase();
+        if (!emailLimpo) {
+            setErro('Digite o seu e-mail no campo acima e toque de novo em "Esqueci minha senha".');
             return;
         }
 
         setLoading(true);
-        await supabase.auth.resetPasswordForEmail(email.trim(), {
+        const { error } = await supabase.auth.resetPasswordForEmail(emailLimpo, {
             redirectTo: `${siteUrl()}/auth/confirmar?next=/redefinir-senha`,
         });
         setLoading(false);
 
-        setAviso('Se houver uma conta com esse e-mail, enviamos um link para redefinir a senha. Procure por uma mensagem de noreply@mail.app.supabase.io (confira o spam).');
+        if (error?.status === 429) {
+            setErro('Já enviamos um link há pouco. Espere alguns minutos e tente de novo.');
+            return;
+        }
+        setAviso('Se houver uma conta com esse e-mail, enviamos um link para criar uma nova senha. Procure o e-mail "Redefina sua senha do Almoço dos Missionários" e confira também a caixa de spam.');
     }
 
     return (

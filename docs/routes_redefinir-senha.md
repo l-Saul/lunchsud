@@ -29,16 +29,26 @@ O convite (`invite-user.html`) usa o mesmo destino: `type=invite&next=/redefinir
 
 ## `page.tsx`
 
-- `dynamic = 'force-dynamic'`, `revalidate = 0`. Metadata: título "Redefinir
-  senha", `robots: noindex, nofollow`.
-- Lê o usuário da sessão e passa `email` (ou `''`) ao formulário, para o
-  gerenciador de senhas saber qual senha salva atualizar.
-- **Não redireciona** quem chega sem sessão: o formulário aparece, e o
-  `updateUser` falha com a mensagem de link expirado (abaixo).
+- `dynamic = 'force-dynamic'`, `revalidate = 0`. Metadata: título "Nova senha",
+  `robots: noindex, nofollow`.
+- Lê o usuário da sessão e passa o `email` dele ao formulário, ou `null` **sem
+  sessão** (link expirado, já usado, ou alguém abriu `/redefinir-senha` direto).
 
 ## `ResetPasswordForm.tsx` (client)
 
-### Campos
+Prop `email: string | null`. Três telas, no mesmo cartão (fitinha + florzinha):
+
+### Sem sessão: link expirado
+
+- Título **"Link expirado"** e "O link para criar uma nova senha expirou ou já
+  foi usado. Peça um novo na tela de entrar, em "Esqueci minha senha"."
+- Botão **"Ir para a tela de entrar"** → `/admin`.
+- O formulário nem aparece (antes ele aparecia e só dava erro ao salvar).
+
+### Com sessão: nova senha
+
+- Título **"Nova senha"** e "Escolha uma nova senha para a conta
+  **\<e-mail\>**." (a pessoa vê de qual conta é; `wrap-anywhere`).
 
 | Campo | Atributos |
 |---|---|
@@ -49,14 +59,28 @@ O convite (`invite-user.html`) usa o mesmo destino: `type=invite&next=/redefinir
 Cada campo de senha tem botão de olho (`aria-label` "Mostrar senha"/"Ocultar
 senha", `aria-pressed`).
 
-### Envio
-
 | Situação | Resultado |
 |---|---|
 | senha < 6 caracteres | "A senha precisa ter pelo menos 6 caracteres." |
 | senhas diferentes | "As senhas não conferem." |
-| `updateUser` falhou (sem sessão, link expirado) | "O link expirou. Peça um novo link de redefinição na tela de login." |
-| sucesso | troca para "Senha atualizada!" / "Redirecionando para o painel…" e, após 1,2 s, `router.push('/dashboard')` + `refresh()` |
+| `updateUser` com `same_password` | "A nova senha precisa ser diferente da senha antiga." |
+| `updateUser` com `weak_password` | "Escolha uma senha mais forte, com pelo menos 6 caracteres." |
+| `updateUser` falhou por outro motivo (sessão caiu) | "O link expirou. Peça um novo na tela de entrar, em "Esqueci minha senha"." |
+| sucesso | a terceira tela |
 
 Botão enquanto salva: `disabled`, `aria-busy`, Spinner e "Salvando…". Erro em
 `role="alert"`, rosa.
+
+### Senha salva
+
+"Senha atualizada!" / "Abrindo o painel…" e, após 1,2 s,
+`router.push('/dashboard')` + `refresh()`. Quem ainda não tem ala aprovada cai
+em `/acesso`.
+
+## Configuração necessária no Supabase
+
+- Template **"Reset Password"** = `supabase/email/reset-password.html`, com o
+  assunto de `reset-password.subject.txt` ("Redefina sua senha do Almoço dos
+  Missionários"). O botão do e-mail leva a `/auth/confirmar?…&type=recovery&next=/redefinir-senha`.
+- SMTP próprio configurado (o e-mail sai pelo remetente do site).
+- **Site URL** = o site no ar; a mesma URL em **Redirect URLs**.

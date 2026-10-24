@@ -1,6 +1,32 @@
 E-MAILS DE AVISO PARA O LÍDER — PLANO PARA IMPLEMENTAR
 =======================================================
 
+STATUS (2026-10-24): IMPLEMENTADO (A simplificado, D, F com G junto, H, J, K). O comportamento real
+está documentado em docs/src_lib.md ("Avisos por e-mail"),
+docs/routes_dashboard.md (NotificationsCard), docs/routes_api.md e
+docs/database.md. Diferenças em relação a este plano:
+- A notificação é sempre USUÁRIO + ALA. A tela não é /dashboard/avisos: é o
+  card "Notificações" no painel, antes de Usuários, só da ala em foco (link dos
+  e-mails: /dashboard#notificacoes). Nada especial para o owner.
+- Tudo vem DESLIGADO; o líder liga o que quer.
+- Dia sem almoço (D): sempre 2 dias antes, sem opção de antecedência.
+- Sem e-mail de teste.
+- A virou "Novo almoço neste mês": só quando alguém agenda um almoço para um
+  dia do mês atual (editar/remover é o próprio líder, então não avisa), sem
+  lista do mês.
+- F sai SEM imagem: o mês vai em lista no corpo do e-mail. G (dia 1) saiu: o F,
+  um dia antes do fim do mês, já avisa que o mês seguinte pode ser agendado.
+- Os avisos só informam: sem botão, sem link, sem anexo. Só J e K têm um botão
+  para o painel.
+- Textos simples e completos, sem termos técnicos (ex.: "pedido para entrar no
+  painel"); curto não pode virar vago.
+- O modelo (layout) do e-mail fica em messages/email/aviso.html.
+- Tabelas: email_preferencia (user_id + ala_id, uma coluna por aviso) e
+  email_envio (anti-repetição do cron).
+- Fora de produção, todo e-mail vai só para EMAIL_TESTE_PARA (sem ela, nada sai).
+- nodemailer 10.2.1 (as versões até 10.1.3 têm vulnerabilidades).
+FALTA: a imagem do calendário gerada no servidor para F (seção 3).
+
 Objetivo: o líder recebe, no e-mail cadastrado, avisos sobre o calendário de
 almoços da sua ala. Ele escolhe numa tela quais avisos quer receber.
 
@@ -222,16 +248,3 @@ Fase 2 (depois de decidir a imagem, seção 3):
 - Sempre o nome da ala no assunto (o owner recebe de várias alas).
 - Datas por extenso e com dia da semana: "quinta-feira, 11 de abril".
 - Nunca ecoar erro do banco no e-mail.
-
-
-8. FORA DO ESCOPO POR ENQUANTO (ideias não escolhidas)
-------------------------------------------------------
-
-- Mudança no próximo mês (igual ao A, para o mês seguinte).
-- Almoço cancelado em cima da hora (hoje até depois de amanhã).
-- Mensagem pronta para colar no WhatsApp.
-- Resumo do mês que terminou (quem deu almoço, para agradecer).
-- Agendamento suspeito (mesmo telefone em vários dias).
-- Resumo diário no lugar dos avisos na hora.
-- Cópia para o e-mail dos missionários.
-- Aviso para o membro que agendou: não dá por e-mail (ele só informa telefone).

@@ -17,6 +17,7 @@
     "@supabase/supabase-js": "^2.89.0",
     "html-to-image": "^1.11.13",
     "next": "^16.1.6",
+    "nodemailer": "^10.2.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "server-only": "^0.0.1",
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

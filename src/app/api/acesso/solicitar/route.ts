@@ -3,10 +3,11 @@
  * Mudou o comportamento? Atualize o doc na mesma mudança.
  */
 
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { getUsuario } from '@/lib/server/session';
 import { supabaseServer } from '@/lib/supabase/service-role';
 import { lerJson, parseAlaId } from '@/lib/server/validation';
+import { avisarPedidoDeAcesso } from '@/lib/server/notifications';
 
 export async function POST(req: Request) {
     const user = await getUsuario();
@@ -53,5 +54,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Erro ao solicitar acesso' }, { status: 500 });
     }
 
+    after(() => avisarPedidoDeAcesso(alaId, user.id));
     return NextResponse.json({ ok: true });
 }

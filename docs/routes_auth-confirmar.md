@@ -44,8 +44,9 @@ Todos no formato `{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}&type
    redirect*).
 2. Com `token_hash` e `type` → `verifyOtp`. Com `code` → `exchangeCodeForSession`.
 3. Deu certo → redireciona para o destino (já com a sessão nos cookies).
-4. Link inválido, expirado ou já usado → `/admin?erro=link`, que mostra "O link
-   de redefinição expirou ou já foi usado…" (ver [routes_admin.md](routes_admin.md)).
+4. Link inválido, expirado ou já usado → `/admin?erro=link`, que mostra "Esse
+   link expirou ou já foi usado. Para criar uma nova senha, toque em "Esqueci
+   minha senha" e peça outro link." (ver [routes_admin.md](routes_admin.md)).
 
 ## Configuração no Supabase
 

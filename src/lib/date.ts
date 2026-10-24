@@ -63,6 +63,26 @@ export function formatMonthLabel(ym: string) {
     return `${MESES[mes - 1]} ${ano}`;
 }
 
+export function nomeDoMes(ym: string) {
+    return MESES[Number(ym.split('-')[1]) - 1];
+}
+
+export function somarDias(dateISO: string, dias: number) {
+    const data = new Date(`${dateISO}T12:00:00Z`);
+    data.setUTCDate(data.getUTCDate() + dias);
+    return data.toISOString().slice(0, 10);
+}
+
+export function dataPorExtenso(dateISO: string) {
+    return new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long' })
+        .format(new Date(`${dateISO}T12:00:00Z`));
+}
+
+export function diaDaSemanaEDia(dateISO: string) {
+    return new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', weekday: 'long', day: 'numeric' })
+        .format(new Date(`${dateISO}T12:00:00Z`));
+}
+
 export function diaTile(dateISO: string) {
     const [, m, d] = dateISO.split('-');
     return { dia: String(Number(d)), mesAbrev: MESES_ABREV[Number(m) - 1] };

@@ -8,6 +8,7 @@ import 'server-only';
 import { gerarSlug, normalizarNomeAla } from '@/lib/wards';
 import { normalizarTelefone } from '@/lib/phone';
 import { PAISES, UFS, fusoValido } from '@/lib/location';
+import { TIPOS_AVISO, type PreferenciasEmail } from '@/lib/email-preferences';
 
 export class ValidationError extends Error {}
 
@@ -138,6 +139,16 @@ export function parseMembroId(raw: unknown): number {
 export function parseAlaId(raw: unknown): number {
     const o = (raw ?? {}) as Record<string, unknown>;
     return idSaneado(o.alaId);
+}
+
+export function parsePreferencias(raw: unknown): PreferenciasEmail {
+    const o = (raw ?? {}) as Record<string, unknown>;
+    const preferencias = {} as PreferenciasEmail;
+    for (const tipo of TIPOS_AVISO) {
+        if (typeof o[tipo] !== 'boolean') throw new ValidationError('Preferência inválida');
+        preferencias[tipo] = o[tipo];
+    }
+    return preferencias;
 }
 
 export function parseSlug(slug: string): string {

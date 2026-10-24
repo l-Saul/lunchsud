@@ -7,7 +7,8 @@ import { supabaseServer } from '@/lib/supabase/service-role'
 import { isPday, getDashboardRange } from '@/lib/date'
 import { lerJson, parseAgendar, ValidationError } from '@/lib/server/validation'
 import { buscarAlaPorSlug } from '@/lib/server/public-ward'
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
+import { avisarNovoAlmoco } from '@/lib/server/notifications'
 
 export async function POST(req: Request) {
     let entrada
@@ -76,5 +77,6 @@ export async function POST(req: Request) {
         )
     }
 
+    after(() => avisarNovoAlmoco(ala.id, { data, nome, telefone }))
     return NextResponse.json({ success: true, id: criado.id })
 }

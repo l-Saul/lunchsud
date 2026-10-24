@@ -13,7 +13,9 @@ import { WardSwitcher } from './_components/WardSwitcher';
 import { BookingsCard } from './_components/BookingsCard';
 import { HistoryCard, type MesHistorico } from './_components/HistoryCard';
 import { UsersCard, type Usuario } from './_components/UsersCard';
+import { NotificationsCard } from './_components/NotificationsCard';
 import { supabaseServer } from '@/lib/supabase/service-role';
+import { buscarPreferenciasEmail } from '@/lib/server/notifications';
 import { getDashboardRange, getHistoricoRange, diasDisponiveisNoMes } from '@/lib/date';
 import { FUSO_PADRAO } from '@/lib/location';
 
@@ -90,6 +92,13 @@ export default async function DashboardPage() {
         alasParaTroca = todasAlas ?? [];
     }
 
+    const [{ data: meuPerfil }, avisos] = alaId !== null
+        ? await Promise.all([
+            supabaseServer.from('perfil').select('email').eq('id', ctx.userId).maybeSingle(),
+            buscarPreferenciasEmail(ctx.userId, alaId),
+        ])
+        : [{ data: null }, null];
+
     const usuarios: Usuario[] = listaMembros.map(m => ({
         id: m.id,
         nome: perfilPorId.get(m.user_id)?.nome ?? '',
@@ -124,6 +133,15 @@ export default async function DashboardPage() {
                     <BookingsCard mesAtual={mesAtual} mesSeguinte={mesSeguinte} agendamentos={agendamentos} />
 
                     <HistoryCard historico={historico} />
+
+                    {alaId !== null && avisos && (
+                        <NotificationsCard
+                            key={alaId}
+                            alaId={alaId}
+                            email={meuPerfil?.email ?? null}
+                            preferenciasIniciais={avisos}
+                        />
+                    )}
 
                     <UsersCard usuarios={usuarios} />
                 </section>

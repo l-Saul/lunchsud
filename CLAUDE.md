@@ -37,13 +37,14 @@ contraste, poucos passos, sem aglomerar informação.
 | `src/hooks/**` | `docs/src_hooks.md` |
 | `src/lib/**` | `docs/src_lib.md` |
 | `supabase/**` | `docs/database.md` |
+| `messages/email/**` (modelo dos avisos por e-mail) | `docs/src_lib.md` |
 
 Sem cabeçalho, de propósito: JSON (`vercel.json`, `tsconfig.json`,
-`package.json`), `next-env.d.ts` (gerado pelo Next), os templates em
-`supabase/email/` (o HTML vai dentro de cada e-mail) e as migrations temporárias.
-Planos ainda não implementados ficam em `messages/` (`design.md`,
-`emails-do-lider.txt`), não em `docs/`. Implementou, documente em `docs/` e
-atualize ou remova o plano.
+`package.json`), `next-env.d.ts` (gerado pelo Next), os templates de e-mail em
+`supabase/email/` e `messages/email/` (o HTML vai dentro de cada e-mail) e as
+migrations temporárias. Além do modelo de e-mail, `messages/` guarda planos
+ainda não implementados (`design.md`, `emails-do-lider.txt`), que não são
+`docs/`. Implementou, documente em `docs/` e atualize ou remova o plano.
 
 Regras:
 
@@ -78,7 +79,7 @@ Regras:
    # cabeçalhos que apontam para doc inexistente
    grep -rhoE "docs/[a-z_-]+\.md" src *.ts *.mjs supabase/schema.sql | sort -u | while read d; do [ -f "$d" ] || echo "falta $d"; done
    # arquivos sem seção no doc do seu cabeçalho
-   git ls-files src | while read f; do d=$(grep -oE "docs/[a-z_-]+\.md" "$f" | head -1); [ -n "$d" ] && ! grep -qF "$(basename "$f")" "$d" && echo "sem seção: $f → $d"; done
+   git ls-files --cached --others --exclude-standard src | while read f; do d=$(grep -oE "docs/[a-z_-]+\.md" "$f" | head -1); [ -n "$d" ] && ! grep -qF "$(basename "$f")" "$d" && echo "sem seção: $f → $d"; done
    ```
 
 ## Stack & comandos
@@ -152,6 +153,14 @@ de data/fuso/P-day em componentes. Detalhes: [`docs/src_lib.md`](docs/src_lib.md
   o que 2+ páginas usam. Código só de servidor vai em `src/lib/server/` (tem
   `import 'server-only'`: se o navegador importar, o build falha). `(member)` e
   `(leader)` são grupos de rota: não aparecem na URL.
+- **Texto para o público (tela e e-mails):** linguagem simples e curta, uma ideia
+  por frase, sem termos técnicos ("acesso", "card", "notificação push",
+  "usuário", "owner"). Diga **quem** fez **o quê**, **quando** e o que fazer.
+  Ex.: "Rita criou uma conta de líder e pediu para usar o painel da Ala X", não
+  "Novo pedido de acesso". **Curto não é vago:** não ser prolixo é não enrolar,
+  não é cortar o que faz entender. "Quando alguém agenda um almoço" é curto
+  demais (parece que toda mudança manda e-mail); "Quando alguém agenda um almoço
+  para um dia deste mês, chega um e-mail com o nome, o dia e o telefone" é claro.
 - **Cores:** use os tokens do tema (`bg-primary`, `text-secondary`, etc.),
   definidos em `src/app/globals.css`. Azul `#143157` / verde `#1fb9a0` / rosa
   `#e0588f` / branco.
@@ -215,6 +224,11 @@ servidor e no banco (validação, constraints, permissões), não travando a pes
   cookies. O `src/proxy.ts` renova o token **só nas rotas do líder** (`matcher`):
   **rota nova que leia sessão precisa entrar no matcher**. **Nunca** reintroduza
   JWT/bcrypt próprios.
+- **Cadastro sem confirmação de e-mail** ("Confirm email" desligado no Supabase):
+  quem libera o painel é a aprovação de outro líder. O Supabase Auth manda os
+  e-mails (nova senha, convite) pelo **SMTP próprio**, com os templates de
+  `supabase/email/`. A tela de nova senha é `/redefinir-senha`, aberta pelo link
+  do e-mail via `/auth/confirmar`; sem sessão ela mostra "Link expirado".
 - Contexto em `src/lib/server/session.ts`: `getContexto()`/`requireAcesso()`
   resolvem papel + ala em foco; `podeEditarAla()` autoriza ações por ala.
 - **owner** (`perfil.is_owner`): todas as alas; aprova/remove usuários, cria alas
@@ -225,6 +239,45 @@ servidor e no banco (validação, constraints, permissões), não travando a pes
   agendar no `npm run dev` grava numa ala real e aparece ao vivo para os líderes.
   Teste fluxos que gravam só com o usuário ciente, numa ala combinada, e entregue
   o SQL de limpeza.
+
+## Avisos por e-mail (Gmail + Vercel Cron)
+
+Regras completas em [`docs/src_lib.md`](docs/src_lib.md) ("Avisos por e-mail").
+
+- **A notificação é sempre usuário + ala.** O card Notificações vale só para a
+  ala em foco, as preferências são por `(user_id, ala_id)` e quem recebe é quem
+  ligou o aviso naquela ala e ainda tem acesso a ela. **Nada no painel do líder é
+  pensado para o owner**: o owner é só o dono do sistema; para ele, cada ala
+  funciona igual à de qualquer líder.
+- **Tudo vem desligado**: o líder escolhe o que quer receber.
+- **Só avisa o que o líder não fez.** Novo almoço (alguém agendou para um dia
+  do mês atual) avisa; editar ou remover almoço não, porque é o próprio líder
+  quem faz.
+- **O que nasce de uma ação sai na hora; o que depende de olhar o calendário sai
+  no cron das 8h** (`/api/cron/avisos`, `0 11 * * *` UTC no `vercel.json`).
+- **Os avisos só informam**, como notificação: **sem botão, sem link, sem
+  anexo**; telefone em texto comum. Exceção: os e-mails de pedido para usar o
+  painel (o pedido e o "Pedido aprovado") têm um botão para o painel.
+- **Um aviso por assunto.** "Almoços do mês seguinte" (um dia antes do fim do
+  mês) já avisa que o mês seguinte pode ser agendado; não há outro no dia 1.
+- **O modelo (layout) do e-mail fica em `messages/email/aviso.html`**; o código
+  só preenche os marcadores `{{…}}` e mantém ou tira os blocos
+  `<!--botao-->`/`<!--parar-->`. Mudar o visual = editar esse arquivo.
+- **E-mail nunca segura nem desfaz uma ação:** dentro de rota, envie em
+  `after()` (`next/server`); falha no envio só vai para o log. A senhora que
+  agenda nunca espera e-mail.
+- **Nunca mande e-mail a líder real fora de produção.** O `mailer.ts` só envia ao
+  destinatário real com `VERCEL_ENV === 'production'`; fora dela tudo vai para
+  `EMAIL_TESTE_PARA` (sem ela, nada sai) e o cron não grava em `email_envio`.
+  Não enfraqueça essa trava: o banco local é o de produção.
+- O cron roda em **UTC**: "hoje" sempre por `getDashboardRange(ala.fuso_horario)`,
+  nunca `new Date()` puro. Rodar de novo no mesmo dia não pode repetir e-mail
+  (`email_envio`).
+- `CRON_SECRET` fecha a rota do cron: sem a variável, recusa tudo.
+- Texto dos e-mails: formal, sem "você", letra grande (corpo 20px, botão 22px,
+  nada abaixo de 16px), uma ação por e-mail, nome da ala no assunto, datas por
+  extenso, tudo do usuário escapado, mesmo visual de `supabase/email/`. Sem a
+  imagem do calendário (ainda não é gerada no servidor), o mês vai em lista.
 
 ## Banco
 
@@ -254,6 +307,14 @@ o arquivo. Nunca coloque SMTP em migration. Tudo em [`docs/database.md`](docs/da
   (`accent`), não vermelho.
 - `prefers-reduced-motion`: zera animações, **menos o spinner**, que gira
   devagar (parado, a pessoa acha que travou).
+- **iCloud:** o repositório local fica numa pasta sincronizada pelo iCloud. Ele
+  já devolveu arquivos apagados (os nomes antigos de antes da reorganização).
+  Antes de concluir, confira o `git status`: arquivos `??` com nomes antigos ou
+  cópias "`* 2`" vêm do iCloud; compare com o git antes de tirar.
+- **`messages/email/aviso.html` some:** duas vezes a pasta `messages/email/`
+  desapareceu logo depois de `messages/design.md` ser reescrito (algo troca a
+  pasta `messages/` inteira). Sem esse arquivo os avisos por e-mail falham.
+  Confira se ele existe antes de concluir e antes do deploy.
 - **macOS é case-insensitive:** ao renomear arquivos só mudando maiúsculas, use
   `git mv -f` e atualize os imports (o build na Vercel/Linux é case-sensitive).
 - Variáveis de ambiente: ver README. **Não há `AUTH_SECRET`**: a sessão é do

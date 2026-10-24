@@ -36,8 +36,8 @@ Dependências: `src/lib/server/session.ts` (`getUsuario`),
 - Já logado (`getUsuario()`) → `redirect('/dashboard')`. O painel, por sua vez,
   manda para `/acesso` quem ainda não tem ala aprovada.
 - `?erro=link` (vem de `/auth/confirmar` quando o link do e-mail expirou ou já foi
-  usado) vira a mensagem inicial: **"O link de redefinição expirou ou já foi
-  usado. Peça um novo em "Esqueci minha senha"."**
+  usado) vira a mensagem inicial: **"Esse link expirou ou já foi usado. Para
+  criar uma nova senha, toque em "Esqueci minha senha" e peça outro link."**
 
 ## `LoginCard.tsx`
 
@@ -57,7 +57,10 @@ senha, o erro e o aviso.
 
 1. `signInWithPassword({ email: emailLimpo, password })`.
 2. Erro → **"E-mail ou senha incorretos."** (mensagem única, não revela se o
-   e-mail existe).
+   e-mail existe). Exceção: conta ainda não confirmada (`email_not_confirmed`,
+   só acontece se a confirmação de e-mail for religada no Supabase) → "Esta
+   conta ainda não foi confirmada. Abra o e-mail que enviamos no cadastro e toque
+   no botão para confirmar."
 3. Sucesso → `router.push('/dashboard')` + `router.refresh()`. O loading **fica
    ligado** até a navegação trocar a tela (o componente desmonta). Senão o botão
    "descarrega" e parece travado.
@@ -76,11 +79,14 @@ Depois `signUp({ email, password, options: { data: { nome } } })`. O trigger
 `handle_new_user` do banco cria o `perfil` com esse nome (ver
 [database.md](database.md)).
 
-- Com **confirmação de e-mail desligada** no Supabase, a resposta já traz sessão
-  → `/acesso` (loading mantido até navegar).
-- Com **confirmação ligada**, não há sessão → para o loading, mostra **"Conta
-  criada! Confirme o e-mail que enviamos e depois faça login."** e volta ao modo
-  entrar.
+- **Não há confirmação de e-mail** ("Confirm email" desligado no Supabase): o
+  líder ainda precisa ser aprovado por outro líder para usar o painel, então
+  confirmar o e-mail seria um passo a mais sem ganho. A resposta já traz sessão
+  → `/acesso`, onde a pessoa pede para usar o painel da ala (loading mantido até
+  navegar).
+- Se a resposta vier sem sessão (confirmação religada no Supabase), para o
+  loading, mostra **"Conta criada! Agora entre com o seu e-mail e a sua senha."**
+  e volta ao modo entrar.
 
 O Supabase responde em inglês; `mensagemDeCadastro()` traduz para o líder saber
 o que fazer:
@@ -103,15 +109,18 @@ incorretos".
 
 Botão de texto, só no modo entrar.
 
-1. E-mail vazio → "Digite seu e-mail acima para receber o link de redefinição."
-2. ``resetPasswordForEmail(email.trim(), { redirectTo: `${siteUrl()}/auth/confirmar?next=/redefinir-senha` })``.
-   `siteUrl()` usa `NEXT_PUBLIC_BASE_URL` para o link cair no domínio em
-   produção, não no localhost (ver [src_lib.md](src_lib.md)).
-3. O retorno é ignorado de propósito. A resposta é **sempre a mesma**, com ou sem
-   conta (não revela se o e-mail existe): **"Se houver uma conta com esse e-mail,
-   enviamos um link para redefinir a senha. Procure por uma mensagem de
-   noreply@mail.app.supabase.io (confira o spam)."** O remetente é citado para a
-   pessoa achar o e-mail.
+1. E-mail vazio → "Digite o seu e-mail no campo acima e toque de novo em
+   "Esqueci minha senha"." (não chama o Supabase).
+2. ``resetPasswordForEmail(emailLimpo, { redirectTo: `${siteUrl()}/auth/confirmar?next=/redefinir-senha` })``,
+   com o e-mail em minúsculas e sem espaços. `siteUrl()` usa
+   `NEXT_PUBLIC_BASE_URL` (ver [src_lib.md](src_lib.md)).
+3. Limite de envios do Supabase (429) → "Já enviamos um link há pouco. Espere
+   alguns minutos e tente de novo."
+4. Qualquer outro caso tem **sempre a mesma resposta**, com ou sem conta (não
+   revela se o e-mail existe): **"Se houver uma conta com esse e-mail, enviamos
+   um link para criar uma nova senha. Procure o e-mail "Redefina sua senha do
+   Almoço dos Missionários" e confira também a caixa de spam."** A pessoa procura
+   pelo assunto do e-mail, que não muda se o remetente (SMTP) mudar.
 
 O link do e-mail usa o template de `supabase/email/reset-password.html`, que
 aponta para `/auth/confirmar?token_hash=…&type=recovery&next=/redefinir-senha`

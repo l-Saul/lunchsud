@@ -27,7 +27,7 @@ export default async function AdminLoginPage({
     const { erro } = await searchParams;
     const erroInicial =
         erro === 'link'
-            ? 'O link de redefinição expirou ou já foi usado. Peça um novo em "Esqueci minha senha".'
+            ? 'Esse link expirou ou já foi usado. Para criar uma nova senha, toque em "Esqueci minha senha" e peça outro link.'
             : undefined;
 
     return (

@@ -113,6 +113,40 @@ Vínculo usuário ↔ ala (o **member**).
 - `idx_ala_membro_ala_status (ala_id, status)`: card Usuários do painel.
 - `idx_ala_membro_aprovado_por`: FK indexada.
 
+### Avisos por e-mail
+
+Duas tabelas dos avisos por e-mail ao líder (regras em [src_lib.md](src_lib.md)).
+Só o servidor acessa.
+
+**`email_preferencia`**: quais avisos cada pessoa quer **em cada ala**. A
+notificação é sempre **usuário + ala**: PK `(user_id, ala_id)`, uma linha por
+pessoa e ala. **Sem linha = tudo desligado**; o líder liga no card Notificações.
+
+| Coluna | Regra |
+|---|---|
+| `user_id` | → `auth.users(id)` on delete cascade |
+| `ala_id` | → `ala(id)` on delete cascade (índice `idx_email_preferencia_ala`) |
+| `novo_almoco`, `dia_sem_almoco`, `proximo_mes`, `semana`, `pedido_acesso` | `boolean not null default false` |
+| `atualizado_em` | `timestamptz not null default now()` |
+
+A linha não some quando a pessoa perde o acesso à ala; o envio confere o acesso
+(vínculo aprovado ou owner) na hora de mandar.
+
+**`email_envio`**: registro do que o cron já mandou, para **não repetir** se ele
+rodar de novo no mesmo dia.
+
+| Coluna | Regra |
+|---|---|
+| `id` | `bigint` identity PK |
+| `tipo` | check `email_envio_tipo`: `dia_sem_almoco`, `proximo_mes` ou `semana` (só os do cron) |
+| `user_id`, `ala_id` | FKs on delete cascade (índices `idx_email_envio_user`, `idx_email_envio_ala`) |
+| `referencia` | o que o aviso cobre: a data alvo (`2026-10-27`), o mês (`2026-11`, nos almoços do mês seguinte) ou a segunda da semana |
+| `enviado_em` | `timestamptz default now()`; índice para a limpeza de 90 dias |
+
+**`email_envio_unico unique (tipo, user_id, ala_id, referencia)`**: o cron insere
+antes de mandar; se a linha já existe, pula. Registros com mais de 90 dias são
+apagados pelo próprio cron.
+
 ## Trigger de cadastro
 
 `public.handle_new_user()` roda `after insert on auth.users` (trigger
@@ -124,14 +158,29 @@ Vínculo usuário ↔ ala (o **member**).
   `revoke execute ... from public, anon, authenticated` e `grant execute` só para
   `supabase_auth_admin`.
 
+## Trigger de troca de e-mail
+
+`public.handle_user_email_change()` roda `after update of email on auth.users`
+(trigger `on_auth_user_email_changed`), **só quando o e-mail mudou** (`when
+(old.email is distinct from new.email)`), e copia o novo e-mail para
+`perfil.email`. Sem ele, o líder que trocasse o e-mail no Supabase Auth
+continuaria com o antigo no perfil, e os avisos iriam para o endereço velho.
+
+- No Supabase, `auth.users.email` só muda **depois** que a pessoa confirma o
+  novo endereço (antes disso o pedido fica em `email_change`): o trigger só pega
+  e-mail confirmado.
+- Mesmas proteções do `handle_new_user`: `security definer`, `search_path = ''`,
+  `revoke execute` de `public, anon, authenticated`.
+
 ## RLS e permissões
 
-- RLS **ligada nas quatro tabelas**.
+- RLS **ligada em todas as tabelas** (`ala`, `agendamento`, `perfil`,
+  `ala_membro`, `email_preferencia`, `email_envio`).
 - **Única policy**: `"leitura publica"` em `agendamento`, `for select to anon,
   authenticated using (true)`, com `grant select (id, ala_id, data, nome)`. É o
   que alimenta o calendário e o Realtime. **`telefone` e `criado_em` ficam fora**
   (permissão por coluna).
-- `ala`, `perfil` e `ala_membro`: RLS ligada **sem policy** = acesso só pelo
+- As demais tabelas: RLS ligada **sem policy** e sem grant = acesso só pelo
   servidor. O aviso "RLS enabled no policy" do Advisor é **intencional**.
 
 ## Realtime
@@ -162,17 +211,10 @@ Mudou o banco?
 
 Nunca coloque SMTP ou configuração de e-mail em migration.
 
-### Pendente
-
-`20261024170000_ala_localizacao.sql` (país, estado, cidade e fuso da ala):
-
-- **Parte 1, aplicada.** Criou as colunas com `DEFAULT` (BR / PR / Curitiba /
-  `America/Sao_Paulo`), para o código antigo, que cria ala sem localização,
-  continuar funcionando.
-- **Parte 2, rodar só DEPOIS do deploy da `dev` na `master`.** Tira os
-  `DEFAULT`s: daí em diante toda ala nova precisa vir com a localização de
-  verdade (o formulário novo manda), em vez de virar "Curitiba" sem ninguém
-  perceber. Rodar antes quebra a criação de ala do código que está no ar.
+Hoje não há migration pendente: a pasta `supabase/migrations/` só existe enquanto
+houver uma para rodar. As últimas, aplicadas em 2026-10-24, foram a localização
+da ala (país, estado, cidade e fuso, sem valor padrão) e os avisos por e-mail
+(`email_preferencia`, `email_envio` e o trigger de troca de e-mail).
 
 ## Dados pessoais
 
@@ -186,7 +228,21 @@ HTML dos e-mails do **Supabase Auth**, com a identidade do site (céu azul,
 cartão branco, fitinha verde→rosa, florzinha, fonte Source Sans/Serif, texto em
 português e botão grande). **Não são enviados pelo app**: são colados no painel
 do Supabase em **Authentication → Email Templates**, com o assunto do arquivo
-`.subject.txt` correspondente.
+`.subject.txt` correspondente. O Supabase os envia pelo **SMTP próprio**
+configurado no painel (Authentication → Emails → SMTP Settings), não pelo
+remetente padrão do Supabase.
+
+**Configuração no Supabase (Authentication):**
+
+- **Confirmar e-mail no cadastro: desligado** ("Confirm email", no provider
+  Email). O líder entra direto depois de criar a conta; quem garante quem usa o
+  painel é a aprovação de outro líder. Com isso o `confirm-signup` não é usado.
+- **Site URL** = o site no ar (os links dos templates usam `{{ .SiteURL }}`) e a
+  mesma URL em **Redirect URLs**.
+
+Em uso pelo site hoje: **`reset-password`** ("Esqueci minha senha" →
+`/redefinir-senha`). Os outros só servem se usados pelo painel do Supabase
+(convite, link mágico, troca de e-mail).
 
 | Template | Assunto | Botão leva a |
 |---|---|---|
@@ -199,9 +255,10 @@ do Supabase em **Authentication → Email Templates**, com o assunto do arquivo
 
 Os links usam `{{ .SiteURL }}/auth/confirmar?token_hash={{ .TokenHash }}`, que
 funciona mesmo abrindo o e-mail em outro aparelho (ver
-[routes_auth-confirmar.md](routes_auth-confirmar.md)). O remetente padrão do
-Supabase é `noreply@mail.app.supabase.io` (a tela de "esqueci a senha" avisa a
-pessoa para procurar por ele).
+[routes_auth-confirmar.md](routes_auth-confirmar.md)). A tela de "esqueci a
+senha" diz à pessoa para procurar o e-mail pelo **assunto** ("Redefina sua senha
+do Almoço dos Missionários"), que não muda se o remetente mudar.
 
-Os avisos de calendário por e-mail para o líder (SMTP do Google) são outro
-assunto, ainda em plano: `messages/emails-do-lider.txt`.
+Os avisos de calendário por e-mail para o líder são outro assunto: saem pelo
+Gmail (SMTP) direto do Next, com HTML próprio no mesmo visual (ver
+[src_lib.md](src_lib.md), "Avisos por e-mail").
