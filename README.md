@@ -57,7 +57,7 @@ Sem framer-motion, sem biblioteca de UI: animações só em CSS.
   resposta esperar; o que depende de olhar o calendário (dia sem almoço,
   almoços do mês seguinte, semana) sai no **cron diário das 8h**. Os avisos só
   informam (sem botão nem link), menos os de pedido para usar o painel. O
-  modelo do e-mail fica em `messages/email/aviso.html`. Fora de produção, todo
+  modelo do e-mail fica em `src/lib/server/email/aviso.html`. Fora de produção, todo
   e-mail vai só para `EMAIL_TESTE_PARA`. Detalhes em [`docs/src_lib.md`](docs/src_lib.md).
 
 ### Rotas
@@ -146,12 +146,11 @@ src/
   hooks/                 use-bookings-realtime (WebSocket)
   lib/                   date, phone, location, wards, scriptures, site-url, email-preferences
   lib/server/            public-ward, session, validation,       (só servidor)
-                         mailer, email-templates, notifications
+                         mailer, email-templates, notifications,
+                         email/aviso.html (modelo dos avisos por e-mail)
   lib/supabase/          realtime, service-role, browser-session, server-session
   proxy.ts               renova a sessão nas rotas do líder
-messages/
-  email/aviso.html       modelo (layout) dos avisos por e-mail ao líder
-  design.md · emails-do-lider.txt   planos
+messages/                planos ainda não implementados (nada do site depende daqui)
 supabase/
   schema.sql             estrutura completa do banco
   migrations/            só quando há mudança pendente (o usuário roda e apaga)

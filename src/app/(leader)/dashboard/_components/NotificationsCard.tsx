@@ -4,8 +4,9 @@
  */
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Spinner } from '@/components/Spinner';
+import { useScrollLock } from '@/hooks/use-scroll-lock';
 import type { PreferenciasEmail, TipoAviso } from '@/lib/email-preferences';
 
 type Props = {
@@ -76,6 +77,7 @@ export function NotificationsCard({ alaId, email, preferenciasIniciais }: Props)
     const [preferencias, setPreferencias] = useState(preferenciasIniciais);
     const [status, setStatus] = useState<'ocioso' | 'salvando' | 'salvo' | 'erro'>('ocioso');
     const [erro, setErro] = useState('');
+    const [confirmar, setConfirmar] = useState<TipoAviso | null>(null);
     const salvo = useRef(preferenciasIniciais);
     const fila = useRef<PreferenciasEmail | null>(null);
     const enviando = useRef(false);
@@ -118,11 +120,35 @@ export function NotificationsCard({ alaId, email, preferenciasIniciais }: Props)
         setStatus('salvo');
     }
 
-    function alternar(tipo: TipoAviso) {
-        const proximo = { ...preferencias, [tipo]: !preferencias[tipo] };
+    function mudar(tipo: TipoAviso, ligado: boolean) {
+        const proximo = { ...preferencias, [tipo]: ligado };
         setPreferencias(proximo);
         salvar(proximo);
     }
+
+    function alternar(tipo: TipoAviso) {
+        if (preferencias[tipo]) setConfirmar(tipo);
+        else mudar(tipo, true);
+    }
+
+    function desligar() {
+        if (!confirmar) return;
+        mudar(confirmar, false);
+        setConfirmar(null);
+    }
+
+    useScrollLock(confirmar !== null);
+
+    useEffect(() => {
+        if (!confirmar) return;
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setConfirmar(null);
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [confirmar]);
+
+    const avisoConfirmando = AVISOS.find(a => a.tipo === confirmar);
 
     return (
         <section className="flex flex-col gap-5 rounded-3xl bg-background p-4 shadow-xl ring-1 ring-white/40 sm:p-8">
@@ -169,6 +195,42 @@ export function NotificationsCard({ alaId, email, preferenciasIniciais }: Props)
                     />
                 ))}
             </div>
+
+            {avisoConfirmando && (
+                <div
+                    onClick={() => setConfirmar(null)}
+                    className="fixed inset-0 z-60 flex animate-aparecer items-center justify-center bg-primary/50 p-4 backdrop-blur-sm"
+                >
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        role="alertdialog"
+                        aria-modal="true"
+                        aria-labelledby="desligar-aviso-titulo"
+                        className="w-full max-w-sm animate-surgir rounded-2xl bg-background p-6 text-center shadow-2xl"
+                    >
+                        <h3 id="desligar-aviso-titulo" className="text-xl font-semibold text-text">
+                            Desligar este aviso?
+                        </h3>
+                        <div className="mt-6 flex flex-wrap gap-3">
+                            <button
+                                type="button"
+                                autoFocus
+                                onClick={() => setConfirmar(null)}
+                                className="min-h-12 grow basis-28 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 cursor-pointer"
+                            >
+                                Manter ligado
+                            </button>
+                            <button
+                                type="button"
+                                onClick={desligar}
+                                className="min-h-12 grow basis-28 rounded-xl bg-accent px-4 text-base font-semibold text-white shadow-md transition duration-100 hover:opacity-95 active:scale-[0.98] cursor-pointer"
+                            >
+                                Desligar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </section>
     );
 }

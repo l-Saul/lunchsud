@@ -20,6 +20,7 @@ src/app/(leader)/dashboard/
     WardSwitcher.tsx                card do owner: trocar a ala em foco
     CreateWardForm.tsx              "Criar nova ala" (dentro do WardSwitcher)
     OpenCalendarButton.tsx          atalho para o calendário público da ala
+    ShareLinkButtons.tsx            copiar e compartilhar o link da ala (ao lado do atalho)
     LogoutButton.tsx                botão Sair
     DashboardClientGuard.tsx        volta ao login se a sessão cair
     DashboardRealtime.tsx           painel ao vivo (WebSocket → router.refresh)
@@ -85,7 +86,9 @@ cada um.
 2. Cabeçalho: "Painel da ala", nome da ala (ou "Selecione uma ala") + " · owner",
    e o `LogoutButton`.
 3. `WardSwitcher`: só owner, e só se houver alas.
-4. `OpenCalendarButton`: se a ala tem slug.
+4. Se a ala tem slug, uma linha com `OpenCalendarButton` (ocupa o espaço que sobra) e
+   os dois botões de ícone do `ShareLinkButtons` (copiar e compartilhar), todos com
+   a mesma altura (`items-stretch`, `gap-2`, `sm:gap-3`).
 5. `BookingsCard` → `HistoryCard` → `NotificationsCard` (só com ala em foco) → `UsersCard`.
 
 `main` sem fundo (o "céu" do `body` aparece); conteúdo em `max-w-3xl`.
@@ -159,8 +162,8 @@ Mesmo tratamento de sucesso e erro ("Erro ao remover").
 
 - Fecha por **toque fora**, **Esc** e **X** (fecho explícito: no celular o
   toque no fundo pode não pegar). Fechar zera a confirmação de remoção.
-- Trava o scroll do fundo do jeito que funciona no iOS (`body` fixo com
-  `top: -scrollY`, posição restaurada ao fechar), igual ao `BookingModal`.
+- Trava a página atrás com `useScrollLock(open)` ([src_hooks.md](src_hooks.md)),
+  como todo modal.
 - Fundo rolável: com o teclado aberto o modal pode passar da tela e ainda dá
   para rolar até os botões.
 - Botões com alvos **≥ 48px** (`min-h-12`), empilhados e largos; "Salvando…" /
@@ -233,6 +236,23 @@ mês abriu: não há outro aviso no dia 1.
 - Não há aviso de almoço editado ou removido: quem faz isso é o próprio líder.
 - O e-mail "Pedido aprovado" **sempre** é enviado à pessoa aprovada e não aparece aqui.
 
+### Desligar pede confirmação
+
+**Ligar é direto** (um toque). **Desligar abre um modal** antes, para um toque
+sem querer não cortar um aviso:
+
+- Só o título **"Desligar este aviso?"**, sem texto: o modal abre logo depois
+  do toque na chave, então já está claro qual é o aviso.
+- Botões **"Manter ligado"** (já com o foco, a opção segura) e **"Desligar"**
+  (rosa, `accent`). Alvos ≥ 48px, lado a lado quando cabem (`flex-wrap` com
+  `basis` em rem).
+- Fecha sem mudar nada por "Manter ligado", **Esc** ou **toque fora**. Só
+  "Desligar" muda a chave e salva.
+- Igual ao modal de remover acesso do `UsersCard`: tela coberta com fundo azul
+  **desfocado**, página atrás **travada** (`useScrollLock`), `role="alertdialog"`,
+  `aria-modal`, título ligado por `aria-labelledby`, fade curto ao abrir e
+  fechamento na hora.
+
 ### Salvar ao tocar
 
 Sem botão "Salvar" (menos passos). Cada toque atualiza a tela na hora e manda
@@ -264,7 +284,7 @@ Exporta `UsersCard` e o tipo `Usuario = { id (do vínculo ala_membro), nome, ema
 - **Remover pede confirmação** num modal que cobre a tela (fundo desfocado,
   `role="alertdialog"`): "Remover acesso?" / "Tem certeza que deseja remover o
   acesso de **\<nome\>**? Para voltar, a pessoa precisará pedir acesso de novo."
-  Cancelar / Remover (rosa). Fecha com Esc e toque fora.
+  Cancelar / Remover (rosa). Fecha com Esc e toque fora. A página atrás fica travada (`useScrollLock`).
 - O componente renderiza o próprio `<section>` (cartão branco). O modal é
   `fixed`, então ficar dentro do cartão não muda nada.
 
@@ -328,10 +348,36 @@ Botão "Criar e entrar": desativado sem nome; enquanto cria, Spinner e "Criando�
 
 ## `OpenCalendarButton.tsx` (client)
 
-"Abrir calendário da ala" → `router.push('/<slug>')`. O loading ("Abrindo…" +
+"Abrir calendário" → `router.push('/<slug>')`. O loading ("Abrindo…" +
 Spinner) **fica ligado de propósito** até a navegação desmontar a tela: a página
 da ala é renderizada no servidor e demora um instante, e assim o líder vê que a
 ação foi acionada.
+
+- Divide a linha com o `ShareLinkButtons`: `flex-1 min-w-0`, texto centralizado
+  e com `text-balance` (se precisar quebrar, as linhas ficam equilibradas).
+- O ícone de calendário só aparece a partir de `sm` (640px): no celular o texto
+  precisa do espaço.
+- Toque: `active:scale-[0.98]`, sem "pulinho" no hover.
+
+## `ShareLinkButtons.tsx` (client)
+
+Dois botões **só com ícone**, ao lado do "Abrir calendário", para o líder
+mandar o link da ala no grupo do WhatsApp. Props: `slug`, `nomeAla`. O link é
+`siteUrl()` + `/<slug>` (em produção, `https://lunchsud.vercel.app/<slug>`).
+
+| Botão | O que faz |
+|---|---|
+| **Copiar** (ícone de duas folhas) | copia o link (`navigator.clipboard`; se não houver, cópia por um campo escondido). O ícone vira ✓ e aparece o aviso **"Link copiado!"** por 3 s. Se nada funcionar: "Não foi possível copiar. O link é: \<link\>" |
+| **Compartilhar** (ícone de três pontos ligados) | no celular abre o menu de compartilhar do sistema (`navigator.share`), com título "Calendário de almoços da \<ala\>", texto "Agende seu almoço para nossos missionários ❤️" e o link (o mesmo da prévia da página da ala). Sem esse menu (computador) abre o WhatsApp (`wa.me`) numa aba nova com a mesma mensagem. Cancelar o menu não faz nada |
+
+- **Mesma cor do botão principal** (verde `bg-secondary`, ícone branco), cantos
+  iguais e mesma altura; largura 3rem no celular e 3.5rem a partir de `sm`
+  (≥ 44px de alvo).
+- Sem texto visível, então cada um tem `aria-label` ("Copiar o link do
+  calendário da ala", "Compartilhar o link do calendário da ala") e `title`
+  (dica no computador).
+- O aviso aparece **no alto da tela** (fixo, azul, `animate-aparecer`), sem
+  empurrar o painel. Para leitor de tela há uma região `role="status"` com o mesmo texto.
 
 ## `LogoutButton.tsx` (client)
 

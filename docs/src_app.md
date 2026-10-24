@@ -156,10 +156,12 @@ tem sessão, é protegido pelo `CRON_SECRET`. **Rota nova que use sessão
 ### `next.config.ts`
 
 - `reactStrictMode: true`.
-- `outputFileTracingIncludes`: `"/api/**"` leva junto `./messages/email/**/*`.
-  O modelo dos avisos por e-mail (`messages/email/aviso.html`) é lido do disco
-  em tempo de execução; sem isso ele poderia ficar fora do pacote das funções na
-  Vercel. Ver [src_lib.md](src_lib.md).
+- **Modelo dos avisos por e-mail** (`MODELO_EMAIL` =
+  `./src/lib/server/email/aviso.html`): se o arquivo não existir, a config lança
+  "Falta o modelo dos avisos por e-mail" e o build (e o `dev`) para. E
+  `outputFileTracingIncludes` leva o arquivo junto em todas as rotas `/api/**`:
+  ele é lido do disco em tempo de execução e, sem isso, poderia ficar fora do
+  pacote das funções na Vercel. Ver [src_lib.md](src_lib.md).
 - **Headers de segurança** em todas as respostas (`/:path*`):
 
 | Header | Valor | Por quê |

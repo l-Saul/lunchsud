@@ -246,11 +246,10 @@ telefone salvos, e a tecla "Ir" do teclado enviar (`type="submit"`). O
 - Abre com fade (`animate-aparecer` no fundo, `animate-surgir` na caixa) e fecha na hora.
 - Fecha por **Cancelar**, **X** (`aria-label="Fechar"`, 44px), **Esc** e **toque
   fora** da caixa.
-- **Trava o scroll do fundo** de forma que funciona no iPhone: o iOS ignora
-  `overflow: hidden` no `body` para toque, então o `body` vira `position: fixed`
-  com `top: -scrollY` e a posição é restaurada ao fechar. Sem isso, rolar dentro
-  do modal mexia a página atrás. O efeito roda **uma vez** ao montar; o `onClose`
-  mais recente fica num `ref`, para o Esc sempre chamar a versão atual.
+- **Trava a página atrás** com `useScrollLock()` ([src_hooks.md](src_hooks.md)
+  explica como funciona no iPhone). Sem isso, rolar dentro do modal mexia a
+  página atrás. O Esc é escutado num efeito que roda **uma vez** ao montar; o
+  `onClose` mais recente fica num `ref`, para o Esc sempre chamar a versão atual.
 - O fundo é um container rolável (`overflow-y-auto overscroll-contain`): com o
   teclado aberto o modal pode passar da tela e ainda dá para rolar até os botões.
 - `role="dialog"`, `aria-modal`, `aria-label="Agendar dia X de <mês>"`.

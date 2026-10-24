@@ -9,6 +9,7 @@ import DashboardClientGuard from './_components/DashboardClientGuard';
 import { DashboardRealtime } from './_components/DashboardRealtime';
 import { LogoutButton } from './_components/LogoutButton';
 import { OpenCalendarButton } from './_components/OpenCalendarButton';
+import { ShareLinkButtons } from './_components/ShareLinkButtons';
 import { WardSwitcher } from './_components/WardSwitcher';
 import { BookingsCard } from './_components/BookingsCard';
 import { HistoryCard, type MesHistorico } from './_components/HistoryCard';
@@ -128,7 +129,12 @@ export default async function DashboardPage() {
                         <WardSwitcher alas={alasParaTroca} atualId={alaId} />
                     )}
 
-                    {ala?.slug && <OpenCalendarButton slug={ala.slug} />}
+                    {ala?.slug && (
+                        <div className="flex items-stretch gap-2 sm:gap-3">
+                            <OpenCalendarButton slug={ala.slug} />
+                            <ShareLinkButtons slug={ala.slug} nomeAla={ala.nome} />
+                        </div>
+                    )}
 
                     <BookingsCard mesAtual={mesAtual} mesSeguinte={mesSeguinte} agendamentos={agendamentos} />
 

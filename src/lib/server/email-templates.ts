@@ -28,7 +28,7 @@ type Conteudo = {
 };
 
 const SITE_NO_AR = 'https://lunchsud.vercel.app';
-const MODELO = path.join(process.cwd(), 'messages', 'email', 'aviso.html');
+const MODELO = path.join(process.cwd(), 'src', 'lib', 'server', 'email', 'aviso.html');
 const PARAR = 'Para parar de receber este aviso, desligue-o no painel, em Notificações.';
 const RODAPE = 'Site independente, sem vínculo oficial com a Igreja de Jesus Cristo dos Santos dos Últimos Dias.';
 

@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { normalizarTelefone } from '@/lib/phone';
 import { Spinner } from '@/components/Spinner';
+import { useScrollLock } from '@/hooks/use-scroll-lock';
 
 type Props = {
     id: number;
@@ -75,31 +76,15 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
         }
     }
 
+    useScrollLock(open);
+
     useEffect(() => {
         if (!open) return;
-
-        const scrollY = window.scrollY;
-        const { style } = document.body;
-        style.position = 'fixed';
-        style.top = `-${scrollY}px`;
-        style.left = '0';
-        style.right = '0';
-        style.width = '100%';
-
         const onKey = (e: KeyboardEvent) => {
             if (e.key === 'Escape') fechar();
         };
         window.addEventListener('keydown', onKey);
-
-        return () => {
-            style.position = '';
-            style.top = '';
-            style.left = '';
-            style.right = '';
-            style.width = '';
-            window.scrollTo(0, scrollY);
-            window.removeEventListener('keydown', onKey);
-        };
+        return () => window.removeEventListener('keydown', onKey);
     }, [open]);
 
     return (

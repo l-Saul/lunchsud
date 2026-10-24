@@ -37,14 +37,14 @@ contraste, poucos passos, sem aglomerar informação.
 | `src/hooks/**` | `docs/src_hooks.md` |
 | `src/lib/**` | `docs/src_lib.md` |
 | `supabase/**` | `docs/database.md` |
-| `messages/email/**` (modelo dos avisos por e-mail) | `docs/src_lib.md` |
 
 Sem cabeçalho, de propósito: JSON (`vercel.json`, `tsconfig.json`,
 `package.json`), `next-env.d.ts` (gerado pelo Next), os templates de e-mail em
-`supabase/email/` e `messages/email/` (o HTML vai dentro de cada e-mail) e as
-migrations temporárias. Além do modelo de e-mail, `messages/` guarda planos
-ainda não implementados (`design.md`, `emails-do-lider.txt`), que não são
-`docs/`. Implementou, documente em `docs/` e atualize ou remova o plano.
+`supabase/email/` e `src/lib/server/email/aviso.html` (o HTML vai dentro de cada
+e-mail) e as migrations temporárias. `messages/` guarda só planos ainda não
+implementados (ex.: `design.md`), que não são `docs/` e podem ser apagados à
+vontade: nada do site depende dessa pasta. Implementou, documente em `docs/` e
+atualize ou remova o plano.
 
 Regras:
 
@@ -75,7 +75,7 @@ Regras:
 6. Antes de concluir, confira:
    ```bash
    # arquivos de código sem o cabeçalho
-   grep -rL "leia CLAUDE.md" src next.config.ts eslint.config.mjs postcss.config.mjs supabase/schema.sql
+   grep -rL --exclude="*.html" "leia CLAUDE.md" src next.config.ts eslint.config.mjs postcss.config.mjs supabase/schema.sql
    # cabeçalhos que apontam para doc inexistente
    grep -rhoE "docs/[a-z_-]+\.md" src *.ts *.mjs supabase/schema.sql | sort -u | while read d; do [ -f "$d" ] || echo "falta $d"; done
    # arquivos sem seção no doc do seu cabeçalho
@@ -260,9 +260,11 @@ Regras completas em [`docs/src_lib.md`](docs/src_lib.md) ("Avisos por e-mail").
   painel (o pedido e o "Pedido aprovado") têm um botão para o painel.
 - **Um aviso por assunto.** "Almoços do mês seguinte" (um dia antes do fim do
   mês) já avisa que o mês seguinte pode ser agendado; não há outro no dia 1.
-- **O modelo (layout) do e-mail fica em `messages/email/aviso.html`**; o código
-  só preenche os marcadores `{{…}}` e mantém ou tira os blocos
-  `<!--botao-->`/`<!--parar-->`. Mudar o visual = editar esse arquivo.
+- **O modelo (layout) do e-mail fica em `src/lib/server/email/aviso.html`**; o
+  código só preenche os marcadores `{{…}}` e mantém ou tira os blocos
+  `<!--botao-->`/`<!--parar-->`. Mudar o visual = editar esse arquivo. Se ele
+  faltar, o `next.config.ts` para o build com "Falta o modelo dos avisos por
+  e-mail".
 - **E-mail nunca segura nem desfaz uma ação:** dentro de rota, envie em
   `after()` (`next/server`); falha no envio só vai para o log. A senhora que
   agenda nunca espera e-mail.
@@ -301,20 +303,18 @@ o arquivo. Nunca coloque SMTP em migration. Tudo em [`docs/database.md`](docs/da
 - **Fundo celestial:** o "céu" vive em `body::before/::after` no `globals.css`.
   As páginas usam fundo **transparente**: **não** ponha `bg-primary` em
   `main`/`section`.
-- **Modais** (`BookingModal`, `EditBookingModal`): fecham por toque fora / Esc /
-  X, travam o scroll com `body` fixo (o iOS ignora `overflow: hidden`). Remoção
-  com confirmação **inline** (não `window.confirm`), alvos ≥48px e cor **rosa**
-  (`accent`), não vermelho.
+- **Todo modal** (e tela por cima, como o `LoadingOverlay`): **fundo desfocado**
+  (`bg-primary/40`–`50` + `backdrop-blur-sm`) e **página atrás travada** com
+  `useScrollLock` (`src/hooks/use-scroll-lock.ts`); nunca reescreva a trava à mão
+  (o iOS ignora `overflow: hidden`). Fecham por toque fora / Esc / botão.
+  Confirmação de remover ou desligar em modal próprio ou inline (não
+  `window.confirm`), alvos ≥48px e cor **rosa** (`accent`), não vermelho.
 - `prefers-reduced-motion`: zera animações, **menos o spinner**, que gira
   devagar (parado, a pessoa acha que travou).
 - **iCloud:** o repositório local fica numa pasta sincronizada pelo iCloud. Ele
   já devolveu arquivos apagados (os nomes antigos de antes da reorganização).
   Antes de concluir, confira o `git status`: arquivos `??` com nomes antigos ou
   cópias "`* 2`" vêm do iCloud; compare com o git antes de tirar.
-- **`messages/email/aviso.html` some:** duas vezes a pasta `messages/email/`
-  desapareceu logo depois de `messages/design.md` ser reescrito (algo troca a
-  pasta `messages/` inteira). Sem esse arquivo os avisos por e-mail falham.
-  Confira se ele existe antes de concluir e antes do deploy.
 - **macOS é case-insensitive:** ao renomear arquivos só mudando maiúsculas, use
   `git mv -f` e atualize os imports (o build na Vercel/Linux é case-sensitive).
 - Variáveis de ambiente: ver README. **Não há `AUTH_SECRET`**: a sessão é do

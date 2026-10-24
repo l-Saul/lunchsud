@@ -355,9 +355,10 @@ html, texto }`. Devolve, para cada e-mail, `'enviado' | 'falhou' | 'desligado'`.
 - `emailsLigados()`: `true` em produção ou com `EMAIL_TESTE_PARA`. Os avisos na
   hora nem consultam o banco quando está desligado.
 
-### Modelo `messages/email/aviso.html`
+### Modelo `server/email/aviso.html`
 
-O **padrão visual de todo aviso** fica em `messages/email/aviso.html`, com o
+O **padrão visual de todo aviso** fica em `src/lib/server/email/aviso.html`
+(junto do código que o usa), com o
 mesmo visual dos e-mails do Supabase (`supabase/email/`): fundo azul em degradê,
 ícone e nome do site, cartão branco com fitinha verde→rosa, florzinha, título
 com serifa e o rodapé "Site independente…". Estilos **inline**, sem Tailwind.
@@ -380,11 +381,17 @@ Blocos que o código mantém ou tira inteiros:
 | `<!--botao-->…<!--/botao-->` | o e-mail tem botão (só os de pedido para usar o painel) |
 | `<!--parar-->…<!--/parar-->` | o aviso pode ser desligado no card: "Para parar de receber este aviso, desligue-o no painel, em Notificações." (sem link). Sai no "Pedido aprovado" |
 
-O arquivo é lido do disco na primeira vez (`process.cwd()/messages/email/aviso.html`)
-e fica em memória. Para ele ir junto no deploy, o `next.config.ts` inclui
-`./messages/email/**/*` em todas as rotas `/api/**` (`outputFileTracingIncludes`).
-O iCloud já apagou essa pasta uma vez (ver "Armadilhas" no `CLAUDE.md`): se o
-e-mail falhar com "arquivo não encontrado", confira se ela existe.
+O arquivo é lido do disco na primeira vez
+(`process.cwd()/src/lib/server/email/aviso.html`) e fica em memória. O
+`next.config.ts` garante as duas pontas:
+
+- **para o build** com "Falta o modelo dos avisos por e-mail" se o arquivo não
+  existir (antes, apagar o modelo só aparecia como erro na hora de mandar);
+- inclui o arquivo em todas as rotas `/api/**` (`outputFileTracingIncludes`),
+  para ele ir junto no pacote das funções na Vercel.
+
+Ele já morou em `messages/email/`, mas essa pasta é de planos e é limpa à mão:
+o modelo foi apagado duas vezes.
 
 ### `server/email-templates.ts`
 

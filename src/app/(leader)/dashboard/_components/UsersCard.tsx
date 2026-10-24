@@ -7,6 +7,7 @@
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Spinner } from '@/components/Spinner';
+import { useScrollLock } from '@/hooks/use-scroll-lock';
 
 export type Usuario = {
     id: number;
@@ -53,6 +54,8 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
         setConfirmar(null);
         await executar('remover', alvo.id);
     }
+
+    useScrollLock(confirmar !== null);
 
     useEffect(() => {
         if (!confirmar) return;

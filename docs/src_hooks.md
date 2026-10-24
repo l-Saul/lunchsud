@@ -73,3 +73,24 @@ de quem está agendando.
   telefone não vai no payload.
 
 Ver [database.md](database.md).
+
+## `use-scroll-lock.ts`
+
+**Trava a rolagem da página atrás de um modal.** Todo modal e tela por cima
+(`BookingModal`, `EditBookingModal`, confirmação de remover acesso, confirmação
+de desligar aviso, `LoadingOverlay`) usa este hook; não reescreva a trava à mão.
+
+```ts
+useScrollLock()        // trava enquanto o componente estiver na tela
+useScrollLock(aberto)  // trava só enquanto `aberto` for true
+```
+
+- **Por que não `overflow: hidden`:** o iPhone ignora isso no `body` para o
+  toque, e rolar dentro do modal mexia a página atrás. Aqui o `body` vira
+  `position: fixed` com `top: -<posição atual>` (a página fica parada onde
+  estava) e, ao soltar, volta ao normal e rola de volta para a mesma posição.
+- **Volta instantânea** (`behavior: 'instant'`): o site usa `scroll-behavior:
+  smooth`, e sem isso a página pulava para o topo e descia animada ao fechar.
+- **Contador:** se dois modais travarem ao mesmo tempo (ex.: o `LoadingOverlay`
+  sobre outro), só o último a fechar destrava, e a posição guardada é a do
+  primeiro.

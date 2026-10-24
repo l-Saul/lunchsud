@@ -2,10 +2,13 @@
  * Contexto e regras: leia CLAUDE.md e docs/src_components.md antes de alterar.
  * Mudou o comportamento? Atualize o doc na mesma mudança.
  */
+'use client';
 
 import { Spinner } from '@/components/Spinner';
+import { useScrollLock } from '@/hooks/use-scroll-lock';
 
 export function LoadingOverlay({ texto = 'Carregando…' }: { texto?: string }) {
+    useScrollLock();
     return (
         <div
             role="status"

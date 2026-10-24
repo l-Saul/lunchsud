@@ -7,6 +7,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { normalizarTelefone } from '@/lib/phone'
 import { Spinner } from '@/components/Spinner'
+import { useScrollLock } from '@/hooks/use-scroll-lock'
 
 const campoBase =
     'w-full min-w-0 box-border appearance-none rounded-xl border px-4 py-3.5 text-lg text-text ' +
@@ -91,29 +92,14 @@ export function BookingModal({
         onCloseRef.current = onClose
     }, [onClose])
 
-    useEffect(() => {
-        const scrollY = window.scrollY
-        const { style } = document.body
-        style.position = 'fixed'
-        style.top = `-${scrollY}px`
-        style.left = '0'
-        style.right = '0'
-        style.width = '100%'
+    useScrollLock()
 
+    useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
             if (e.key === 'Escape') onCloseRef.current()
         }
         window.addEventListener('keydown', onKey)
-
-        return () => {
-            style.position = ''
-            style.top = ''
-            style.left = ''
-            style.right = ''
-            style.width = ''
-            window.scrollTo(0, scrollY)
-            window.removeEventListener('keydown', onKey)
-        }
+        return () => window.removeEventListener('keydown', onKey)
     }, [])
 
     return (

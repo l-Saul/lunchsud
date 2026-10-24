@@ -41,6 +41,8 @@ Carregamento **na tela toda**: fundo azul translúcido desfocado, Spinner grande
 - Para transições que demoram um instante, como o owner trocando de ala
   ("Trocando de ala…", "Abrindo a ala…"): deixa claro que algo está acontecendo.
 - `role="status"`, `aria-live="polite"`, `z-80` (acima dos modais).
+- Trava a página atrás enquanto aparece (`useScrollLock`), como todo modal; por
+  isso é `'use client'`.
 - Aparece com fade curto e some na hora: **renderize condicionalmente**
   (`{texto && <LoadingOverlay texto={texto} />}`).
 
