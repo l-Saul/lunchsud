@@ -66,6 +66,7 @@ Paleta da Igreja (valores do site oficial, `churchofjesuschrist.org`); só
 | `background` | `#ffffff` | cartões | — |
 | `text` | `#212225` | texto principal | sobre branco 15,91:1 |
 | `muted` | `#53575b` | texto secundário | sobre branco 7,29:1 |
+| `faded` | `#676b6e` | cinza "apagado" que ainda se lê: dia que já passou, placeholder | sobre branco 5,38:1 |
 
 **Não existe verde no site** (o verde-água antigo, `#1fb9a0`, dava 2,46:1 com
 texto branco). Sucesso = azul + texto. O rosa não é cor de botão de confirmar:
@@ -88,8 +89,13 @@ Regras completas de animação no `CLAUDE.md`.
 
 ### Base
 
-- `html { font-size: 112.5% }` (~18px): base maior para leitura confortável no
-  celular. Em **%** para respeitar o zoom e o tamanho de letra do sistema.
+- **Tamanho da letra:** `html { font-size: 96.25% }` (**15,4px**) no celular e
+  `99%` (**15,8px**) a partir de 640px (`@media (min-width: 40rem)`, aninhado).
+  Em **%** para respeitar o zoom e o tamanho de letra do sistema. Decisão do
+  dono em 24/10/2026, depois de testar 18px fixo e a letra que crescia com a
+  tela (18px → 22px): os dois ficaram grandes demais. Com essa base,
+  `text-sm` ≈ 13,5px (só legendas, rodapé e dicas) e `text-lg` ≈ 17,3px (todo
+  campo de formulário: abaixo de 16px o iPhone dá zoom ao tocar).
   `scroll-behavior: smooth`.
 - `h1, h2, h3` com serifa (estética serena, como o site da Igreja).
 - `body`: suavização de fonte e `text-rendering: optimizeLegibility`.
@@ -101,6 +107,16 @@ Regras completas de animação no `CLAUDE.md`.
   (6,90:1); a `HeaderBand` troca `--focus-color` para **dourado**, porque o azul
   some sobre o azul (1,89:1). Componente que precise de outra cor de foco muda
   a variável, não o `outline`.
+
+- `::placeholder`: cor `faded` (5,38:1) e `opacity: 1` em todo campo. O
+  cinza padrão do navegador (e o `muted/60` de antes, ~2,8:1) não passava no
+  contraste.
+
+### `bg-pday`: o dia de P-day
+
+Utilitário próprio: fundo cinza `#eff0f0` com listrinhas diagonais `#e0e2e2`.
+É o segundo sinal do P-day no calendário (não depende só da cor) e entra
+também no quadradinho da legenda.
 
 ### `bg-band`: o "céu" da faixa do cabeçalho
 

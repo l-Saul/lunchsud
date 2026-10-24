@@ -59,7 +59,7 @@ function Chave({ titulo, descricao, ligado, onAlternar }: {
         >
             <span className="min-w-0">
                 <span className="block font-semibold text-text">{titulo}</span>
-                <span className="mt-1 block text-sm leading-snug text-muted">{descricao}</span>
+                <span className="mt-1 block text-base leading-snug text-muted">{descricao}</span>
             </span>
             <span
                 aria-hidden="true"
@@ -156,9 +156,9 @@ export function NotificationsCard({ alaId, email, preferenciasIniciais }: Props)
                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                     <div className="flex items-center gap-2">
                         <span className="h-5 w-1.5 rounded-full bg-accent" />
-                        <h2 className="text-lg font-semibold text-text">Notificações</h2>
+                        <h2 className="text-xl font-semibold text-text">Notificações</h2>
                     </div>
-                    <p role="status" aria-live="polite" className="text-sm font-medium">
+                    <p role="status" aria-live="polite" className="text-base font-medium">
                         {status === 'salvando' && (
                             <span className="flex items-center gap-2 text-muted">
                                 <Spinner className="h-4 w-4" />
@@ -168,7 +168,7 @@ export function NotificationsCard({ alaId, email, preferenciasIniciais }: Props)
                         {status === 'salvo' && <span className="animate-aparecer text-secondary">Salvo.</span>}
                     </p>
                 </div>
-                <p className="wrap-anywhere text-sm leading-snug text-muted">
+                <p className="wrap-anywhere text-base leading-snug text-muted">
                     Escolha quais e-mails quer receber sobre esta ala.{' '}
                     {email ? (
                         <>Eles chegam em <strong className="text-text">{email}</strong>.</>
@@ -179,7 +179,7 @@ export function NotificationsCard({ alaId, email, preferenciasIniciais }: Props)
             </div>
 
             {status === 'erro' && (
-                <p key={erro} role="alert" className="animate-aparecer text-sm font-medium text-accent">
+                <p key={erro} role="alert" className="animate-aparecer text-base font-medium text-accent">
                     {erro}
                 </p>
             )}

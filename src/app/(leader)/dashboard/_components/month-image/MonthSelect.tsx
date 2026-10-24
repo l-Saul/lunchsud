@@ -39,7 +39,7 @@ export function MonthSelect({
                 onClick={() => setAberto(o => !o)}
                 aria-haspopup="listbox"
                 aria-expanded={aberto}
-                className="flex w-full items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-left text-sm font-medium text-text transition hover:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary cursor-pointer"
+                className="flex w-full items-center justify-between gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-left text-base font-medium text-text transition hover:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary cursor-pointer"
             >
                 <span>{formatMonthLabel(value)}</span>
                 <svg
@@ -73,7 +73,7 @@ export function MonthSelect({
                                     onChange(m);
                                     setAberto(false);
                                 }}
-                                className={`block w-full px-3 py-2.5 text-left text-sm transition hover:bg-secondary/10 cursor-pointer ${
+                                className={`block w-full px-3 py-2.5 text-left text-base transition hover:bg-secondary/10 cursor-pointer ${
                                     m === value ? 'font-semibold text-secondary' : 'text-text'
                                 }`}
                             >

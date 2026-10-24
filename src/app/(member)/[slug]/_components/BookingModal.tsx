@@ -11,7 +11,7 @@ import { useScrollLock } from '@/hooks/use-scroll-lock'
 
 const campoBase =
     'w-full min-w-0 box-border appearance-none rounded-xl border px-4 py-3.5 text-lg text-text ' +
-    'placeholder:text-muted/60 focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary'
+    'focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary'
 
 export type Agendado = { id: number; data: string; nome: string }
 

@@ -25,7 +25,7 @@ export default function ResetPasswordForm({ email }: { email: string | null }) {
 
     const campo =
         'w-full min-w-0 box-border rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-lg text-text ' +
-        'placeholder:text-muted/60 focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary';
+        'focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary';
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();

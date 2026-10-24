@@ -27,7 +27,7 @@ export function BookingsCard({ mesAtual, mesSeguinte, agendamentos }: Props) {
             <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-2">
                     <span className="h-5 w-1.5 rounded-full bg-accent" />
-                    <h2 className="text-lg font-semibold text-text">Agendamentos</h2>
+                    <h2 className="text-xl font-semibold text-text">Agendamentos</h2>
                 </div>
                 <MonthImageExport meses={[mesAtual, mesSeguinte]} agendamentos={agendamentos} />
             </div>
@@ -45,25 +45,25 @@ export function BookingsCard({ mesAtual, mesSeguinte, agendamentos }: Props) {
                             disponiveis={disponiveis}
                         >
                             {itens.length === 0 ? (
-                                <p className="rounded-2xl border border-dashed border-slate-300 py-6 text-center text-sm text-muted">
+                                <p className="rounded-2xl border border-dashed border-slate-300 py-6 text-center text-base text-muted">
                                     Nenhum almoço agendado ainda.
                                 </p>
                             ) : (
-                                <ul className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                                <ul className="flex flex-col gap-3">
                                     {itens.map(row => {
-                                        const { dia, mesAbrev } = diaTile(row.data);
+                                        const { dia, semana } = diaTile(row.data);
                                         return (
                                             <li
                                                 key={row.id}
                                                 className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-accent/40 hover:bg-accent/5"
                                             >
-                                                <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-primary text-white">
+                                                <div className="flex size-14 shrink-0 flex-col items-center justify-center rounded-xl bg-primary text-white">
                                                     <span className="text-lg font-bold leading-none">{dia}</span>
-                                                    <span className="mt-0.5 text-[10px] uppercase leading-none opacity-80">{mesAbrev}</span>
+                                                    <span className="mt-1 text-sm leading-none text-white/85">{semana}</span>
                                                 </div>
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="truncate font-medium text-text">{row.nome}</p>
-                                                    <p className="text-sm text-muted">{row.telefone}</p>
+                                                    <p className="wrap-anywhere font-medium text-text">{row.nome}</p>
+                                                    <p className="text-base text-muted">{row.telefone}</p>
                                                 </div>
                                                 <EditBookingModal {...row} />
                                             </li>

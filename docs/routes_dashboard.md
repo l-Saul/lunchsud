@@ -95,6 +95,12 @@ Do item 3 em diante tudo fica no `<main>`, sobre o fundo creme, em
 `max-w-3xl`. Os cartões são brancos com `ring-1 ring-primary/10` e
 `shadow-md`.
 
+**Letra no painel:** nada menor que `text-base` (nem `text-sm`): o líder lê
+nomes, telefones e e-mails, muitas vezes no computador. Título da faixa
+`text-3xl`, título de cartão `text-xl`, sem `sm:text-*` para "compensar".
+Nome da ala na faixa, nomes e e-mails nos cartões quebram a linha
+(`wrap-anywhere`), nunca "…".
+
 ## `BookingsCard.tsx` (Server Component)
 
 Props: `mesAtual`, `mesSeguinte` (`YYYY-MM`), `agendamentos` (`{ id, data, nome, telefone }[]`).
@@ -104,9 +110,10 @@ Props: `mesAtual`, `mesSeguinte` (`YYYY-MM`), `agendamentos` (`{ id, data, nome,
 - Um `CollapsibleMonth` por mês, com o rótulo (`formatMonthLabel`), o total e os
   disponíveis.
 - Mês vazio: "Nenhum almoço agendado ainda." (caixa tracejada).
-- Cada almoço: medalhão azul com dia e mês abreviado (`diaTile`), nome
-  (`truncate`, aguenta 80 caracteres sem espaço), telefone e o
-  `EditBookingModal`. Grade de 1 coluna, 2 no desktop (`lg`).
+- Cada almoço: medalhão azul (`size-14`) com o dia e o dia da semana ("27 /
+  ter", `diaTile`; o mês já está no título), nome (`wrap-anywhere`: quebra a
+  linha, nunca "…"; aguenta 80 caracteres sem espaço), telefone e o
+  `EditBookingModal`. **Uma coluna** sempre: em duas, os nomes eram cortados.
 
 ## `CollapsibleMonth.tsx` (client)
 
@@ -124,6 +131,7 @@ mês tem ~30 dias: recolher o de cima evita rolar tudo para editar o de baixo.
 
 Botão de **lápis** (`aria-label="Editar agendamento"`, 44px, SVG inline) que
 abre o modal de editar ou remover um almoço. Props: `id`, `data`, `nome`, `telefone`.
+Modal `max-w-lg`; rótulos em texto escuro (`text-base`) e campos em `text-lg`.
 
 ### Campos
 
@@ -181,6 +189,7 @@ Exporta `HistoryCard` e o tipo `MesHistorico = { ym, total, disponiveis }`.
   "total/disponíveis".
 - A barra é `role="img"` com `aria-label="X de Y dias"`.
 - Vazio: "Ainda não há almoços anteriores."
+- Rótulo do mês com largura fixa `w-32` (cabe "Setembro 2026" em `text-base`).
 
 ## `NotificationsCard.tsx` (client)
 
@@ -454,6 +463,8 @@ O calendário **desenhado para a imagem**, separado do calendário público.
   (fundo do dia com almoço), dourado `#ffb81c` (divisória do cabeçalho), cinza
   `#676b6e` sobre `#eff0f0` (P-day), fundo creme `#faf7f5`.
 - Cabeçalho azul: "Almoço dos Missionários", mês e ano, divisória com florzinha.
+- Dias da semana ("Dom", "Seg"…) e "P-day" em 16px, **sem maiúsculas**. Os
+  tamanhos em px aqui são da imagem (ela tem largura fixa), não da tela.
 - Dias da semana (sábado e domingo em framboesa) e grade com
   **`repeat(7, minmax(0, 1fr))`**: 7 colunas sempre iguais. Só `1fr` deixava um
   nome longo sem espaço esticar a coluna e empurrar o sábado para fora da imagem

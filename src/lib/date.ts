@@ -53,10 +53,7 @@ const MESES = [
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ];
 
-const MESES_ABREV = [
-    'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
-    'jul', 'ago', 'set', 'out', 'nov', 'dez',
-];
+const SEMANA_ABREV = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 
 export function formatMonthLabel(ym: string) {
     const [ano, mes] = ym.split('-').map(Number);
@@ -84,8 +81,10 @@ export function diaDaSemanaEDia(dateISO: string) {
 }
 
 export function diaTile(dateISO: string) {
-    const [, m, d] = dateISO.split('-');
-    return { dia: String(Number(d)), mesAbrev: MESES_ABREV[Number(m) - 1] };
+    return {
+        dia: String(Number(dateISO.slice(8, 10))),
+        semana: SEMANA_ABREV[new Date(`${dateISO}T12:00:00Z`).getUTCDay()],
+    };
 }
 
 export function isPday(dateISO: string) {

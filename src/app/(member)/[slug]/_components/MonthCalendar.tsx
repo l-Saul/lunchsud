@@ -83,10 +83,10 @@ export function MonthCalendar({
                     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M15 18l-6-6 6-6" />
                     </svg>
-                    <span className="text-xs font-semibold uppercase tracking-wide">Voltar</span>
+                    <span className="text-sm font-semibold">Voltar</span>
                 </button>
 
-                <h2 className="text-center text-base sm:text-xl font-semibold text-text @max-[15rem]:order-1 @max-[15rem]:col-span-2">
+                <h2 className="text-center text-xl font-semibold text-text @max-[15rem]:order-1 @max-[15rem]:col-span-2">
                     {formatMonthLabel(`${anoNum}-${String(mesNum + 1).padStart(2, '0')}`)}
                 </h2>
 
@@ -102,11 +102,11 @@ export function MonthCalendar({
                     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M9 18l6-6-6-6" />
                     </svg>
-                    <span className="text-xs font-semibold uppercase tracking-wide">Avançar</span>
+                    <span className="text-sm font-semibold">Avançar</span>
                 </button>
             </div>
 
-            <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-sm font-semibold uppercase tracking-wide text-muted">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-sm font-semibold text-muted">
                 {SEMANA.map(([abrev, inicial]) => (
                     <div key={abrev}>
                         <span className="@max-[15rem]:hidden">{abrev}</span>
@@ -165,13 +165,13 @@ export function MonthCalendar({
                                 }
                             }}
                             className={`
-                                aspect-square w-full rounded-lg text-base sm:text-lg font-medium
+                                aspect-square w-full rounded-lg text-lg font-medium
                                 flex items-center justify-center
                                 cursor-pointer transition duration-100 active:scale-95
                                 ${passado
-                                    ? 'text-primary/30'
+                                    ? 'text-faded'
                                     : pday
-                                    ? 'bg-primary/5 text-primary/40 border border-primary/10'
+                                    ? 'bg-pday text-muted border border-slate-300'
                                     : ocupado
                                         ? 'bg-accent text-white'
                                         : selecionado
@@ -179,16 +179,7 @@ export function MonthCalendar({
                                             : 'bg-white text-primary border border-slate-200 hover:border-secondary hover:bg-secondary/10 hover:shadow-md'}
                             `}
                         >
-                            {pday && !passado ? (
-                                <div className="flex flex-col items-center leading-none">
-                                    <span className="text-sm">{dia}</span>
-                                    <span className="text-[9px] sm:text-[10px] font-semibold uppercase">
-                                        P-day
-                                    </span>
-                                </div>
-                            ) : (
-                                dia
-                            )}
+                            {dia}
                         </div>
                     )
                 })}
@@ -196,15 +187,15 @@ export function MonthCalendar({
 
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-1 text-sm text-text">
                 <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 rounded border border-slate-300 bg-white" />
+                    <span className="h-5 w-5 rounded border border-slate-300 bg-white" />
                     Disponível
                 </span>
                 <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 rounded bg-accent" />
+                    <span className="h-5 w-5 rounded bg-accent" />
                     Ocupado
                 </span>
                 <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 rounded border border-primary/10 bg-primary/5" />
+                    <span className="h-5 w-5 rounded border border-slate-300 bg-pday" />
                     P-day
                 </span>
             </div>

@@ -60,13 +60,13 @@ export function WardSwitcher({ alas, atualId }: { alas: Ala[]; atualId: number |
                         </svg>
                     </span>
                     <div className="flex flex-col leading-tight">
-                        <span className="text-sm font-semibold text-text">Acesso owner</span>
-                        <span className="text-xs text-muted">Acesso a todas as alas</span>
+                        <span className="text-base font-semibold text-text">Acesso owner</span>
+                        <span className="text-base text-muted">Acesso a todas as alas</span>
                     </div>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                    <label htmlFor="trocar-ala" className="text-sm font-medium text-text">
+                    <label htmlFor="trocar-ala" className="text-base font-medium text-text">
                         Trocar de ala
                     </label>
                     <div className="relative">
@@ -75,7 +75,7 @@ export function WardSwitcher({ alas, atualId }: { alas: Ala[]; atualId: number |
                             value={atualId ?? ''}
                             onChange={trocar}
                             disabled={transicao !== null}
-                            className="min-h-12 w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 pr-11 text-base font-medium text-text shadow-sm transition hover:border-secondary/70 focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary disabled:opacity-60 cursor-pointer"
+                            className="min-h-12 w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 pr-11 text-lg font-medium text-text shadow-sm transition hover:border-secondary/70 focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary disabled:opacity-60 cursor-pointer"
                         >
                             {atualId === null && <option value="">Selecione uma ala…</option>}
                             {alas.map(a => (

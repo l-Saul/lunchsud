@@ -131,7 +131,7 @@ export default function MonthImageExport({ meses, agendamentos }: Props) {
                     aria-busy={loading}
                     className={`
                         flex flex-1 items-center justify-center gap-2 sm:flex-none
-                        rounded-lg px-4 py-2.5 text-sm font-semibold text-white cursor-pointer
+                        rounded-lg px-4 py-2.5 text-base font-semibold text-white cursor-pointer
                         transition duration-100 enabled:active:scale-[0.98]
                         ${loading
                             ? 'bg-gray-400 cursor-not-allowed'

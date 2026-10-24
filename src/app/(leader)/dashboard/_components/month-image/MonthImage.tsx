@@ -100,9 +100,7 @@ export default function MonthImage({ diasDoMes }: Props) {
                                 style={{
                                     textAlign: 'center',
                                     fontWeight: 700,
-                                    fontSize: 14,
-                                    textTransform: 'uppercase',
-                                    letterSpacing: 1,
+                                    fontSize: 16,
                                     color: i === 0 || i === 6 ? ROSA : AZUL,
                                 }}
                             >
@@ -173,10 +171,8 @@ export default function MonthImage({ diasDoMes }: Props) {
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                fontSize: 13,
+                                                fontSize: 16,
                                                 fontWeight: 700,
-                                                textTransform: 'uppercase',
-                                                letterSpacing: 1,
                                                 color: CINZA,
                                             }}
                                         >

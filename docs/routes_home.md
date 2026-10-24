@@ -48,14 +48,19 @@ por ala**. Tocar leva a `/[slug]` (ver [routes_slug.md](routes_slug.md)).
   fica no efeito, com a exceção pontual `eslint-disable-next-line
   react-hooks/set-state-in-effect`: é uma inicialização única e intencional.
 - O texto é dividido em verso e referência pelo separador ` — `. A referência
-  aparece embaixo, em azul (`text-secondary`). O bloco entra com `animate-aparecer`.
+  aparece embaixo, em azul (`text-secondary`, `text-sm`). Verso em texto
+  escuro, **sem itálico** (itálico longo é difícil de ler). O bloco entra com
+  `animate-aparecer`.
 
 ## Layout
 
 - `HeaderBand` (faixa azul): logo `public/lds.jpg` (160×160, `priority`, branca,
   por isso fica na faixa), título `h1` e divisória com florzinha.
 - `<main>` no fundo creme, largura máxima `max-w-xl`: "Toque na sua ala para
-  agendar." (`text-xl`, texto escuro), escritura (cinza) e a lista de alas.
+  agendar." (`text-xl`, texto escuro), escritura e a lista de alas.
+- Com letra grande em tela estreita, o título e o nome das alas **hifenizam**
+  (`hyphens-auto` + `wrap-break-word`, o `lang="pt-BR"` hifeniza certo) em vez
+  de empurrar a página para o lado. Testado em 320px com letra a 200%.
   Erro da lista em rosa (`text-accent`).
 
 ## Planejado (não implementado)

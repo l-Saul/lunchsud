@@ -76,8 +76,8 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
         return (
             <li className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-slate-200 p-3">
                 <div className="min-w-0 flex-1 basis-40">
-                    <p className="truncate font-medium text-text">{u.nome || '(sem nome)'}</p>
-                    <p className="truncate text-sm text-muted">{u.email}</p>
+                    <p className="wrap-anywhere font-medium text-text">{u.nome || '(sem nome)'}</p>
+                    <p className="wrap-anywhere text-base text-muted">{u.email}</p>
                 </div>
 
                 {u.status === 'pendente' && (
@@ -85,7 +85,7 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
                         onClick={() => executar('aprovar', u.id)}
                         disabled={emAndamento !== null}
                         aria-busy={aprovando}
-                        className="flex min-h-11 items-center gap-2 rounded-xl bg-secondary px-3 text-sm font-semibold text-white shadow-sm transition duration-100 hover:opacity-95 enabled:hover:shadow-md enabled:active:scale-[0.97] disabled:opacity-60 cursor-pointer"
+                        className="flex min-h-11 items-center gap-2 rounded-xl bg-secondary px-3 text-base font-semibold text-white shadow-sm transition duration-100 hover:opacity-95 enabled:hover:shadow-md enabled:active:scale-[0.97] disabled:opacity-60 cursor-pointer"
                     >
                         {aprovando && <Spinner className="h-4 w-4" />}
                         {aprovando ? 'Aprovando…' : 'Aprovar'}
@@ -96,7 +96,7 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
                     onClick={() => setConfirmar(u)}
                     disabled={emAndamento !== null}
                     aria-busy={removendo}
-                    className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-medium text-accent transition duration-100 hover:bg-accent/10 enabled:active:scale-[0.97] disabled:opacity-60 cursor-pointer"
+                    className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-base font-medium text-accent transition duration-100 hover:bg-accent/10 enabled:active:scale-[0.97] disabled:opacity-60 cursor-pointer"
                 >
                     {removendo && <Spinner className="h-4 w-4" />}
                     {removendo ? 'Removendo…' : 'Remover'}
@@ -109,11 +109,11 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
         <section className="flex flex-col gap-5 rounded-3xl bg-background p-4 shadow-md ring-1 ring-primary/10 sm:p-8">
             <div className="flex items-center gap-2">
                 <span className="h-5 w-1.5 rounded-full bg-accent" />
-                <h2 className="text-lg font-semibold text-text">Usuários</h2>
+                <h2 className="text-xl font-semibold text-text">Usuários</h2>
             </div>
 
             {usuarios.length === 0 ? (
-                <p className="text-sm text-muted">Nenhum usuário vinculado ainda.</p>
+                <p className="text-base text-muted">Nenhum usuário vinculado ainda.</p>
             ) : (
                 <div className="flex flex-col gap-5">
                     {pendentes.length > 0 && (
@@ -130,7 +130,7 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
                     <div className="flex flex-col gap-3">
                         <h3 className="text-base font-semibold text-text">Com acesso</h3>
                         {aprovados.length === 0 ? (
-                            <p className="text-sm text-muted">Ninguém com acesso ainda.</p>
+                            <p className="text-base text-muted">Ninguém com acesso ainda.</p>
                         ) : (
                             <ul className="flex flex-col gap-3">
                                 {aprovados.map(u => <Linha key={u.id} u={u} />)}

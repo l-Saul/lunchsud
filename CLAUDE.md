@@ -170,7 +170,15 @@ de data/fuso/P-day em componentes. Detalhes: [`docs/src_lib.md`](docs/src_lib.md
   completa em [`docs/src_app.md`](docs/src_app.md).
 - **Fontes:** Source Sans (corpo) + Source Serif (títulos) via `next/font` no layout;
   `h1/h2/h3` já recebem serifa por regra base no CSS.
-- **Acessibilidade:** texto grande (base ~18px), foco visível, alvos ≥44px,
+- **Tamanho da letra (decisão do dono, 24/10/2026):** base de **15,4px no
+  celular e 15,8px a partir de 640px** (`globals.css`). 18px (e a letra que
+  crescia até 22px no computador) foi testado e achado grande demais: não
+  aumente sem pedido. Menor texto: `text-sm` (~13,5px), só para legenda,
+  rodapé e dica. **Campo de formulário sempre `text-lg`** (≥ 16px): abaixo
+  disso o iPhone dá zoom sozinho ao tocar. Sem `text-xs`, sem `text-[Npx]`,
+  sem MAIÚSCULAS (`uppercase`) e sem itálico. Nome e e-mail quebram a linha
+  (`wrap-anywhere`), nunca "…" (`truncate`).
+- **Acessibilidade:** foco visível, alvos ≥44px,
   `aria-label` em ícones, respeito a `prefers-reduced-motion`. Não reduza isso.
 - **Animação = feedback, não enfeite.** Só CSS (sem biblioteca; a `framer-motion`
   saiu porque escondia a página até o JS carregar e pesava 35 KB). Use só para:

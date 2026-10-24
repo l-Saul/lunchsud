@@ -288,15 +288,15 @@ antes disso o dia está bloqueado), `selectedDay`, `onSelectDay`,
 
 | Estado | Visual | Toque |
 |---|---|---|
-| Passado (`data < hoje`, comparação de texto `YYYY-MM-DD`) | esmaecido (`text-primary/30`) | `onSelectPassado` |
-| P-day (`isPday`) | cinza-azulado, número + "P-day" em letra pequena | `onSelectPday` |
+| Passado (`data < hoje`, comparação de texto `YYYY-MM-DD`) | número cinza `text-faded` (5,38:1: é clicável, então precisa ser legível), sem borda | `onSelectPassado` |
+| P-day (`isPday`) | listrinhas (`bg-pday`), número `text-muted`, borda cinza; sem texto "P-day" dentro do dia (não cabia sem letra minúscula) | `onSelectPday` |
 | Ocupado | framboesa (`bg-accent`), texto branco | `onSelectOcupado(nome)` |
 | Selecionado | azul (`bg-secondary`) com sombra | — |
 | Livre | branco com borda; hover azul-claro | `onSelectDay(dia)` |
 
 Dia passado e P-day **não abrem o agendamento**: só a mensagem embaixo do
 calendário explica o porquê. Segunda que já passou aparece só como passada (sem
-o rótulo "P-day").
+as listrinhas).
 
 ### Acessibilidade
 
@@ -306,9 +306,13 @@ o rótulo "P-day").
   disponível".
 - Enter e Espaço ativam o dia.
 - `active:scale-95` ao tocar ("recebi seu toque").
-- Botões **Voltar**/**Avançar** com ícone + texto, `aria-label` "Mês anterior" /
-  "Próximo mês". Desativados fora da janela (`opacity-30`).
-- Legenda: Disponível / Ocupado / P-day.
+- Botões **Voltar**/**Avançar** com ícone + texto (`text-sm`, caixa normal),
+  `aria-label` "Mês anterior" / "Próximo mês". Desativados fora da janela
+  (`opacity-30`).
+- Mês em `text-xl`; dias da semana "Dom Seg Ter…" (`text-sm`, sem maiúsculas;
+  iniciais no modo compacto); número do dia em `text-lg`.
+- Legenda: Disponível / Ocupado / P-day, quadradinhos de `h-5 w-5` com o mesmo
+  visual dos dias (o do P-day com listrinhas).
 
 ### Modo compacto (letra grande ou tela estreita)
 

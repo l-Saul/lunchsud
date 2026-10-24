@@ -18,7 +18,7 @@ type Props = {
 };
 
 const campoBase =
-    'w-full min-w-0 min-h-12 box-border appearance-none rounded-lg border px-3 py-3 text-base text-text ' +
+    'w-full min-w-0 min-h-12 box-border appearance-none rounded-lg border px-3 py-3 text-lg text-text ' +
     'focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary';
 
 export default function EditBookingModal({ id, data, nome, telefone }: Props) {
@@ -111,7 +111,7 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                         role="dialog"
                         aria-modal="true"
                         aria-label="Editar agendamento"
-                        className="w-full max-w-md animate-surgir rounded-2xl bg-background p-6 shadow-2xl"
+                        className="w-full max-w-lg animate-surgir rounded-2xl bg-background p-6 shadow-2xl"
                     >
                         <div className="mb-5 flex items-center justify-between gap-3">
                             <h3 className="text-xl font-semibold text-text">
@@ -130,7 +130,7 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
 
                         <div className="flex flex-col gap-4">
                             <div className="flex flex-col gap-1.5">
-                                <label htmlFor={`data-${id}`} className="text-sm font-medium text-muted">
+                                <label htmlFor={`data-${id}`} className="text-base font-medium text-text">
                                     Data
                                 </label>
                                 <input
@@ -145,7 +145,7 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                             </div>
 
                             <div className="flex flex-col gap-1.5">
-                                <label htmlFor={`nome-${id}`} className="text-sm font-medium text-muted">
+                                <label htmlFor={`nome-${id}`} className="text-base font-medium text-text">
                                     Nome
                                 </label>
                                 <input
@@ -160,14 +160,14 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                                     className={`${campoBase} ${erroNome ? 'border-accent' : 'border-slate-300'}`}
                                 />
                                 {erroNome && (
-                                    <p className="mt-0.5 text-sm text-accent">
+                                    <p className="mt-0.5 text-base text-accent">
                                         Informe o nome.
                                     </p>
                                 )}
                             </div>
 
                             <div className="flex flex-col gap-1.5">
-                                <label htmlFor={`tel-${id}`} className="text-sm font-medium text-muted">
+                                <label htmlFor={`tel-${id}`} className="text-base font-medium text-text">
                                     Telefone
                                 </label>
                                 <input
@@ -188,7 +188,7 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                                     className={`${campoBase} ${erroTelefone ? 'border-accent' : 'border-slate-300'}`}
                                 />
                                 {erroTelefone && (
-                                    <p className="mt-0.5 text-sm text-accent">
+                                    <p className="mt-0.5 text-base text-accent">
                                         Confira o telefone, com DDD (ou + e o código do país).
                                     </p>
                                 )}

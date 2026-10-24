@@ -16,18 +16,18 @@ export function HistoryCard({ historico }: { historico: MesHistorico[] }) {
         <section className="flex flex-col gap-5 rounded-3xl bg-background p-4 shadow-md ring-1 ring-primary/10 sm:p-8">
             <div className="flex items-center gap-2">
                 <span className="h-5 w-1.5 rounded-full bg-accent" />
-                <h2 className="text-lg font-semibold text-text">Histórico de almoços</h2>
+                <h2 className="text-xl font-semibold text-text">Histórico de almoços</h2>
             </div>
 
             {historico.length === 0 ? (
-                <p className="text-sm text-muted">Ainda não há almoços anteriores.</p>
+                <p className="text-base text-muted">Ainda não há almoços anteriores.</p>
             ) : (
                 <ul className="flex flex-col gap-3">
                     {historico.map(({ ym, total, disponiveis }) => {
                         const pct = disponiveis ? Math.round((total / disponiveis) * 100) : 0;
                         return (
                             <li key={ym} className="flex items-center gap-3">
-                                <span className="w-24 shrink-0 text-sm font-medium text-text sm:w-32">
+                                <span className="w-32 shrink-0 text-base font-medium text-text">
                                     {formatMonthLabel(ym)}
                                 </span>
                                 <div
@@ -37,7 +37,7 @@ export function HistoryCard({ historico }: { historico: MesHistorico[] }) {
                                 >
                                     <div className="h-full rounded-full bg-accent" style={{ width: `${Math.max(pct, 6)}%` }} />
                                 </div>
-                                <span className="w-14 shrink-0 text-right text-sm font-semibold text-accent">
+                                <span className="w-14 shrink-0 text-right text-base font-semibold text-accent">
                                     {total}/{disponiveis}
                                 </span>
                             </li>

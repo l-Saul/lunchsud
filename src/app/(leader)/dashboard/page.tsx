@@ -114,10 +114,10 @@ export default async function DashboardPage() {
             <HeaderBand className="sm:px-6">
                 <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 py-6 text-left sm:py-8">
                     <div className="min-w-0">
-                        <h1 className="text-2xl font-semibold sm:text-3xl">
+                        <h1 className="text-3xl font-semibold">
                             Painel da ala
                         </h1>
-                        <p className="truncate text-sm text-white/80 sm:text-base">
+                        <p className="wrap-anywhere text-base text-white/80">
                             {ala?.nome ?? 'Selecione uma ala'}
                             {ctx.isOwner && ' · owner'}
                         </p>

@@ -512,10 +512,10 @@ Pastas: `(m)` = `src/app/(member)/[slug]/_components/`, `(d)` = `src/app/(leader
 |---|---|---|---|---|---|
 | A1 | Teal nos botões (2,46:1) e no contorno de foco (< 3:1). **Medido em todas as páginas** | `globals.css:10,67` | V | Azul `#006184` | 1.4.3, 1.4.11 |
 | A2 | Rosa dos erros em texto (3,52:1) | vários | V | Framboesa `#bd0057` | 1.4.3 |
-| A3 | Texto secundário `#64748b` (4,76:1, no limite); placeholders `muted/60` bem abaixo | vários | V | `#53575b`; placeholder ≥ 4,5:1 | 1.4.3 |
-| A4 | Texto de 9–10px **fixo em px** (não cresce com a letra do celular). **Medido: 9px no celular, 10px no computador** | `(m)MonthCalendar.tsx:185`, `(d)BookingsCard.tsx:62` | V | Remover; tudo em `rem` | 1.4.4 |
-| A5 | MAIÚSCULAS em rótulos (mais difíceis de ler). **Medido** | `(m)MonthCalendar.tsx:86,105,109,185`, `(d)BookingsCard.tsx:62`, `(d)month-image/MonthImage.tsx:103,177` | V C | Caixa normal | boa prática |
-| A6 | Escritura inteira em itálico. **Medido** | `(member)/page.tsx:76` | V | Sem itálico | boa prática |
+| A3 ✅ | Texto secundário `#64748b` (4,76:1, no limite); placeholders `muted/60` bem abaixo | vários | V | `#53575b`; placeholder ≥ 4,5:1 | 1.4.3 |
+| A4 ✅ | Texto de 9–10px **fixo em px** (não cresce com a letra do celular). **Medido: 9px no celular, 10px no computador** | `(m)MonthCalendar.tsx:185`, `(d)BookingsCard.tsx:62` | V | Remover; tudo em `rem` | 1.4.4 |
+| A5 ✅ | MAIÚSCULAS em rótulos (mais difíceis de ler). **Medido** | `(m)MonthCalendar.tsx:86,105,109,185`, `(d)BookingsCard.tsx:62`, `(d)month-image/MonthImage.tsx:103,177` | V C | Caixa normal | boa prática |
+| A6 ✅ | Escritura inteira em itálico. **Medido** | `(member)/page.tsx:76` | V | Sem itálico | boa prática |
 | A7 | Estados do dia só por cor | `(m)MonthCalendar.tsx` | V L | Segundo sinal (seção 6.3) | 1.4.1 |
 | A8 | Mensagem ao tocar no dia **não é anunciada** (fora de região "ao vivo"). **Medido** | `(m)WardBooking.tsx:181–197` | L, todos | Faixa fixa com `role="status"` **sempre montada** | 4.1.3 |
 | A9 | Região "ao vivo" do sucesso é criada junto com o texto; leitores costumam não anunciar | `(m)WardBooking.tsx:216–220` | L | Região sempre montada + cartão de confirmação recebe foco | 4.1.3 |
@@ -535,11 +535,11 @@ Pastas: `(m)` = `src/app/(member)/[slug]/_components/`, `(d)` = `src/app/(leader
 | A23 | Botões desabilitados com `opacity-30`: a pessoa não entende se é botão | `(m)MonthCalendar.tsx:81,100` | V C | Some com os botões de mês; regra geral: desabilitado em cinza legível | — |
 | A24 | Botão fechar do modal só com "X" | modais | C | Manter "Cancelar" sempre visível ao lado da ação (já é assim no agendar) | — |
 | A25 | Base fixa em 18px em qualquer tela (**medido: 18px a 1366px**): no computador o painel fica pequeno, e o `text-sm` vira 15,8px | `globals.css:35`, `(leader)/dashboard/*` | V | Letra que cresce com a tela (8.1) + painel (8.2) | boa prática |
-| A26 | Nomes e e-mails cortados com "…" (`truncate`): a informação some | `(leader)/dashboard/page.tsx:119`, `(d)BookingsCard.tsx:65`, `(d)UsersCard.tsx:76,77` | V C | Quebrar a linha | 1.4.4, 1.4.10 (sem perda de conteúdo) |
+| A26 ✅ | Nomes e e-mails cortados com "…" (`truncate`): a informação some | `(leader)/dashboard/page.tsx:119`, `(d)BookingsCard.tsx:65`, `(d)UsersCard.tsx:76,77` | V C | Quebrar a linha | 1.4.4, 1.4.10 (sem perda de conteúdo) |
 | **A27** | **Novo.** `aria-pressed` nos 31 dias: o leitor anuncia "botão de alternância, não pressionado" em cada um, e escolher dia não é alternar | `(m)MonthCalendar.tsx:159` | L | Tirar `aria-pressed`; estado no nome ("…, escolhido") | 4.1.2 |
-| **A28** | **Novo.** Home com letra a 200% num celular de 320px: título e botões das alas não quebram e a página vai para **401px** (o celular afasta o zoom) | `(member)/page.tsx` (título `text-3xl` e botões das alas) | V | `min-w-0` no texto dos botões + `wrap-anywhere`/`hyphens-auto` (com `lang="pt-BR"` hifeniza certo) | 1.4.4, 1.4.10 |
+| **A28** ✅ | **Novo.** Home com letra a 200% num celular de 320px: título e botões das alas não quebram e a página vai para **401px** (o celular afasta o zoom) | `(member)/page.tsx` (título `text-3xl` e botões das alas) | V | `min-w-0` no texto dos botões + `wrap-anywhere`/`hyphens-auto` (com `lang="pt-BR"` hifeniza certo) | 1.4.4, 1.4.10 |
 | **A29** ✅ | **Novo.** Home sem `<main>` (axe: `landmark-one-main`, `region`) | `(member)/page.tsx:47` | L | Trocar `<section>` por `<main>` | 1.3.1 (boa prática) |
-| **A30** | **Novo.** Dias que já passaram com contraste de **1,81:1**, e eles são clicáveis (não valem como "inativos") | `(m)MonthCalendar.tsx:172` | V | `#676b6e` (5,38:1), sem borda/fundo para diferenciar | 1.4.3 |
+| **A30** ✅ | **Novo.** Dias que já passaram com contraste de **1,81:1**, e eles são clicáveis (não valem como "inativos") | `(m)MonthCalendar.tsx:172` | V | `#676b6e` (5,38:1), sem borda/fundo para diferenciar | 1.4.3 |
 | **A31** | **Novo.** Texto visível fora do nome acessível: "VOLTAR" → "Mês anterior", "AVANÇAR" → "Próximo mês", "26 P-DAY" → "Dia 26, P-day…" (axe: `label-content-name-mismatch`). Comando de voz falha | `(m)MonthCalendar.tsx:80,99,158` | L M | Nome acessível começando pelo texto visível | 2.5.3 |
 | **A32** | **Novo.** "Esqueci minha senha" e "Não tem conta? Criar conta" com **23px de altura**, fora de frase | `(leader)/admin/_components/LoginForm.tsx` | M | Botões secundários de 48px | 2.5.8 |
 | **A33** | **Novo.** Confirmar vazio dispara **3 `role="alert"` ao mesmo tempo**, lidos embaralhados | `(m)BookingModal.tsx:176,207,215` | L C | Erros por campo via `aria-describedby`, um resumo anunciado, foco no 1º campo com erro | 3.3.1, 4.1.3 |
@@ -595,6 +595,13 @@ computador a 1366px.
 ---
 
 ## 8. Tamanhos de letra
+
+> ✅ **Fase 2 feita em 24/10/2026, com uma decisão do dono que muda esta seção:**
+> a letra que cresce com a tela (8.1) e a base de 18px foram testadas e
+> **achadas grandes demais**. Ficou: base **15,4px no celular e 15,8px a partir
+> de 640px**; menor texto `text-sm` (~13,5px, só legenda/rodapé/dica); campos
+> em `text-lg` (≥ 16px, sem zoom no iPhone); painel com mínimo `text-base`. Os
+> números abaixo eram a proposta e ficam só como registro.
 
 Base em `%`, que já acompanha a letra do navegador. **Nada em `px` fixo para
 texto.** Os tamanhos abaixo são os do celular; no computador tudo cresce junto
@@ -746,7 +753,7 @@ tremor. Os 24px são o piso legal, não a meta.
 | Fase | O que | Arquivos principais | Tamanho |
 |---|---|---|---|
 | **1. Cores + fundo claro** | Tokens novos, faixa de cabeçalho, fundo creme, `<main>` na home, flor, fitinha, imagem exportada, e-mails, `color-scheme`, `CLAUDE.md` | `globals.css`, `layout.tsx`, novo componente de cabeçalho, todas as páginas (texto branco → escuro), `Flower.tsx`, `month-image/MonthImage.tsx`, `supabase/email/*`, `email-templates.ts`, `CLAUDE.md` | Grande |
-| **2. Letra e contraste** | **Letra que cresce com a tela** (8.1), **painel no computador** (8.2), eliminar textos < 16px e px fixo, MAIÚSCULAS, itálico; dias passados ≥ 4,5:1; `muted` mais escuro; placeholders; home sem estourar com letra a 200% | `globals.css`, `(leader)/dashboard/*`, `MonthCalendar.tsx`, `(member)/page.tsx`, lista da seção 8 | Médio |
+| **2. Letra e contraste** ✅ (base menor, por decisão do dono) | **Letra que cresce com a tela** (8.1), **painel no computador** (8.2), eliminar textos < 16px e px fixo, MAIÚSCULAS, itálico; dias passados ≥ 4,5:1; `muted` mais escuro; placeholders; home sem estourar com letra a 200% | `globals.css`, `(leader)/dashboard/*`, `MonthCalendar.tsx`, `(member)/page.tsx`, lista da seção 8 | Médio |
 | **3. Agendamento** | Botões de mês com nome, estados do dia, `<button>` nos dias sem `aria-pressed`, nome acessível com o texto visível, lista de dias livres, faixa de mensagens, título por extenso, dicas, `enterKeyHint`, lembrar nome/telefone, cartão de confirmação + agenda (iPhone e Android) | `MonthCalendar.tsx`, `WardBooking.tsx`, `BookingModal.tsx`, `src/lib/date.ts`, nova rota do `.ics` | Grande |
 | **4. Modais e leitor de tela** | `<dialog>`/foco/`inert`/retorno do foco, `aria-describedby`, um alerta por vez, regiões "ao vivo", `alert()` → mensagem, tirar `backdrop-blur` | `BookingModal.tsx`, `EditBookingModal.tsx`, `UsersCard.tsx`, `LoadingOverlay.tsx`, `WardSwitcher.tsx` | Médio |
 | **5. Painel** | "owner" em português, Ligar/WhatsApp (só no painel), nomes de botões, mês recolhível, interruptores com texto e contraste, regra da senha visível, links do login como botões de 48px | `(leader)/dashboard/*`, `NotificationsCard.tsx`, `LoginForm.tsx`, `ResetPasswordForm.tsx` | Médio |

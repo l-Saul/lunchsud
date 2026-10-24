@@ -12,7 +12,7 @@ export default function LoginCard({ erroInicial }: { erroInicial?: string }) {
             <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-accent via-gold to-accent" />
 
             <div className="flex flex-col items-center gap-3 text-center">
-                <h1 className="text-2xl font-semibold text-text sm:text-3xl">
+                <h1 className="text-2xl font-semibold text-text">
                     Acesso do líder
                 </h1>
                 <div className="flex items-center gap-3" aria-hidden="true">

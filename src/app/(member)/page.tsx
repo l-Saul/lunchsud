@@ -56,7 +56,7 @@ export default function IndexPage() {
                         className="rounded-2xl shadow-xl ring-2 ring-white/15"
                         priority
                     />
-                    <h1 className="text-3xl font-semibold">
+                    <h1 className="hyphens-auto wrap-break-word text-3xl font-semibold">
                         Almoço dos Missionários
                     </h1>
                     <div className="flex items-center gap-3" aria-hidden="true">
@@ -78,10 +78,10 @@ export default function IndexPage() {
                         </p>
 
                         {escritura && (
-                            <p className="max-w-sm animate-aparecer text-balance text-base italic leading-relaxed text-muted">
+                            <p className="max-w-sm animate-aparecer text-balance text-base leading-relaxed text-text">
                                 {verso}
                                 {referencia && (
-                                    <span className="mt-1 block text-sm not-italic text-secondary">
+                                    <span className="mt-1 block text-sm text-secondary">
                                         {referencia}
                                     </span>
                                 )}
@@ -123,7 +123,7 @@ export default function IndexPage() {
                                                 : 'bg-white text-primary hover:bg-secondary hover:text-white hover:shadow-xl'}
                                         `}
                                     >
-                                        <span className="min-w-0">{ala.nome}</span>
+                                        <span className="min-w-0 hyphens-auto wrap-break-word">{ala.nome}</span>
                                         {isLoading ? (
                                             <span className="flex shrink-0 items-center gap-2 text-base">
                                                 Abrindo…

@@ -16,6 +16,7 @@
     --color-background: #ffffff;
     --color-text: #212225;
     --color-muted: #53575b;
+    --color-faded: #676b6e;
 
     --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
     --font-serif: var(--font-source-serif), Georgia, 'Times New Roman', serif;
@@ -36,9 +37,13 @@
 
 @layer base {
     html {
-        font-size: 112.5%;
+        font-size: 96.25%;
         scroll-behavior: smooth;
         color-scheme: only light;
+
+        @media (min-width: 40rem) {
+            font-size: 99%;
+        }
     }
 
     h1, h2, h3 {
@@ -48,6 +53,11 @@
     body {
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
+    }
+
+    ::placeholder {
+        color: var(--color-faded);
+        opacity: 1;
     }
 
     :focus-visible {
@@ -63,6 +73,11 @@
         radial-gradient(60% 70% at 50% -25%, rgba(255, 184, 28, 0.16), transparent 70%),
         radial-gradient(40% 80% at 95% 0%, rgba(237, 58, 101, 0.18), transparent 70%),
         linear-gradient(180deg, #0b3a66 0%, #003057 60%, #00284a 100%);
+}
+
+@utility bg-pday {
+    background-color: #eff0f0;
+    background-image: repeating-linear-gradient(135deg, transparent 0 6px, #e0e2e2 6px 9px);
 }
 
 @media (prefers-reduced-motion: reduce) {

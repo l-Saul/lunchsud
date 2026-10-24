@@ -29,7 +29,7 @@ mês "viraria" perto da meia-noite, e Manaus vira o dia 1 h depois de São Paulo
 | `getDashboardRange(timeZone?)` | `{ inicio, fim, hoje, mesAtual, mesSeguinte }` | `hoje` = data de agora no fuso dado (`Intl`, formato `en-CA` = `YYYY-MM-DD`). `inicio` = dia 1 do mês atual (inclusivo); `fim` = dia 1 do mês **após o seguinte** (exclusivo). A janela do membro é de `hoje` até `fim`. |
 | `getHistoricoRange(mesesAtras = 3, timeZone?)` | `{ inicio, fim }` | Os N meses **anteriores** ao atual, sem o atual. Ex.: em junho com 3 → `[março-01, junho-01)` = mar, abr, mai. O painel não carrega histórico mais antigo. |
 | `formatMonthLabel('2026-06')` | `'Junho 2026'` | nomes em português |
-| `diaTile('2026-06-07')` | `{ dia: '7', mesAbrev: 'jun' }` | o medalhão de data do painel |
+| `diaTile('2026-06-07')` | `{ dia: '7', semana: 'dom' }` | o medalhão de data do painel (dia da semana em UTC ao meio-dia, sem depender do fuso) |
 | `isPday('2026-06-08')` | `true` | segunda-feira? Calcula em UTC (`T00:00:00Z`), então não depende do fuso do servidor |
 | `diasDisponiveisNoMes('2026-06')` | `26` | dias do mês menos as segundas (o "Y" do "X de Y dias") |
 | `nomeDoMes('2026-12')` | `'Dezembro'` | só o nome do mês |
