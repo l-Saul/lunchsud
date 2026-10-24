@@ -1,7 +1,8 @@
-// Indicador de "estou trabalhando" dos botões. Usa a cor do texto do botão
-// (branco no botão verde, rosa no botão de remover). Fica sempre ao lado de um
-// verbo ("Confirmando…") — é o texto que diz o que está acontecendo, por isso o
-// círculo é só decorativo para leitores de tela. Gira no CSS, sem JavaScript.
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/src_components.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 export function Spinner({ className = 'h-5 w-5' }: { className?: string }) {
     return (
         <span

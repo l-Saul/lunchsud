@@ -1,12 +1,14 @@
-// Card "Histórico de almoços" do painel (Server Component): uma barra por mês
-// (os 3 anteriores ao atual) com "agendados / dias disponíveis".
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_dashboard.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 
 import { formatMonthLabel } from '@/lib/date';
 
 export type MesHistorico = {
-    ym: string;           // 'YYYY-MM'
-    total: number;        // almoços agendados no mês
-    disponiveis: number;  // dias do mês − segundas
+    ym: string;
+    total: number;
+    disponiveis: number;
 };
 
 export function HistoryCard({ historico }: { historico: MesHistorico[] }) {

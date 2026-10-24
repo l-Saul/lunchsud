@@ -1,15 +1,15 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_dashboard.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 'use client';
-
-// Card de Usuários do painel. Mostra sempre os usuários da ala em foco (member: a
-// sua; owner: a ala selecionada). Permite aprovar pendentes e remover acesso —
-// a remoção pede confirmação num modal que cobre a tela com fundo desfocado.
 
 import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Spinner } from '@/components/Spinner';
 
 export type Usuario = {
-    id: number;          // id do vínculo ala_membro
+    id: number;
     nome: string;
     email: string;
     status: 'pendente' | 'aprovado';
@@ -19,7 +19,6 @@ type Acao = 'aprovar' | 'remover';
 
 export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
     const router = useRouter();
-    // Ação em andamento (qual usuário e o quê) — mostra o verbo certo no botão.
     const [emAndamento, setEmAndamento] = useState<{ id: number; acao: Acao } | null>(null);
     const [, iniciarAtualizacao] = useTransition();
     const [confirmar, setConfirmar] = useState<Usuario | null>(null);
@@ -38,8 +37,6 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
                 alert('Não foi possível concluir a ação.');
                 return;
             }
-            // O "Aprovando…" fica até a lista nova chegar: limpar o estado dentro
-            // da mesma transição do refresh faz os dois aparecerem juntos.
             iniciarAtualizacao(() => {
                 router.refresh();
                 setEmAndamento(null);
@@ -57,7 +54,6 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
         await executar('remover', alvo.id);
     }
 
-    // Fecha a confirmação com a tecla Esc.
     useEffect(() => {
         if (!confirmar) return;
         const onKey = (e: KeyboardEvent) => {
@@ -81,7 +77,6 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
                     <p className="truncate text-sm text-muted">{u.email}</p>
                 </div>
 
-                {/* Uma ação por vez: enquanto uma roda, todos os botões ficam travados. */}
                 {u.status === 'pendente' && (
                     <button
                         onClick={() => executar('aprovar', u.id)}
@@ -142,8 +137,6 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
                 </div>
             )}
 
-            {/* Confirmação de remoção — cobre a tela, fundo desfocado. */}
-            {/* Abre com um fade curto (avisa que uma camada apareceu); fecha na hora. */}
             {confirmar && (
                 <div
                     onClick={() => setConfirmar(null)}

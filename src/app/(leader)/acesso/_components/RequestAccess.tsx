@@ -1,7 +1,8 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_acesso.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 'use client';
-
-// Card do /acesso: usuário logado sem ala aprovada. Pede acesso a uma ala ou
-// vê o aviso de "aguardando aprovação". Sempre tem um Sair (caso conta errada).
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
@@ -25,8 +26,6 @@ export default function RequestAccess({
     const [alaId, setAlaId] = useState<number | ''>('');
     const [loading, setLoading] = useState(false);
     const [erro, setErro] = useState('');
-    // "Atualizar" e "Sair" também mostram que estão trabalhando: sem isso a
-    // pessoa toca de novo achando que não funcionou.
     const [atualizando, iniciarAtualizar] = useTransition();
     const [saindo, setSaindo] = useState(false);
 

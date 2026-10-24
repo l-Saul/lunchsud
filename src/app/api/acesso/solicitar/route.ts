@@ -1,10 +1,13 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_api.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 import { NextResponse } from 'next/server';
 import { getUsuario } from '@/lib/server/session';
 import { supabaseServer } from '@/lib/supabase/service-role';
 import { lerJson, parseAlaId } from '@/lib/server/validation';
 
-// Usuário logado pede acesso a UMA ala (cria vínculo pendente). Member = 1 ala,
-// então bloqueia se já houver qualquer vínculo.
 export async function POST(req: Request) {
     const user = await getUsuario();
     if (!user) {
@@ -18,7 +21,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Dados inválidos' }, { status: 400 });
     }
 
-    // Já tem vínculo (pendente ou aprovado)? Member só pode ter um.
     const { data: existente } = await supabaseServer
         .from('ala_membro')
         .select('id')

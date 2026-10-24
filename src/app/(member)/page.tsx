@@ -1,6 +1,8 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_home.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 'use client'
-
-// Home: lista as alas (via SWR em /api/alas) como botões que levam ao agendamento.
 
 import Image from 'next/image'
 import useSWR from 'swr'
@@ -34,10 +36,6 @@ export default function IndexPage() {
     const [loadingSlug, setLoadingSlug] = useState<string | null>(null)
     const router = useRouter()
 
-    // Escritura sorteada a cada refresh. A home é estática (prerender no build),
-    // então o sorteio precisa rodar no client, na montagem — só assim varia a cada
-    // carregamento sem dar mismatch de hidratação. É uma inicialização única e
-    // intencional, daí a exceção pontual à regra set-state-in-effect.
     const [escritura, setEscritura] = useState<string | null>(null)
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -65,7 +63,6 @@ export default function IndexPage() {
                         <h1 className="text-3xl font-semibold">
                             Almoço dos Missionários
                         </h1>
-                        {/* Divisória com florzinha — toque sereno e cohesão com a página da ala */}
                         <div className="flex items-center gap-3" aria-hidden="true">
                             <span className="h-px w-10 bg-linear-to-r from-transparent to-secondary/70" />
                             <Flower size={22} />
@@ -75,7 +72,6 @@ export default function IndexPage() {
                             Toque na sua ala para agendar.
                         </p>
 
-                        {/* Escritura do Livro de Mórmon, sorteada a cada refresh (referência positiva). */}
                         {escritura && (
                             <p className="max-w-sm animate-aparecer text-balance text-base italic leading-relaxed text-white/70">
                                 {verso}
@@ -102,8 +98,6 @@ export default function IndexPage() {
                         </p>
                     )}
 
-                    {/* A lista chega depois da página (busca no client): aparece de uma vez,
-                        com um fade curto. */}
                     {alas && (
                         <div className="grid animate-aparecer gap-4">
                         {alas.map((ala) => {
@@ -125,8 +119,6 @@ export default function IndexPage() {
                                             : 'bg-white text-primary hover:bg-secondary hover:text-white hover:shadow-xl'}
                                     `}
                                 >
-                                    {/* O nome fica: a pessoa vê qual ala tocou. O "Abrindo…"
-                                        aparece no lugar da seta até a página da ala abrir. */}
                                     <span className="min-w-0">{ala.nome}</span>
                                     {isLoading ? (
                                         <span className="flex shrink-0 items-center gap-2 text-base">

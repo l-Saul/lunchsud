@@ -1,10 +1,13 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_api.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase/service-role';
 import { getContexto } from '@/lib/server/session';
 import { lerJson, parseEdicao, ValidationError } from '@/lib/server/validation';
 
-// Atualiza um agendamento (data/nome/telefone). Escopo = ala em foco do líder
-// (member: sua ala; owner: ala selecionada). O filtro por ala_id garante isso.
 export async function POST(req: Request) {
     const ctx = await getContexto();
     if (!ctx || ctx.alaId === null) {
@@ -29,11 +32,9 @@ export async function POST(req: Request) {
         .select();
 
     if (error) {
-        // Não ecoa o erro do banco (evita vazar detalhes internos).
         return NextResponse.json({ error: 'Erro ao atualizar' }, { status: 400 });
     }
 
-    // Nenhuma linha = id inexistente ou de outra ala.
     if (!result || result.length === 0) {
         return NextResponse.json(
             { error: 'Nenhuma linha afetada' },

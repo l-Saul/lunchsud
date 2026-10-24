@@ -1,10 +1,12 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_dashboard.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { formatMonthLabel } from '@/lib/date';
 
-// Dropdown de mês customizado (o <select> nativo posicionava/dimensionava mal dentro
-// dos cards animados). Recebe a lista 'YYYY-MM' e devolve a escolha por onChange.
 export function MonthSelect({
     meses,
     value,
@@ -17,7 +19,6 @@ export function MonthSelect({
     const [aberto, setAberto] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
 
-    // Fecha o menu ao clicar fora dele.
     useEffect(() => {
         if (!aberto) return;
 
@@ -57,7 +58,6 @@ export function MonthSelect({
                 </svg>
             </button>
 
-            {/* Menu ancorado logo abaixo do botão, com a largura dele. */}
             {aberto && (
                 <ul
                     role="listbox"

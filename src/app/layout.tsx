@@ -1,9 +1,13 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/src_app.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 import type { Metadata, Viewport } from "next"
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google"
 import { Footer } from "@/components/Footer"
 import "./globals.css"
 
-// Source Sans / Source Serif: a família tipográfica oficial da Igreja.
 const fontSans = Source_Sans_3({
     subsets: ["latin"],
     variable: "--font-source-sans",
@@ -79,7 +83,6 @@ export const viewport: Viewport = {
     initialScale: 1,
 }
 
-// Layout raiz: aplica as fontes, o fundo azul e o rodapé fixo em todas as páginas.
 export default function RootLayout({
     children,
 }: {

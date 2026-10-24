@@ -1,8 +1,8 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_dashboard.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 'use client';
-
-// Botão "Abrir calendário da ala": navega para a página pública (/[slug]) e
-// mantém o loading até a navegação trocar a tela (a página é server-side e demora
-// um instante para carregar) — assim o líder vê que a ação foi acionada.
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -16,7 +16,6 @@ export function OpenCalendarButton({ slug }: { slug: string }) {
         if (loading) return;
         setLoading(true);
         router.push(`/${slug}`);
-        // loading fica ligado de propósito até a navegação desmontar esta tela.
     }
 
     return (

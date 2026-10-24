@@ -1,9 +1,11 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/src_app.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 import Link from 'next/link'
 import { Flower } from '@/components/Flower'
 
-// 404 do site inteiro — na prática, link de ala digitado errado ou de uma ala
-// que não existe mais. Em vez da tela padrão do Next (em inglês), leva à lista
-// de alas da home, onde a pessoa acha a sua com um toque.
 export default function NaoEncontrada() {
     return (
         <main className="flex min-h-screen items-center justify-center px-4 py-12">

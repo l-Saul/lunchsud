@@ -1,15 +1,13 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_slug.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 'use client'
-
-// Modal de agendar um dia: nome + telefone → /api/agendar. Popup com fundo
-// desfocado; trava o scroll da página atrás e fecha por Cancelar, X, Esc ou
-// toque fora. Nome e telefone vêm de fora (WardBooking) para continuarem
-// preenchidos se a pessoa fechar e abrir outro dia; os erros são daqui.
 
 import { useState, useEffect, useRef } from 'react'
 import { normalizarTelefone } from '@/lib/phone'
 import { Spinner } from '@/components/Spinner'
 
-// Estilo único dos campos (label claro + placeholder).
 const campoBase =
     'w-full min-w-0 box-border appearance-none rounded-xl border px-4 py-3.5 text-lg text-text ' +
     'placeholder:text-muted/60 focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary'
@@ -18,16 +16,16 @@ export type Agendado = { id: number; data: string; nome: string }
 
 type Props = {
     slug: string
-    dia: number          // dia do mês, para o título
-    nomeMes: string      // 'novembro'
-    data: string         // 'YYYY-MM-DD' enviado à API
+    dia: number
+    nomeMes: string
+    data: string
     nome: string
     telefone: string
     onNomeChange: (nome: string) => void
     onTelefoneChange: (telefone: string) => void
     onClose: () => void
     onBooked: (agendado: Agendado) => void
-    onConflict: () => void   // 409: outra pessoa marcou o dia antes
+    onConflict: () => void
 }
 
 export function BookingModal({
@@ -42,12 +40,10 @@ export function BookingModal({
     async function agendar() {
         if (loading) return
 
-        // Limpa os erros da tentativa anterior.
         setErroNome(false)
         setErroTelefone(false)
         setErro('')
 
-        // Validação do formulário (nome com 2+ letras e telefone que dá para entender).
         const nomeInvalido = nome.trim().length < 2
         const telefoneInvalido = !normalizarTelefone(telefone)
 
@@ -68,8 +64,6 @@ export function BookingModal({
                 body: JSON.stringify({ slug, data, nome, telefone })
             })
         } catch {
-            // Sem internet / conexão caiu: o modal continua aberto com o que foi
-            // digitado (antes o botão ficava preso em "Confirmando…").
             setLoading(false)
             setErro('Sem conexão com a internet. Verifique e tente de novo.')
             return
@@ -77,36 +71,27 @@ export function BookingModal({
 
         setLoading(false)
 
-        // 409: outra pessoa marcou esse dia entre abrir a tela e confirmar.
         if (res.status === 409) {
             onConflict()
             return
         }
 
-        // Demais erros: mostra a mensagem da API aqui, com o modal aberto (nome e
-        // telefone ficam) para tentar de novo.
         if (!res.ok) {
             const corpo = await res.json().catch(() => null)
             setErro(corpo?.error ?? 'Não foi possível agendar. Tente de novo.')
             return
         }
 
-        // Sucesso: o id casa com o evento do WebSocket que chega em seguida.
         const { id } = await res.json().catch(() => ({ id: 0 }))
         onBooked({ id, data, nome: nome.trim() })
     }
 
-    // Guarda o onClose mais recente: a trava abaixo roda só ao abrir/fechar.
     const onCloseRef = useRef(onClose)
     useEffect(() => {
         onCloseRef.current = onClose
     }, [onClose])
 
-    // Aberto: trava o scroll do fundo e fecha com a tecla Esc.
     useEffect(() => {
-        // Trava o scroll de forma confiável no mobile: o iOS ignora `overflow:hidden`
-        // no body para toque, então fixamos o body e guardamos a posição (restaurada
-        // ao fechar). Sem isso, rolar dentro do modal mexia a página atrás.
         const scrollY = window.scrollY
         const { style } = document.body
         style.position = 'fixed'
@@ -131,11 +116,8 @@ export function BookingModal({
         }
     }, [])
 
-    // Abre com um fade curto (avisa que uma camada apareceu); fecha na hora.
     return (
         <div className="fixed inset-0 z-50 animate-aparecer overflow-y-auto overscroll-contain bg-primary/50 backdrop-blur-sm">
-            {/* Container rolável: com o teclado aberto no mobile o modal
-                pode passar da tela e ainda assim dá pra rolar até os botões. */}
             <div
                 onClick={onClose}
                 className="flex min-h-full items-center justify-center p-4"
@@ -162,10 +144,6 @@ export function BookingModal({
                     </button>
                 </div>
 
-                {/* <form> + name + autocomplete: é o que faz o celular oferecer
-                    o nome e o telefone salvos (preenchimento automático) e a tecla
-                    "Ir" do teclado enviar. noValidate: os erros são os nossos,
-                    em português, embaixo de cada campo. */}
                 <form
                     noValidate
                     onSubmit={e => {
@@ -210,23 +188,16 @@ export function BookingModal({
                             name="tel"
                             type="tel"
                             autoComplete="tel"
-                            // "tel" (não "numeric"): o teclado de telefone tem a tecla "+".
                             inputMode="tel"
                             placeholder="Digite seu telefone aqui"
                             maxLength={25}
                             aria-invalid={erroTelefone}
                             className={`${campoBase} ${erroTelefone ? 'border-accent' : 'border-slate-300'}`}
                             value={telefone}
-                            // Sem máscara enquanto digita: o campo guarda exatamente o
-                            // que a pessoa escreveu (com espaço, traço, + …). Reformatar
-                            // a cada tecla jogava o cursor para o fim e impedia corrigir
-                            // um dígito no meio.
                             onChange={e => {
                                 onTelefoneChange(e.target.value)
                                 if (erroTelefone) setErroTelefone(false)
                             }}
-                            // Ao sair do campo mostra o número como foi entendido
-                            // (ex.: o 9 do celular antigo, o país separado).
                             onBlur={() => {
                                 const lido = normalizarTelefone(telefone)
                                 if (lido) onTelefoneChange(lido.formatado)
@@ -246,13 +217,6 @@ export function BookingModal({
                     </p>
                 )}
 
-                {/* Lado a lado quando cabe; um embaixo do outro em tela
-                    estreita ou letra grande (basis em rem cresce com a letra).
-                    Antes, com letra 130%, o Confirmar saía da tela.
-                    wrap-reverse: empilhado, o Confirmar fica em cima.
-                    Não fixar a barra no rodapé (sticky): testado em 320px com
-                    letra 130%, ela cobria o campo de telefone — melhor rolar na
-                    ordem natural (nome → telefone → Confirmar). */}
                 <div className="mt-6 flex flex-wrap-reverse gap-3">
                     <button
                         type="button"
@@ -262,8 +226,6 @@ export function BookingModal({
                     >
                         Cancelar
                     </button>
-                    {/* Toque responde na hora; enquanto envia: travado, girando e
-                        dizendo "Confirmando…" — tocar de novo não faz nada. */}
                     <button
                         type="submit"
                         disabled={loading}

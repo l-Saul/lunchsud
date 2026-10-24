@@ -1,8 +1,8 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_dashboard.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 'use client';
-
-// Versão "bonita" do calendário usada APENAS na imagem exportada (WhatsApp).
-// Usa estilos inline + SVG de propósito: o html-to-image não depende do Tailwind,
-// então renderiza igual em qualquer aparelho.
 
 import { isPday, formatMonthLabel } from '@/lib/date';
 import { Flower } from '@/components/Flower';
@@ -42,7 +42,6 @@ export default function MonthImage({ diasDoMes }: Props) {
                     overflow: 'hidden',
                 }}
             >
-                {/* Cabeçalho */}
                 <div
                     style={{
                         backgroundColor: AZUL,
@@ -85,11 +84,7 @@ export default function MonthImage({ diasDoMes }: Props) {
                     </div>
                 </div>
 
-                {/* Corpo */}
                 <div style={{ padding: 24 }}>
-                    {/* Dias da semana. minmax(0, 1fr) = 7 colunas sempre iguais: com
-                        só 1fr, um nome longo sem espaço esticava a coluna e empurrava
-                        o sábado para fora da imagem. */}
                     <div
                         style={{
                             display: 'grid',
@@ -115,7 +110,6 @@ export default function MonthImage({ diasDoMes }: Props) {
                         ))}
                     </div>
 
-                    {/* Grade de dias */}
                     <div
                         style={{
                             display: 'grid',
@@ -150,7 +144,6 @@ export default function MonthImage({ diasDoMes }: Props) {
                                                 : '#ffffff',
                                     }}
                                 >
-                                    {/* Medalhão com o número do dia */}
                                     <span
                                         style={{
                                             display: 'inline-flex',
@@ -211,9 +204,6 @@ export default function MonthImage({ diasDoMes }: Props) {
                                                         gap: 3,
                                                     }}
                                                 >
-                                                    {/* Nome: cabe na célula. Quebra até palavra sem
-                                                        espaço, fonte menor se for longo e no máximo
-                                                        3 linhas (o nome completo fica no painel). */}
                                                     <div
                                                         style={{
                                                             fontSize: a.nome.length > 16 ? 15 : 18,
@@ -250,7 +240,6 @@ export default function MonthImage({ diasDoMes }: Props) {
                     </div>
                 </div>
 
-                {/* Rodapé */}
                 <div
                     style={{
                         padding: '4px 24px 24px',

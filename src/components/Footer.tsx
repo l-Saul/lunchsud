@@ -1,8 +1,8 @@
-// Rodapé global (renderizado no layout em todas as páginas):
-//  1. aviso de que o site é independente/não oficial;
-//  2. crédito do desenvolvedor — o nome (sublinhado, com ícone de link externo)
-//     abre o portfólio em uma nova aba, já na seção de contato.
-// O link externo usa rel="noopener noreferrer" por segurança (target="_blank").
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/src_components.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 export function Footer() {
     return (
         <footer className="mt-16 w-full border-t border-white/10 px-4 py-7 text-white sm:mt-24">
@@ -21,7 +21,6 @@ export function Footer() {
                         className="inline-flex items-center gap-1 underline underline-offset-4 transition hover:text-white"
                     >
                         Luis Henrique Engel Saul
-                        {/* Ícone de link externo (indica que abre em outra página). */}
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <path d="M15 3h6v6" />
                             <path d="M10 14 21 3" />

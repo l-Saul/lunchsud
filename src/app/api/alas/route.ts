@@ -1,10 +1,13 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_api.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 import { supabaseServer } from '@/lib/supabase/service-role'
 import { NextResponse } from 'next/server'
 
-// Sempre consulta o banco: sem isto o Next poderia congelar a lista no build.
 export const dynamic = 'force-dynamic'
 
-// Lista as alas (nome + slug) para a home montar os botões. Consumido via SWR.
 export async function GET() {
     const { data, error } = await supabaseServer
         .from('ala')

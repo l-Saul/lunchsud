@@ -1,10 +1,13 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_api.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 import { NextResponse } from 'next/server';
 import { getContexto, podeEditarAla } from '@/lib/server/session';
 import { supabaseServer } from '@/lib/supabase/service-role';
 import { lerJson, parseMembroId } from '@/lib/server/validation';
 
-// Aprova um vínculo pendente. Quem pode: owner (qualquer ala) ou member já
-// aprovado da MESMA ala do pedido.
 export async function POST(req: Request) {
     const ctx = await getContexto();
     if (!ctx) {

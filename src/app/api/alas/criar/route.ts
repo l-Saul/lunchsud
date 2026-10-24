@@ -1,10 +1,13 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_api.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 import { NextResponse } from 'next/server';
 import { getContexto } from '@/lib/server/session';
 import { supabaseServer } from '@/lib/supabase/service-role';
 import { lerJson, parseNovaAla, ValidationError, type NovaAlaInput } from '@/lib/server/validation';
 
-// Cria uma nova ala na tabela `ala` (nome + slug gerado do nome + localização e
-// fuso). Só owner. Pensado para o owner cadastrar alas rapidamente pelo painel.
 export async function POST(req: Request) {
     const ctx = await getContexto();
     if (!ctx) {
@@ -25,7 +28,6 @@ export async function POST(req: Request) {
     }
     const { nome, slug, endereco, pais, estado, cidade, fuso } = entrada;
 
-    // Slug já usado? (o endereço público precisa ser único)
     const { data: existente } = await supabaseServer
         .from('ala')
         .select('id')
@@ -46,14 +48,12 @@ export async function POST(req: Request) {
         .single();
 
     if (error || !nova) {
-        // 23505 = violação de unicidade (corrida entre a checagem e o insert).
         if (error?.code === '23505') {
             return NextResponse.json(
                 { error: `Já existe uma ala no endereço "${slug}".` },
                 { status: 409 }
             );
         }
-        // Não ecoa o erro do banco (evita vazar detalhes internos).
         return NextResponse.json({ error: 'Erro ao criar ala' }, { status: 500 });
     }
 

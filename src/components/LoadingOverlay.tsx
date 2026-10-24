@@ -1,7 +1,7 @@
-// Overlay de carregamento na tela TODA (fundo desfocado + spinner). Usado em
-// transições que demoram um instante — ex.: o owner trocando de ala — para deixar
-// claro, visualmente, que algo está acontecendo. Aparece com um fade curto e
-// some na hora (renderize condicionalmente).
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/src_components.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 
 import { Spinner } from '@/components/Spinner';
 

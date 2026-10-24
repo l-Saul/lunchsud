@@ -1,3 +1,8 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_dashboard.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 import type { Metadata } from 'next';
 import { requireAcesso } from '@/lib/server/session';
 import DashboardClientGuard from './_components/DashboardClientGuard';
@@ -20,22 +25,17 @@ export const metadata: Metadata = {
     robots: { index: false, follow: false },
 };
 
-// Painel do líder (Server Component). requireAcesso resolve o usuário (Supabase Auth)
-// e a ala em foco: member → sua ala; owner → ala selecionada (troca de ala).
 export default async function DashboardPage() {
     const ctx = await requireAcesso();
     const alaId = ctx.alaId;
 
-    // Ala em foco.
     const { data: ala } = alaId !== null
         ? await supabaseServer.from('ala').select('nome, slug, fuso_horario').eq('id', alaId).single()
         : { data: null };
 
-    // Mês atual/seguinte e histórico no fuso da ala (sem ala em foco: o padrão).
     const fuso = ala?.fuso_horario ?? FUSO_PADRAO;
     const { inicio, fim, mesAtual, mesSeguinte } = getDashboardRange(fuso);
 
-    // Agendamentos do mês atual + seguinte (vazio se owner sem ala em foco).
     const { data: agData } = alaId !== null
         ? await supabaseServer
             .from('agendamento')
@@ -47,7 +47,6 @@ export default async function DashboardPage() {
         : { data: [] };
     const agendamentos = agData ?? [];
 
-    // Histórico: só os 3 meses anteriores ao atual.
     const { inicio: histInicio, fim: histFim } = getHistoricoRange(3, fuso);
     const { data: historicoRaw } = alaId !== null
         ? await supabaseServer
@@ -70,9 +69,6 @@ export default async function DashboardPage() {
         disponiveis: diasDisponiveisNoMes(ym),
     })).sort((a, b) => b.ym.localeCompare(a.ym));
 
-    // Usuários do card: sempre só os da ala EM FOCO (member: a sua; owner: a
-    // selecionada na troca de ala). Como todos pertencem à mesma ala, não há
-    // necessidade de mostrar o nome da ala em cada um.
     const { data: membros } = alaId !== null
         ? await supabaseServer
             .from('ala_membro')
@@ -88,7 +84,6 @@ export default async function DashboardPage() {
         : { data: [] };
     const perfilPorId = new Map((perfis ?? []).map(p => [p.id, p]));
 
-    // Lista de alas para o owner trocar a ala em foco.
     let alasParaTroca: { id: number; nome: string; slug: string }[] = [];
     if (ctx.isOwner) {
         const { data: todasAlas } = await supabaseServer.from('ala').select('id, nome, slug').order('nome');
@@ -104,11 +99,9 @@ export default async function DashboardPage() {
 
     return (
         <DashboardClientGuard>
-            {/* Atualiza ao vivo quando alguém agenda/edita/remove na ala em foco. */}
             {alaId !== null && <DashboardRealtime alaId={alaId} />}
             <main className="min-h-screen px-4 py-8 sm:px-6 sm:py-12">
                 <section className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-                    {/* Cabeçalho */}
                     <header className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
                             <h1 className="text-2xl font-semibold text-white sm:text-3xl">
@@ -122,21 +115,16 @@ export default async function DashboardPage() {
                         <LogoutButton />
                     </header>
 
-                    {/* Troca de ala (somente owner) */}
                     {ctx.isOwner && alasParaTroca.length > 0 && (
                         <WardSwitcher alas={alasParaTroca} atualId={alaId} />
                     )}
 
-                    {/* Atalho para o calendário público desta ala (com loading) */}
                     {ala?.slug && <OpenCalendarButton slug={ala.slug} />}
 
-                    {/* Card 1 — Agendamentos do mês */}
                     <BookingsCard mesAtual={mesAtual} mesSeguinte={mesSeguinte} agendamentos={agendamentos} />
 
-                    {/* Card 2 — Histórico de almoços */}
                     <HistoryCard historico={historico} />
 
-                    {/* Card 3 — Usuários (aprovar/remover) */}
                     <UsersCard usuarios={usuarios} />
                 </section>
             </main>

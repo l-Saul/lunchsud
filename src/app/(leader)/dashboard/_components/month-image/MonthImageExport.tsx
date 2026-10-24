@@ -1,8 +1,8 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_dashboard.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 'use client';
-
-// Gera a imagem do calendário do mês (PNG) a partir de um DOM oculto e:
-// - no desktop, baixa o arquivo;
-// - no mobile, abre o menu de compartilhar (ex.: enviar no grupo do WhatsApp).
 
 import { toPng } from 'html-to-image';
 import { useMemo, useState, useEffect } from 'react';
@@ -23,7 +23,6 @@ type Props = {
     agendamentos: Agendamento[];
 };
 
-// Heurística de "é toque" (celular/tablet) para decidir baixar vs compartilhar.
 function isMobile() {
     return (
         typeof window !== 'undefined' &&
@@ -31,7 +30,6 @@ function isMobile() {
     );
 }
 
-// Espera 2 frames para garantir que o DOM oculto já pintou antes de capturar.
 function waitForRender() {
     return new Promise<void>(resolve => {
         requestAnimationFrame(() => {
@@ -40,7 +38,6 @@ function waitForRender() {
     });
 }
 
-// Monta os dias do mês com seus agendamentos (formato que o MonthImage espera).
 function gerarDiasDoMes(mes: string, agendamentos: Agendamento[]) {
     const [ano, mesNum] = mes.split('-').map(Number);
 
@@ -67,12 +64,10 @@ export default function MonthImageExport({ meses, agendamentos }: Props) {
     const [loading, setLoading] = useState(false);
     const [mounted, setMounted] = useState(false);
 
-    // createPortal só pode rodar após montar no client.
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    // Dias do mês selecionado (com seus agendamentos) que alimentam o calendário da imagem.
     const diasDoMes = useMemo(
         () => gerarDiasDoMes(mes, agendamentos),
         [mes, agendamentos]
@@ -86,7 +81,6 @@ export default function MonthImageExport({ meses, agendamentos }: Props) {
         try {
             await waitForRender();
 
-            // Captura o calendário renderizado no container oculto (#calendar-export).
             const node = document.getElementById('calendar-export');
             if (!node) return;
 
@@ -110,14 +104,12 @@ export default function MonthImageExport({ meses, agendamentos }: Props) {
                 type: 'image/png',
             });
 
-            // Mobile com suporte a compartilhar arquivo -> abre o menu nativo (WhatsApp etc.).
             if (isMobile() && navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
                     files: [file],
                     title: `Calendário ${mes}`,
                 });
             } else {
-                // Desktop (ou sem share) -> baixa o PNG.
                 const link = document.createElement('a');
                 link.href = dataUrl;
                 link.download = `calendario-${mes}.png`;
@@ -151,7 +143,6 @@ export default function MonthImageExport({ meses, agendamentos }: Props) {
                 </button>
             </div>
 
-            {/* Container 0x0 e oculto: hospeda o calendário em 1024px só para virar imagem. */}
             <div
                 id="export-root"
                 style={{

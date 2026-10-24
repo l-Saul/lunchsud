@@ -1,8 +1,8 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_slug.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 'use client'
-
-// Calendário público do agendamento. Mostra um mês por vez (atual ou seguinte),
-// marca dias ocupados (rosa) e bloqueia segundas (P-day) e dias que já passaram.
-// Só apresentação: quem busca os dados e controla o mês é a WardBooking.
 
 import { useState } from 'react'
 import { isPday, formatMonthLabel } from '@/lib/date'
@@ -19,7 +19,7 @@ const SEMANA = [
 type Props = {
     ocupados: DiaOcupado[]
     baseDate: Date
-    hoje: string // 'YYYY-MM-DD' (fuso de SP); antes disso o dia está bloqueado
+    hoje: string
     selectedDay: number | null
     onSelectDay: (day: number) => void
     onSelectOcupado: (nome: string) => void
@@ -48,8 +48,6 @@ export function MonthCalendar({
     const anoNum = baseDate.getFullYear()
     const mesNum = baseDate.getMonth()
 
-    // A troca de mês ganha um fade curto (avisa que os dias mudaram). No primeiro
-    // carregamento não: o calendário tem que aparecer na hora.
     const [trocouDeMes, setTrocouDeMes] = useState(false)
 
     const primeiroDiaSemana = new Date(anoNum, mesNum, 1).getDay()
@@ -65,17 +63,11 @@ export function MonthCalendar({
         return ocupados.find(o => o.data === dataDoDia(dia))
     }
 
-    // Células vazias até o 1º dia cair na coluna certa, depois os dias do mês.
     const dias = [
         ...Array(primeiroDiaSemana).fill(null),
         ...Array.from({ length: diasNoMes }, (_, i) => i + 1),
     ]
 
-    // Modo compacto (@max-[15rem]): calendário estreito para o tamanho da letra —
-    // celular pequeno e/ou letra aumentada no sistema. O limite é em rem, então
-    // cresce junto com a letra: com fonte 130% o compacto entra antes. Nele, o mês
-    // vai para cima dos botões e os dias da semana viram iniciais. Sem isso, com
-    // letra grande o "Avançar" saía da tela e "SEG TER QUA" se encavalavam.
     return (
         <div className="@container space-y-4">
             <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 @max-[15rem]:grid-cols-2">
@@ -114,8 +106,6 @@ export function MonthCalendar({
                 </button>
             </div>
 
-            {/* Dias da semana: abreviados; no modo compacto, só a inicial
-                (D S T Q Q S S, como no calendário de papel). */}
             <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-sm font-semibold uppercase tracking-wide text-muted">
                 {SEMANA.map(([abrev, inicial]) => (
                     <div key={abrev}>
@@ -125,7 +115,6 @@ export function MonthCalendar({
                 ))}
             </div>
 
-            {/* key por mês: a grade é recriada e o fade roda de novo a cada troca. */}
             <div
                 key={`${anoNum}-${mesNum}`}
                 className={`grid grid-cols-7 gap-1 sm:gap-2 ${trocouDeMes ? 'animate-aparecer' : ''}`}
@@ -133,16 +122,12 @@ export function MonthCalendar({
                 {dias.map((dia, index) => {
                     if (!dia) return <div key={`empty-${index}`} />
 
-                    // Estado do dia define cor e o que acontece ao tocar.
-                    // 'YYYY-MM-DD' compara certo como texto.
                     const passado = dataDoDia(dia) < hoje
                     const pday = isPday(dataDoDia(dia))
                     const ocupacao = getOcupacao(dia)
                     const ocupado = Boolean(ocupacao)
                     const selecionado = dia === selectedDay
 
-                    // Dia passado e P-day não abrem o agendamento: só a mensagem
-                    // embaixo do calendário explica o porquê.
                     const ativar = () => {
                         if (passado) {
                             onSelectPassado?.()

@@ -1,6 +1,7 @@
-// Card "Agendamentos" do painel (Server Component): mês atual + seguinte, cada
-// um recolhível, com exportar imagem no topo e lápis de editar em cada almoço.
-// Os dados chegam prontos do dashboard/page.tsx.
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_dashboard.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 
 import { formatMonthLabel, diaTile, diasDisponiveisNoMes } from '@/lib/date';
 import EditBookingModal from './EditBookingModal';
@@ -15,8 +16,8 @@ type Agendamento = {
 };
 
 type Props = {
-    mesAtual: string;     // 'YYYY-MM'
-    mesSeguinte: string;  // 'YYYY-MM'
+    mesAtual: string;
+    mesSeguinte: string;
     agendamentos: Agendamento[];
 };
 

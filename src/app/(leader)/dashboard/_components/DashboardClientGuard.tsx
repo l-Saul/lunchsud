@@ -1,7 +1,8 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_dashboard.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 'use client';
-
-// Sincroniza o logout entre abas: se a sessão do Supabase Auth cai (logout em
-// outra aba ou token expirado), volta para o login.
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';

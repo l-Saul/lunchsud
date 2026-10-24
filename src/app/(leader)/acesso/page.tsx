@@ -1,3 +1,8 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_acesso.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getContexto } from '@/lib/server/session';
@@ -12,12 +17,10 @@ export const metadata: Metadata = {
     robots: { index: false, follow: false },
 };
 
-// Tela para quem está logado mas ainda não tem ala aprovada: pede acesso a uma
-// ala (member = 1 ala) ou mostra "aguardando aprovação".
 export default async function AcessoPage() {
     const ctx = await getContexto();
-    if (!ctx) redirect('/admin');          // não logado
-    if (ctx.alaId !== null) redirect('/dashboard'); // já tem acesso
+    if (!ctx) redirect('/admin');
+    if (ctx.alaId !== null) redirect('/dashboard');
 
     const { data: vinculo } = await supabaseServer
         .from('ala_membro')

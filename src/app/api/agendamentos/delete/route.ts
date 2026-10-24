@@ -1,10 +1,13 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_api.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase/service-role';
 import { getContexto } from '@/lib/server/session';
 import { lerJson, parseId, ValidationError } from '@/lib/server/validation';
 
-// Remove um agendamento por id. Escopo = ala em foco do líder (member: sua ala;
-// owner: ala selecionada).
 export async function POST(req: Request) {
     const ctx = await getContexto();
     if (!ctx || ctx.alaId === null) {
@@ -25,15 +28,13 @@ export async function POST(req: Request) {
         .from('agendamento')
         .delete()
         .eq('id', id)
-        .eq('ala_id', ctx.alaId) // trava: só apaga agendamento da ala em foco
+        .eq('ala_id', ctx.alaId)
         .select();
 
     if (error) {
-        // Não ecoa o erro do banco (evita vazar detalhes internos).
         return NextResponse.json({ error: 'Erro ao remover' }, { status: 400 });
     }
 
-    // Nenhuma linha = id inexistente ou de outra ala.
     if (!result || result.length === 0) {
         return NextResponse.json(
             { error: 'Nenhuma linha afetada' },

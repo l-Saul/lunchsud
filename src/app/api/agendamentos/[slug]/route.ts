@@ -1,8 +1,11 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_api.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 import { buscarAlaPorSlug, buscarOcupados } from '@/lib/server/public-ward'
 import { NextRequest, NextResponse } from 'next/server'
 
-// Dias ocupados (data + nome) de uma ala pelo slug, só na janela agendável.
-// Chamada pela página pública a cada evento do Realtime para recarregar o calendário.
 export async function GET(_request: NextRequest, context: { params: Promise<{ slug: string }> }) {
     const { slug } = await context.params
 

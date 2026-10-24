@@ -1,85 +1,230 @@
-# LunchSud — Agendamento de Almoço para Missionários
+# LunchSud: agendamento de almoço para missionários
 
-Calendário onde os membros agendam almoços dos missionários por ala, e um painel
-onde os líderes gerenciam. Feito para o **celular**, com textos grandes e poucos passos.
+Calendário por **ala** onde membros da Igreja de Jesus Cristo dos Santos dos
+Últimos Dias agendam o almoço dos missionários, e um **painel** onde os líderes
+gerenciam. Feito para o **celular** de senhoras de 45 a 85 anos: letra grande,
+alto contraste, poucos passos, sem conta para agendar.
 
-🔗 Exemplo no ar: https://lunchsud.vercel.app
-
-Este README é um **passo a passo para clonar e publicar o site para a sua ala ou
-estaca.** Tudo grátis, ~20 minutos.
-
-## Antes de começar
-
-Crie contas (grátis) no **[Supabase](https://supabase.com)** (banco + login) e na
-**[Vercel](https://vercel.com)** (publicar o site), e tenha o **Node.js 20+** instalado.
-
-## 1. Clonar e instalar
-
-```bash
-git clone https://github.com/<seu-usuario>/lunchsud.git
-cd lunchsud
-npm install
-```
-
-## 2. Criar o banco no Supabase
-
-Crie um projeto em [app.supabase.com](https://app.supabase.com). Abra o **SQL Editor**,
-cole **todo o conteúdo de [`supabase/schema.sql`](supabase/schema.sql)** e clique em
-**Run**. Ele cria as tabelas, o login dos líderes, a atualização ao vivo do
-calendário e as permissões (o telefone de quem agenda nunca fica visível no navegador).
-
-## 3. Ligar o login
-
-No Supabase → **Authentication**:
-- Habilite o provider **Email**.
-- Em **URL Configuration**, defina **Site URL** = `http://localhost:3000` e adicione
-  essa mesma URL em **Redirect URLs** (depois troque pela URL da Vercel — passo 6).
-
-## 4. Configurar as chaves
-
-Em **Project Settings → API**, copie a URL e as chaves. Crie um arquivo `.env.local`:
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=        # Project URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY=   # chave "anon public"
-SUPABASE_URL=                    # a mesma Project URL
-SUPABASE_SERVICE_ROLE_KEY=       # chave "service_role" (nunca exponha)
-```
-
-## 5. Rodar e virar líder principal
-
-```bash
-npm run dev
-```
-
-Abra **http://localhost:3000/admin** e **cadastre-se**. Depois, no SQL Editor do
-Supabase, vire o líder principal (acesso a todas as alas):
-
-```sql
-update public.perfil set is_owner = true where email = 'voce@exemplo.com';
-```
-
-Atualize a página: você entra no painel **/dashboard**. Lá você **cria as alas** (o
-link público `/nome-da-ala` é o que você manda no grupo do WhatsApp) e aprova outros
-líderes que se cadastram.
-
-## 6. Publicar na Vercel
-
-1. Suba seu repositório para o GitHub e importe-o em [vercel.com](https://vercel.com).
-2. Adicione as **mesmas 4 variáveis** do `.env.local` em *Environment Variables*.
-3. **Deploy.** Pegue a URL final e coloque-a na **Site URL** e nas **Redirect URLs**
-   do Supabase (passo 3) — senão o login não funciona em produção.
-
-A cada `git push` a Vercel republica sozinha.
-
-## Bom saber
-
-- **Um almoço por dia, por ala**; **segunda é P-day** (não agendável).
-- Membros agendam só no **mês atual e no seguinte**; tudo atualiza **ao vivo**.
-- O líder edita/exclui agendamentos e exporta o mês como **imagem** para o WhatsApp.
-
-Stack: Next.js 16 · React 19 · TypeScript · Tailwind 4 · Supabase · Vercel.
+- Produção: https://lunchsud.vercel.app
+- Regras para quem mexe no código (pessoas e agentes de IA): [`CLAUDE.md`](CLAUDE.md)
+- Documentação por rota e módulo: [`docs/`](docs/) (mapa código → doc no [`CLAUDE.md`](CLAUDE.md))
 
 ---
 
-Desenvolvido por **Luis Henrique Engel Saul** — [luishsaul.com.br](https://luishsaul.com.br/#contato) · Uso interno.
+## Stack
+
+| Camada | Tecnologia |
+|---|---|
+| Framework | Next.js 16 (App Router, Server Components, route handlers, `proxy.ts`) |
+| UI | React 19.2, TypeScript 5 (`strict`), Tailwind CSS 4 (tema em `globals.css`, sem `tailwind.config`) |
+| Banco | Supabase Postgres (`sa-east-1`) com RLS e permissões por coluna |
+| Auth | Supabase Auth (e-mail + senha) via `@supabase/ssr`, sessão em cookies |
+| Tempo real | Supabase Realtime (WebSocket, `postgres_changes`) via `@supabase/realtime-js` |
+| Dados no cliente | SWR (só a lista de alas da home) |
+| Imagem do mês | `html-to-image` (PNG) + Web Share API |
+| Hospedagem | Vercel, funções em `gru1` (São Paulo) |
+| Node | `>= 20.11` |
+
+Sem framer-motion, sem biblioteca de UI: animações só em CSS.
+
+## Arquitetura
+
+```
+ navegador (celular)                         Vercel gru1 (Next.js)                Supabase sa-east-1
+ ───────────────────                         ─────────────────────                ──────────────────
+ página da ala  ──GET /[slug] (SSR)────────▶ Server Component ──service-role────▶ Postgres
+                ──POST /api/agendar────────▶ route handler    ──service-role────▶   (RLS, checks,
+                ◀─────── WebSocket (anon, só id/ala_id/data/nome) ──────────────── Realtime  unique)
+ painel líder   ──GET /dashboard (SSR)─────▶ proxy.ts (renova sessão) → Server Component
+                ──POST /api/... ───────────▶ route handler (getContexto + escopo por ala)
+```
+
+- **Toda leitura e escrita passa pelo servidor com o service-role.** O navegador
+  só fala direto com o Supabase em dois casos: o **WebSocket do Realtime** (chave
+  anon, sem telefone) e o **Supabase Auth** do líder (login, cadastro, senha).
+- **Autorização nas rotas**, não na RLS: `getContexto()` resolve papel (owner ou
+  member) e ala em foco; toda escrita filtra por `ala_id`.
+- **Banco e funções na mesma região** (São Paulo). Com a função nos EUA, cada
+  consulta cruzava o continente (~1 s por página).
+- **Regras de data no fuso da ala**: o servidor roda em UTC; "hoje", a janela e
+  a virada do mês vêm de `getDashboardRange(ala.fuso_horario)`.
+
+### Rotas
+
+| Rota | Tipo | Acesso | Dados | Doc |
+|---|---|---|---|---|
+| `/` | estática + client | público | SWR em `/api/alas` | [home](docs/routes_home.md) |
+| `/[slug]` | dinâmica (SSR) | público | ala + dias ocupados da janela; Realtime | [slug](docs/routes_slug.md) |
+| `/admin` | dinâmica | público (redireciona logado) | Supabase Auth no client | [admin](docs/routes_admin.md) |
+| `/acesso` | dinâmica | logado sem ala | vínculo + alas | [acesso](docs/routes_acesso.md) |
+| `/redefinir-senha` | dinâmica | sessão do link | e-mail da sessão | [redefinir-senha](docs/routes_redefinir-senha.md) |
+| `/auth/confirmar` | route handler | link do e-mail | `verifyOtp` / `exchangeCodeForSession` | [auth-confirmar](docs/routes_auth-confirmar.md) |
+| `/dashboard` | dinâmica (SSR) | líder com ala | agendamentos, histórico, usuários, alas | [dashboard](docs/routes_dashboard.md) |
+| `/api/*` | route handlers | ver tabela | — | [api](docs/routes_api.md) |
+
+### API
+
+| Método e rota | Acesso | Função |
+|---|---|---|
+| `POST /api/agendar` | público | cria agendamento (fonte da verdade das regras do membro) |
+| `GET /api/agendamentos/[slug]` | público | dias ocupados da janela (ressincronizar) |
+| `GET /api/alas` | público | lista de alas da home |
+| `POST /api/agendamentos/update` | líder | edita data/nome/telefone (ala em foco) |
+| `POST /api/agendamentos/delete` | líder | remove (ala em foco) |
+| `POST /api/acesso/solicitar` | logado | pede acesso a uma ala |
+| `POST /api/acesso/aprovar` | owner / member aprovado da ala | aprova vínculo |
+| `POST /api/acesso/remover` | owner / member aprovado da ala | remove vínculo |
+| `POST /api/ala-atual` | owner | troca a ala em foco (cookie `ala_atual`) |
+| `POST /api/alas/criar` | owner | cria ala (slug gerado do nome) |
+
+Contratos, validações e respostas em [`docs/routes_api.md`](docs/routes_api.md).
+
+## Regras de negócio
+
+1. **Um almoço por dia, por ala** (`unique (ala_id, data)`; a API devolve 409).
+2. **Segunda = P-day**: o membro não agenda (`isPday` no calendário, na imagem e
+   no `/api/agendar`). O líder pode mover um almoço para segunda.
+3. **Janela = mês atual + seguinte**, no fuso da ala; **dia passado** não é
+   agendável pelo membro.
+4. **Agendar não exige conta**; só líderes fazem login.
+5. Painel: "X de Y dias" com `Y = dias do mês − segundas`; histórico só dos **3
+   meses anteriores**.
+6. Papéis: **owner** (todas as alas, cria alas, troca a ala em foco) e
+   **member** (uma ala, depois de aprovado).
+
+Detalhes e onde cada regra é garantida: [`CLAUDE.md`](CLAUDE.md) e `docs/`.
+
+## Banco
+
+Tabelas `ala`, `agendamento`, `perfil` (1:1 com `auth.users`, criado por
+trigger) e `ala_membro` (vínculo usuário↔ala, único por usuário). RLS ligada em
+todas; o navegador só lê `id, ala_id, data, nome` de `agendamento`. Schema
+completo, checks, permissões, Realtime, migrations e templates de e-mail:
+[`docs/database.md`](docs/database.md). Fonte da verdade: [`supabase/schema.sql`](supabase/schema.sql).
+
+## Segurança
+
+- Entrada de toda rota validada em `src/lib/server/validation.ts` (teto de 10 KB,
+  `Content-Type`, formato e charset); erros do banco nunca ecoados.
+- Service-role só no servidor (`import 'server-only'` quebra o build se o
+  navegador importar).
+- Telefone nunca chega ao navegador do membro (permissão por coluna no Postgres).
+- Headers de segurança no `next.config.ts` (HSTS, `X-Frame-Options: DENY`,
+  `nosniff`, `Referrer-Policy`, `Permissions-Policy`); CSP pendente.
+- **Sem limite por IP**: muitas pessoas usam o mesmo IP (Wi-Fi da igreja). Abuso
+  se trata no Firewall da Vercel, não travando o usuário.
+
+---
+
+## Estrutura
+
+```
+src/
+  app/
+    (member)/            /  e  /[slug]                  (grupo de rota: não aparece na URL)
+    (leader)/            /admin /acesso /redefinir-senha /dashboard
+    api/                 route handlers (URLs em português = contrato)
+    auth/confirmar/      link dos e-mails do Supabase Auth
+    layout.tsx  globals.css  not-found.tsx  manifest.ts  robots.ts
+  components/            usados por 2+ páginas (Spinner, Flower, Footer, LoadingOverlay)
+  hooks/                 use-bookings-realtime (WebSocket)
+  lib/                   date, phone, location, wards, scriptures, site-url
+  lib/server/            public-ward, session, validation        (só servidor)
+  lib/supabase/          realtime, service-role, browser-session, server-session
+  proxy.ts               renova a sessão nas rotas do líder
+supabase/
+  schema.sql             estrutura completa do banco
+  migrations/            mudanças pendentes (o usuário roda e apaga)
+  email/                 templates dos e-mails do Supabase Auth
+docs/                    routes_<rota>.md · src_app/components/hooks/lib.md · database.md
+```
+
+Componente de uma página só fica em `_components/` dentro da rota. Cada arquivo
+de código diz no cabeçalho qual é o seu doc; o mapa por pasta está no
+[`CLAUDE.md`](CLAUDE.md).
+
+## Variáveis de ambiente
+
+| Variável | Onde é usada | Valor |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | navegador + servidor (Auth, Realtime, proxy) | Project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | navegador + servidor | chave `anon` / publishable |
+| `SUPABASE_URL` | servidor (service-role) | a mesma Project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | **só servidor** | chave `service_role`. **Nunca exponha** |
+| `NEXT_PUBLIC_BASE_URL` | `siteUrl()` (link do e-mail de senha) | `https://lunchsud.vercel.app` em produção |
+
+`GMAIL_USER` e `GMAIL_APP_PASSWORD` estão reservadas para os avisos por e-mail
+ao líder (plano em `messages/emails-do-lider.txt`); o código ainda não usa.
+Arquivos `.env*` são ignorados pelo git.
+
+**Atenção:** o `.env` local aponta para o banco de **produção**. Agendar no
+`npm run dev` grava numa ala real e aparece ao vivo para os líderes.
+
+## Rodar localmente
+
+Pré-requisitos: Node 20.11+, um projeto no Supabase e (para publicar) conta na Vercel.
+
+1. **Instalar**
+   ```bash
+   git clone https://github.com/<usuario>/lunchsud.git && cd lunchsud
+   npm install
+   ```
+2. **Banco**: no SQL Editor do Supabase, rode **todo** o
+   [`supabase/schema.sql`](supabase/schema.sql) (tabelas, trigger, RLS,
+   permissões e Realtime).
+3. **Auth**: em *Authentication*, ligue o provider **Email**; em *URL
+   Configuration*, defina **Site URL** = `http://localhost:3000` e a mesma URL em
+   **Redirect URLs**. Cole os templates de `supabase/email/` em *Email Templates*.
+4. **Variáveis**: crie `.env.local` com as variáveis da tabela acima
+   (*Project Settings → API*).
+5. **Rodar**
+   ```bash
+   npm run dev          # http://localhost:3000
+   ```
+6. **Virar owner**: cadastre-se em `/admin` e rode no SQL Editor:
+   ```sql
+   update public.perfil set is_owner = true where email = 'voce@exemplo.com';
+   ```
+   No `/dashboard`, crie as alas. O link público `/<slug>` é o que vai para o
+   grupo do WhatsApp.
+
+## Scripts e qualidade
+
+| Comando | O que faz |
+|---|---|
+| `npm run dev` | servidor de desenvolvimento |
+| `npm run build` | build de produção |
+| `npm run start` | serve o build |
+| `npm run lint` | `eslint src` (o `next lint` saiu no Next 16) |
+| `npx tsc --noEmit` | checagem de tipos |
+
+Antes de concluir uma mudança: `npx tsc --noEmit`, `npm run lint` (hoje: 0
+erros, 0 avisos) e `npm run build`. **Nunca rode `build` com o `dev` aberto**:
+os dois disputam a pasta `.next` e corrompem o cache (`ENOENT …
+build-manifest.json`).
+
+## Deploy
+
+- **Branches:** `master` = produção (Vercel), `dev` = desenvolvimento. Código
+  chega na `master` só vindo da `dev`.
+- **Vercel:** importe o repositório, configure as variáveis de ambiente e faça o
+  deploy. `vercel.json` fixa a região `gru1`. Cada push na branch de produção
+  republica.
+- **Supabase:** troque a **Site URL** e as **Redirect URLs** pela URL da Vercel,
+  senão o login e os links de e-mail não funcionam em produção.
+- **Mudança no banco:** migration em `supabase/migrations/`, aplicada à mão no
+  SQL Editor, na ordem que o arquivo indicar em relação ao deploy.
+
+## Limites do plano Free (Supabase)
+
+- **200 conexões Realtime simultâneas** (cada página de ala aberta = 1). Página
+  escondida por 30 s solta o canal; o WebSocket fecha ~50 s depois.
+- Sem backup automático.
+- Projeto pausa após 7 dias sem uso.
+
+---
+
+Desenvolvido por **Luis Henrique Engel Saul**:
+[luishsaul.com.br](https://luishsaul.com.br/#contato). Site independente, sem
+vínculo institucional ou oficial com a Igreja de Jesus Cristo dos Santos dos
+Últimos Dias.

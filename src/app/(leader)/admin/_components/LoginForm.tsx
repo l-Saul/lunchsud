@@ -1,9 +1,8 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_admin.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 'use client';
-
-// Login e cadastro do líder via Supabase Auth (e-mail + senha).
-//  - Entrar  → signInWithPassword → vai pro /dashboard (que redireciona pro /acesso
-//              se ainda não houver ala aprovada).
-//  - Criar   → signUp (o trigger cria o perfil) → vai pro /acesso pedir acesso a uma ala.
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -11,7 +10,6 @@ import { criarSupabaseBrowser } from '@/lib/supabase/browser-session';
 import { Spinner } from '@/components/Spinner';
 import { siteUrl } from '@/lib/site-url';
 
-// O Supabase responde em inglês; o líder precisa entender e saber o que fazer.
 function mensagemDeCadastro(original: string) {
     const msg = original.toLowerCase();
     if (msg.includes('already registered')) {
@@ -33,7 +31,6 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
     const [confirmarSenha, setConfirmarSenha] = useState('');
     const [mostrarSenha, setMostrarSenha] = useState(false);
     const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
-    // Semeia o erro com o que veio do servidor (ex.: ?erro=link de link expirado).
     const [erro, setErro] = useState(erroInicial ?? '');
     const [aviso, setAviso] = useState('');
     const [loading, setLoading] = useState(false);
@@ -50,9 +47,6 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
         setAviso('');
         setLoading(true);
 
-        // A sugestão do teclado do celular deixa um espaço no fim do e-mail, e o
-        // iPhone pode pôr a 1ª letra maiúscula: sem limpar, a senha certa dava
-        // "E-mail ou senha incorretos".
         const emailLimpo = email.trim().toLowerCase();
 
         if (modo === 'entrar') {
@@ -63,14 +57,11 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
                 setErro('E-mail ou senha incorretos.');
                 return;
             }
-            // Mantém o loading LIGADO até a navegação trocar a tela (o componente
-            // desmonta no /dashboard) — senão o botão "descarrega" e parece travado.
             router.push('/dashboard');
             router.refresh();
             return;
         }
 
-        // modo === 'criar' — validações locais antes de mandar pro banco.
         if (!nome.trim()) {
             setLoading(false);
             setErro('Informe seu nome.');
@@ -99,9 +90,6 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
             return;
         }
 
-        // Com confirmação de e-mail desligada, já vem sessão → segue pro /acesso
-        // (mantém o loading até navegar). Com confirmação ligada, não há sessão →
-        // para o loading e orienta a confirmar o e-mail.
         if (data.session) {
             router.push('/acesso');
             router.refresh();
@@ -112,8 +100,6 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
         }
     }
 
-    // Esqueci a senha: envia o e-mail de redefinição. O link cai em /auth/confirmar
-    // (troca o código pela sessão) e leva o usuário para /redefinir-senha.
     async function recuperarSenha() {
         if (loading) return;
         setErro('');
@@ -125,16 +111,11 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
         }
 
         setLoading(true);
-        // Ignora o retorno de propósito: respondemos igual com ou sem conta.
-        // Usa a URL pública do site (NEXT_PUBLIC_SITE_URL) para o link cair no
-        // domínio em produção, não no localhost.
         await supabase.auth.resetPasswordForEmail(email.trim(), {
             redirectTo: `${siteUrl()}/auth/confirmar?next=/redefinir-senha`,
         });
         setLoading(false);
 
-        // Resposta genérica de propósito (não revela se o e-mail existe). Avisa o
-        // remetente para a pessoa achar o e-mail (e olhar o spam, se preciso).
         setAviso('Se houver uma conta com esse e-mail, enviamos um link para redefinir a senha. Procure por uma mensagem de noreply@mail.app.supabase.io (confira o spam).');
     }
 
@@ -164,9 +145,6 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
                 <label htmlFor="email" className="text-base font-medium text-text">
                     E-mail
                 </label>
-                {/* Entrar: "username" puxa o login salvo no gerenciador de senhas.
-                    Criar conta: "email" puxa o e-mail do próprio celular. Sem
-                    maiúscula automática nem corretor — e-mail não é frase. */}
                 <input
                     id="email"
                     name="email"
@@ -225,7 +203,6 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
                 </div>
             </div>
 
-            {/* Confirmar senha — só no cadastro, validado antes de enviar ao banco. */}
             {modo === 'criar' && (
                 <div className="flex flex-col gap-1.5">
                     <label htmlFor="confirmar-senha" className="text-base font-medium text-text">
@@ -268,7 +245,6 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
                 </div>
             )}
 
-            {/* Esqueci a senha — só no modo entrar. */}
             {modo === 'entrar' && (
                 <button
                     type="button"
@@ -303,7 +279,6 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
                     : modo === 'entrar' ? 'Entrar' : 'Criar conta'}
             </button>
 
-            {/* Alterna entre entrar e criar conta. */}
             <button
                 type="button"
                 onClick={() => {

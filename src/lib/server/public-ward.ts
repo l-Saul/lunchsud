@@ -1,25 +1,20 @@
-// Só servidor (src/lib/server): o build falha se o navegador importar.
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/src_lib.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 import 'server-only';
 import { cache } from 'react';
 import { supabaseServer } from '@/lib/supabase/service-role';
 import { getDashboardRange } from '@/lib/date';
 import { parseSlug, ValidationError } from '@/lib/server/validation';
 
-// Dados da página pública da ala (servidor, service-role). Usado pela página
-// `[slug]` e por /api/agendamentos/[slug], que a página chama só para
-// ressincronizar (reconexão do WebSocket ou volta para a aba) — as mudanças do
-// dia a dia chegam pelo próprio WebSocket.
-
 export type DiaOcupado = {
-    id: number; // casa os eventos do Realtime (DELETE só traz o id)
-    data: string; // 'YYYY-MM-DD'
+    id: number;
+    data: string;
     nome: string;
 };
 
-// Ala pelo slug do link público. O `cache` evita ir ao banco duas vezes no mesmo
-// carregamento (generateMetadata + página). Normaliza o slug (link digitado com
-// maiúscula também funciona) e descarta lixo (ex.: robôs pedindo /wp-login.php)
-// sem consultar o banco.
 export const buscarAlaPorSlug = cache(async (slugCru: string) => {
     let slug: string;
     try {
@@ -40,15 +35,10 @@ export const buscarAlaPorSlug = cache(async (slugCru: string) => {
 
 export type AlaPublica = { id: number; nome: string; slug: string; fuso_horario: string };
 
-// Dias ocupados da ala só na janela agendável (de hoje até o fim do mês
-// seguinte, no fuso da ala). Dias passados aparecem bloqueados no calendário,
-// então não precisam de dados. Sem esse filtro a lista crescia com todo o
-// histórico. null = erro no banco.
 export async function buscarOcupados(ala: AlaPublica): Promise<DiaOcupado[] | null> {
     const { hoje, fim } = getDashboardRange(ala.fuso_horario);
     const alaId = ala.id;
 
-    // data::text mantém 'YYYY-MM-DD' (sem timezone).
     const { data, error } = await supabaseServer
         .from('agendamento')
         .select('id, data::text, nome')

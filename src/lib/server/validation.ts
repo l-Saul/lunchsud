@@ -1,20 +1,16 @@
-// Só servidor (src/lib/server): o build falha se o navegador importar.
-import 'server-only';
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/src_lib.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 
-// Validação e saneamento da entrada das rotas públicas. Princípio: tudo que vem
-// do cliente é hostil até prova em contrário — limita tamanho, formato e o
-// conjunto de caracteres ANTES de tocar no banco.
+import 'server-only';
 
 import { gerarSlug, normalizarNomeAla } from '@/lib/wards';
 import { normalizarTelefone } from '@/lib/phone';
 import { PAISES, UFS, fusoValido } from '@/lib/location';
 
-// Erro de validação: as rotas pegam com try/catch e respondem 400 genérico
-// (sem ecoar detalhes que ajudem um atacante a sondar a API).
 export class ValidationError extends Error {}
 
-// Slug aceita letras minúsculas, números, hífen e sublinhado (`_`). O `_` entra
-// pela convenção de nomes de ala ("Jardim Brasil" → "jardim_brasil").
 const SLUG_RE = /^[a-z0-9_-]{1,60}$/;
 const DATA_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -22,7 +18,6 @@ function asString(v: unknown): string {
     return typeof v === 'string' ? v : '';
 }
 
-// Nome: 2–80 chars, sem < > (anti-HTML/script) nem caracteres de controle (\p{Cc}).
 function nomeSaneado(v: unknown): string {
     const nome = asString(v).replace(/\s+/g, ' ').trim();
     if (nome.length < 2 || nome.length > 80 || /[<>]/.test(nome) || /\p{Cc}/u.test(nome)) {
@@ -31,8 +26,6 @@ function nomeSaneado(v: unknown): string {
     return nome;
 }
 
-// Endereço (rua/número) — texto livre opcional, só um campo do banco. Limita
-// tamanho e bloqueia < > e caracteres de controle. Vazio vira null.
 function enderecoSaneado(v: unknown): string | null {
     const s = asString(v).replace(/\s+/g, ' ').trim();
     if (!s) return null;
@@ -42,8 +35,6 @@ function enderecoSaneado(v: unknown): string | null {
     return s;
 }
 
-// Texto curto obrigatório (estado/cidade): espaços normalizados, limites de
-// tamanho, sem < > nem caracteres de controle.
 function textoSaneado(v: unknown, min: number, max: number, erro: string): string {
     const s = asString(v).replace(/\s+/g, ' ').trim();
     if (s.length < min || s.length > max || /[<>]/.test(s) || /\p{Cc}/u.test(s)) {
@@ -52,15 +43,12 @@ function textoSaneado(v: unknown, min: number, max: number, erro: string): strin
     return s;
 }
 
-// Telefone: Brasil (celular/fixo) ou de outro país, lido por normalizarTelefone
-// (mesma regra do formulário). Grava sempre no formato normalizado.
 function telefoneSaneado(v: unknown): string {
     const telefone = normalizarTelefone(asString(v).slice(0, 40));
     if (!telefone) throw new ValidationError('Telefone inválido');
     return telefone.formatado;
 }
 
-// Data 'YYYY-MM-DD' real (formato + data existente).
 function dataSaneada(v: unknown): string {
     const data = asString(v).trim();
     if (!DATA_RE.test(data) || Number.isNaN(Date.parse(data))) {
@@ -69,22 +57,18 @@ function dataSaneada(v: unknown): string {
     return data;
 }
 
-// Id inteiro positivo (chave primária do agendamento).
 function idSaneado(v: unknown): number {
     const id = Number(v);
     if (!Number.isInteger(id) || id <= 0) throw new ValidationError('Id inválido');
     return id;
 }
 
-// Lê o corpo como JSON com teto de tamanho e checagem de Content-Type. Evita
-// payloads gigantes ("lançar várias informações") e corpos malformados.
 export async function lerJson(req: Request, maxBytes = 10_000): Promise<unknown> {
     const contentType = req.headers.get('content-type') ?? '';
     if (!contentType.includes('application/json')) {
         throw new ValidationError('Content-Type inválido');
     }
 
-    // Rejeita cedo pelo Content-Length, antes de bufferizar o corpo.
     const declarado = Number(req.headers.get('content-length') ?? 0);
     if (declarado > maxBytes) {
         throw new ValidationError('Corpo grande demais');
@@ -109,8 +93,6 @@ export type AgendarInput = {
     telefone: string;
 };
 
-// Valida o payload de /api/agendar. Garante slug seguro, data 'YYYY-MM-DD' real,
-// nome 2–80 sem caracteres de controle/HTML e telefone com exatamente 11 dígitos.
 export function parseAgendar(raw: unknown): AgendarInput {
     const o = (raw ?? {}) as Record<string, unknown>;
 
@@ -132,7 +114,6 @@ export type EdicaoInput = {
     telefone: string;
 };
 
-// Valida o payload de /api/agendamentos/update (admin): id + campos editáveis.
 export function parseEdicao(raw: unknown): EdicaoInput {
     const o = (raw ?? {}) as Record<string, unknown>;
 
@@ -144,25 +125,21 @@ export function parseEdicao(raw: unknown): EdicaoInput {
     };
 }
 
-// Valida o payload de /api/agendamentos/delete (admin): só o id.
 export function parseId(raw: unknown): number {
     const o = (raw ?? {}) as Record<string, unknown>;
     return idSaneado(o.id);
 }
 
-// Valida { membroId } (rotas de aprovar/remover acesso de usuário).
 export function parseMembroId(raw: unknown): number {
     const o = (raw ?? {}) as Record<string, unknown>;
     return idSaneado(o.membroId);
 }
 
-// Valida { alaId } (rotas de pedir acesso / trocar a ala em foco).
 export function parseAlaId(raw: unknown): number {
     const o = (raw ?? {}) as Record<string, unknown>;
     return idSaneado(o.alaId);
 }
 
-// Valida um slug vindo da URL (rota dinâmica). Normaliza para minúsculas.
 export function parseSlug(slug: string): string {
     const s = asString(slug).trim().toLowerCase();
     if (!SLUG_RE.test(s)) throw new ValidationError('Ala inválida');
@@ -179,12 +156,6 @@ export type NovaAlaInput = {
     fuso: string;
 };
 
-// Valida o payload de criação de ala (owner):
-//  - nome: saneado e normalizado ("Ala São Lourenço" — vira nome próprio com "Ala");
-//  - slug: SEMPRE gerado automaticamente a partir do nome (link público da ala);
-//  - endereco: texto livre opcional (rua/número) — só um campo do banco;
-//  - pais/estado/cidade/fuso: no Brasil o estado é uma UF e o fuso sai dela; nos
-//    outros países o estado é texto livre e o fuso vem do formulário.
 export function parseNovaAla(raw: unknown): NovaAlaInput {
     const o = (raw ?? {}) as Record<string, unknown>;
     const nome = normalizarNomeAla(nomeSaneado(o.nome));

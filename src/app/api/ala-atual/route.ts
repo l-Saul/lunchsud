@@ -1,11 +1,14 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_api.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { getContexto } from '@/lib/server/session';
 import { supabaseServer } from '@/lib/supabase/service-role';
 import { lerJson, parseAlaId } from '@/lib/server/validation';
 
-// Owner troca a ala em foco no painel (grava o cookie `ala_atual`, lido pelo
-// getContexto). Só owner — member tem uma ala só.
 export async function POST(req: Request) {
     const ctx = await getContexto();
     if (!ctx) {

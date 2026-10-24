@@ -1,14 +1,10 @@
-// Localização da ala: país, estado, cidade e fuso horário. Usado no formulário
-// de nova ala (client) e na validação do servidor — só dados, sem dependências.
-//
-// O fuso é o que importa para as regras de data: o "hoje" (dia passado
-// bloqueado), a janela de 2 meses e a virada do mês são calculados no fuso da
-// ala (getDashboardRange). No Brasil ele sai da UF; nos outros países o owner
-// escolhe (EUA, México… têm vários fusos).
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/src_lib.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 
 export const FUSO_PADRAO = 'America/Sao_Paulo';
 
-// UFs do Brasil e o fuso de cada uma (capital).
 export const UFS = [
     { sigla: 'AC', nome: 'Acre', fuso: 'America/Rio_Branco' },
     { sigla: 'AL', nome: 'Alagoas', fuso: 'America/Maceio' },
@@ -39,8 +35,6 @@ export const UFS = [
     { sigla: 'TO', nome: 'Tocantins', fuso: 'America/Araguaina' },
 ] as const;
 
-// Países do foco (Brasil, América Latina, EUA/Canadá), com o fuso sugerido —
-// o owner troca se a ala for em outro fuso do país.
 export const PAISES = [
     { codigo: 'BR', nome: 'Brasil', fuso: 'America/Sao_Paulo' },
     { codigo: 'AR', nome: 'Argentina', fuso: 'America/Argentina/Buenos_Aires' },
@@ -65,8 +59,6 @@ export const PAISES = [
     { codigo: 'VE', nome: 'Venezuela', fuso: 'America/Caracas' },
 ] as const;
 
-// Fuso IANA que o navegador/servidor conhece ("America/Manaus"). Inválido →
-// o Intl lança RangeError.
 export function fusoValido(fuso: string) {
     if (!/^[A-Za-z]+(\/[A-Za-z0-9_+-]+)+$/.test(fuso)) return false;
     try {
@@ -77,7 +69,6 @@ export function fusoValido(fuso: string) {
     }
 }
 
-// Fusos das Américas para o owner escolher (países fora do Brasil).
 export function fusosDasAmericas(): string[] {
     const todos = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : [];
     return todos.filter(f => f.startsWith('America/'));

@@ -1,7 +1,8 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_redefinir-senha.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 'use client';
-
-// Formulário de nova senha. A sessão já foi criada por /auth/confirmar (troca do
-// código do e-mail), então basta atualizar a senha do usuário logado.
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -76,8 +77,6 @@ export default function ResetPasswordForm({ email }: { email: string }) {
                     <p className="text-base text-muted">Escolha uma nova senha para a sua conta.</p>
 
                     <form onSubmit={handleSubmit} className="flex w-full flex-col gap-5 text-left">
-                        {/* Conta (escondido): diz ao gerenciador de senhas do celular de
-                            qual login é a senha nova, para ele atualizar a senha salva. */}
                         <input
                             type="email"
                             name="username"

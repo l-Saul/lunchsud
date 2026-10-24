@@ -1,3 +1,8 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_admin.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getUsuario } from '@/lib/server/session';
@@ -7,14 +12,10 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export const metadata: Metadata = {
-    // absolute = aba mostra só "Entrar" (sem o sufixo "· Almoço dos Missionários").
     title: { absolute: 'Entrar' },
     robots: { index: false, follow: false },
 };
 
-// Tela de login/cadastro. Se já houver sessão do Supabase Auth, pula pro painel
-// (que por sua vez manda pro /acesso se ainda não tiver ala aprovada).
-// `?erro=link` chega quando o link de redefinição de senha expirou/foi usado.
 export default async function AdminLoginPage({
     searchParams,
 }: {

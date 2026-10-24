@@ -1,20 +1,12 @@
-// Utilidades de data: janela mês atual+seguinte, rótulos de mês e a regra de
-// P-day (segunda-feira). Sem dependência do fuso do servidor.
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/src_lib.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 
 const TZ = 'America/Sao_Paulo';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
-/**
- * Intervalo do mês atual até o fim do mês seguinte.
- *
- * O "hoje" é calculado no fuso de São Paulo para o servidor (UTC) não
- * "virar o mês" perto da meia-noite.
- *
- * - inicio: 'YYYY-MM-01' do mês atual (inclusivo)
- * - fim:    'YYYY-MM-01' do mês após o seguinte (exclusivo)
- * - hoje:   'YYYY-MM-DD' de hoje — o membro agenda de hoje em diante
- */
 export function getDashboardRange(timeZone = TZ) {
     const hoje = new Intl.DateTimeFormat('en-CA', {
         timeZone,
@@ -23,10 +15,10 @@ export function getDashboardRange(timeZone = TZ) {
         day: '2-digit',
     }).format(new Date());
 
-    const [ano, mes] = hoje.split('-').map(Number); // mes: 1-12
+    const [ano, mes] = hoje.split('-').map(Number);
 
-    const seguinte = new Date(ano, mes, 1); // índice 0-based = mês seguinte
-    const aposSeguinte = new Date(ano, mes + 1, 1); // mês após o seguinte
+    const seguinte = new Date(ano, mes, 1);
+    const aposSeguinte = new Date(ano, mes + 1, 1);
 
     return {
         inicio: `${ano}-${pad(mes)}-01`,
@@ -37,14 +29,6 @@ export function getDashboardRange(timeZone = TZ) {
     };
 }
 
-/**
- * Janela do histórico: os N meses ANTERIORES ao mês atual (sem o atual).
- * Ex.: em junho com mesesAtras=3 → [março-01, junho-01) = mar, abr, mai.
- * Usado para o painel não carregar histórico antigo demais.
- *
- * - inicio: 'YYYY-MM-01' de N meses atrás (inclusivo)
- * - fim:    'YYYY-MM-01' do mês atual (exclusivo)
- */
 export function getHistoricoRange(mesesAtras = 3, timeZone = TZ) {
     const hoje = new Intl.DateTimeFormat('en-CA', {
         timeZone,
@@ -53,10 +37,10 @@ export function getHistoricoRange(mesesAtras = 3, timeZone = TZ) {
         day: '2-digit',
     }).format(new Date());
 
-    const [ano, mes] = hoje.split('-').map(Number); // mes: 1-12
+    const [ano, mes] = hoje.split('-').map(Number);
 
-    const inicioAtual = new Date(ano, mes - 1, 1); // 1º dia do mês atual
-    const inicioHist = new Date(ano, mes - 1 - mesesAtras, 1); // N meses antes
+    const inicioAtual = new Date(ano, mes - 1, 1);
+    const inicioHist = new Date(ano, mes - 1 - mesesAtras, 1);
 
     return {
         inicio: `${inicioHist.getFullYear()}-${pad(inicioHist.getMonth() + 1)}-01`,
@@ -74,33 +58,23 @@ const MESES_ABREV = [
     'jul', 'ago', 'set', 'out', 'nov', 'dez',
 ];
 
-/** 'YYYY-MM' -> 'Junho 2026' */
 export function formatMonthLabel(ym: string) {
     const [ano, mes] = ym.split('-').map(Number);
     return `${MESES[mes - 1]} ${ano}`;
 }
 
-/** 'YYYY-MM-DD' -> { dia: '7', mesAbrev: 'jun' } para o "tile" de data */
 export function diaTile(dateISO: string) {
     const [, m, d] = dateISO.split('-');
     return { dia: String(Number(d)), mesAbrev: MESES_ABREV[Number(m) - 1] };
 }
 
-/**
- * true se a data 'YYYY-MM-DD' cair numa segunda-feira (P-day).
- * Usa UTC para o resultado não depender do fuso do servidor.
- */
 export function isPday(dateISO: string) {
-    return new Date(`${dateISO}T00:00:00Z`).getUTCDay() === 1; // 1 = segunda
+    return new Date(`${dateISO}T00:00:00Z`).getUTCDay() === 1;
 }
 
-/**
- * Quantidade de dias do mês 'YYYY-MM' que podem receber almoço,
- * ou seja, todos os dias menos as segundas (P-day).
- */
 export function diasDisponiveisNoMes(ym: string) {
-    const [ano, mes] = ym.split('-').map(Number); // mes: 1-12
-    const totalDias = new Date(ano, mes, 0).getDate(); // último dia do mês
+    const [ano, mes] = ym.split('-').map(Number);
+    const totalDias = new Date(ano, mes, 0).getDate();
 
     let disponiveis = 0;
     for (let dia = 1; dia <= totalDias; dia++) {

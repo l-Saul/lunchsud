@@ -1,9 +1,8 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_dashboard.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 'use client';
-
-// "Criar nova ala" do owner (fica no card do WardSwitcher, abaixo da troca de
-// ala). Fechado é só um botão; aberto, o formulário: nome (o link/slug é gerado
-// do nome), país → estado → cidade (e fuso fora do Brasil) e endereço opcional.
-// Ao criar, entrega o id para o WardSwitcher entrar na ala nova.
 
 import { useMemo, useState } from 'react';
 import { gerarSlug, normalizarNomeAla } from '@/lib/wards';
@@ -17,7 +16,6 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
     const [criando, setCriando] = useState(false);
     const [nome, setNome] = useState('');
     const [endereco, setEndereco] = useState('');
-    // Localização da nova ala. Começa no Brasil/Paraná, onde estão as alas hoje.
     const [pais, setPais] = useState('BR');
     const [estado, setEstado] = useState('PR');
     const [cidade, setCidade] = useState('');
@@ -26,16 +24,13 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
     const [erro, setErro] = useState('');
 
     const nomePreview = normalizarNomeAla(nome);
-    const linkPreview = gerarSlug(nomePreview); // slug automático (só leitura)
+    const linkPreview = gerarSlug(nomePreview);
 
-    // Fusos das Américas (só aparecem fora do Brasil). Garante que o sugerido
-    // para o país esteja na lista mesmo se o navegador não listar fusos.
     const fusos = useMemo(() => {
         const lista = fusosDasAmericas();
         return lista.includes(fuso) ? lista : [fuso, ...lista];
     }, [fuso]);
 
-    // Trocar o país zera o estado e sugere o fuso principal dele.
     function trocarPais(codigo: string) {
         setPais(codigo);
         setEstado(codigo === 'BR' ? 'PR' : '');
@@ -77,7 +72,6 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
                 }),
             });
         } catch {
-            // Sem internet: avisa em vez de deixar o botão preso em "Criando…".
             setSalvando(false);
             setErro('Sem conexão com a internet. Verifique e tente de novo.');
             return;
@@ -90,7 +84,6 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
             return;
         }
 
-        // O "Criando…" continua enquanto o WardSwitcher entra na ala nova.
         await onCreated(json?.ala?.id);
         resetForm();
     }
@@ -139,7 +132,6 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
                 </button>
             </div>
 
-            {/* Nome */}
             <div className="flex flex-col gap-1.5">
                 <label htmlFor="nova-ala-nome" className="text-sm font-medium text-white/90">
                     Nome da nova ala
@@ -165,8 +157,6 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
                 )}
             </div>
 
-            {/* Localização: país → estado → cidade (e fuso fora do Brasil).
-                O fuso define o "hoje" e a virada do mês dessa ala. */}
             <div className="flex flex-col gap-1.5">
                 <label htmlFor="nova-ala-pais" className="text-sm font-medium text-white/90">
                     País
@@ -250,7 +240,6 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
                 </div>
             )}
 
-            {/* Endereço (rua/número) — campo livre, opcional */}
             <div className="flex flex-col gap-1.5">
                 <label htmlFor="nova-ala-endereco" className="text-sm font-medium text-white/90">
                     Endereço <span className="font-normal text-white/50">(opcional)</span>

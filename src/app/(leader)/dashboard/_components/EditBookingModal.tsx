@@ -1,9 +1,8 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_dashboard.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 'use client';
-
-// Botão de lápis + modal para o líder editar/remover um agendamento (usado no painel).
-// Mobile-first: inputs de altura uniforme, alvos de toque ≥48px, confirmação de
-// remoção inline (sem window.confirm, que falha em alguns celulares) e fechamento
-// por clique fora, tecla Esc ou botão X.
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -17,9 +16,6 @@ type Props = {
     telefone: string;
 };
 
-// Estilo único para os três campos → mesma altura/largura no celular.
-// `appearance-none` + `min-w-0` corrigem o <input type="date"> no iOS Safari, que
-// senão ignora o width:100% e fica mais largo que os demais (estoura o container).
 const campoBase =
     'w-full min-w-0 min-h-12 box-border appearance-none rounded-lg border px-3 py-3 text-base text-text ' +
     'focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary';
@@ -30,21 +26,17 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
     const [erroTelefone, setErroTelefone] = useState(false);
 
     const [open, setOpen] = useState(false);
-    const [form, setForm] = useState({ data, nome, telefone }); // cópia editável da linha
-    // Ação em andamento — cada botão mostra o próprio verbo ("Salvando…"/"Removendo…").
+    const [form, setForm] = useState({ data, nome, telefone });
     const [acao, setAcao] = useState<'salvar' | 'remover' | null>(null);
     const ocupado = acao !== null;
     const [confirmarRemocao, setConfirmarRemocao] = useState(false);
 
-    // Fecha o modal e zera estados transitórios.
     function fechar() {
         setOpen(false);
         setConfirmarRemocao(false);
     }
 
-    // Valida no client e envia o update; recarrega a página para refletir a mudança.
     async function handleSave() {
-        // Mesmas regras do servidor (parseEdicao), senão o líder via só "Erro ao atualizar".
         const nomeInvalido = form.nome.trim().length < 2;
         const telefoneInvalido = !normalizarTelefone(form.telefone);
 
@@ -58,7 +50,6 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
         await enviar('salvar');
     }
 
-    // Envia a edição ou a remoção (já confirmada pelo passo inline) e recarrega.
     async function enviar(tipo: 'salvar' | 'remover') {
         if (ocupado) return;
         setAcao(tipo);
@@ -73,24 +64,20 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
             );
             if (res.ok) {
                 fechar();
-                router.refresh(); // atualiza a lista sem recarregar a página toda
+                router.refresh();
             } else {
                 alert(tipo === 'salvar' ? 'Erro ao atualizar' : 'Erro ao remover');
             }
         } catch {
-            // Sem internet: avisa em vez de deixar o botão preso em "Salvando…".
             alert('Sem conexão com a internet. Verifique e tente de novo.');
         } finally {
             setAcao(null);
         }
     }
 
-    // Trava o scroll do fundo e habilita Esc para fechar enquanto o modal está aberto.
     useEffect(() => {
         if (!open) return;
 
-        // Lock confiável no mobile (iOS ignora overflow:hidden no body para toque):
-        // fixa o body e restaura a posição ao fechar.
         const scrollY = window.scrollY;
         const { style } = document.body;
         style.position = 'fixed';
@@ -122,18 +109,14 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                 aria-label="Editar agendamento"
                 className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-secondary transition hover:bg-secondary/10 hover:scale-110 active:scale-95 cursor-pointer"
             >
-                {/* Ícone de lápis (SVG inline em vez de /editar.png). */}
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M12 20h9" />
                     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
                 </svg>
             </button>
 
-            {/* Abre com um fade curto (avisa que uma camada apareceu); fecha na hora. */}
             {open && (
                 <div className="fixed inset-0 z-50 animate-aparecer overflow-y-auto overscroll-contain bg-primary/40 backdrop-blur-sm">
-                    {/* Container rolável: com o teclado aberto no mobile o modal pode
-                        passar da tela e ainda assim dá pra rolar até os botões. */}
                     <div
                         onClick={fechar}
                         className="flex min-h-full items-center justify-center p-4"
@@ -149,7 +132,6 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                             <h3 className="text-xl font-semibold text-text">
                                 Editar agendamento
                             </h3>
-                            {/* Botão X: fecho explícito (mobile pode não pegar o clique no fundo). */}
                             <button
                                 onClick={fechar}
                                 aria-label="Fechar"
@@ -207,13 +189,10 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                                     id={`tel-${id}`}
                                     autoComplete="off"
                                     type="tel"
-                                    // "tel" (não "numeric"): o teclado de telefone tem a tecla "+".
                                     inputMode="tel"
                                     maxLength={25}
                                     value={form.telefone}
                                     aria-invalid={erroTelefone}
-                                    // Sem máscara enquanto digita (o cursor ficava pulando para o
-                                    // fim); o número é arrumado ao sair do campo.
                                     onChange={e =>
                                         setForm({ ...form, telefone: e.target.value })
                                     }
@@ -231,7 +210,6 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                             </div>
                         </div>
 
-                        {/* Ações: empilhadas e largas (mobile-first). */}
                         <div className="mt-6 flex flex-col gap-3">
                             <div className="flex flex-wrap gap-3">
                                 <button
@@ -251,7 +229,6 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                                 </button>
                             </div>
 
-                            {/* Remover com confirmação inline (substitui o window.confirm). */}
                             {confirmarRemocao ? (
                                 <div className="flex flex-wrap gap-3">
                                     <button

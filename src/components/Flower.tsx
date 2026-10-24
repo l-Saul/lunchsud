@@ -1,6 +1,8 @@
-// Florzinha decorativa (rosa) usada na imagem gerada e no painel.
-// Cor #e0588f = --color-accent (mantida em hex aqui para renderizar no
-// html-to-image, que captura estilos resolvidos).
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/src_components.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 export function Flower({ size = 18 }: { size?: number }) {
     return (
         <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">

@@ -1,25 +1,21 @@
-// Só servidor (src/lib/server): o build falha se o navegador importar.
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/src_lib.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
+
 import 'server-only';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { criarSupabaseServidor } from '@/lib/supabase/server-session';
 import { supabaseServer } from '@/lib/supabase/service-role';
 
-// Contexto de acesso do líder logado, resolvido a partir do Supabase Auth +
-// das tabelas `perfil` (is_owner) e `ala_membro` (vínculo aprovado).
-//
-// Regras (definidas com o dono do projeto):
-//  - owner  → acessa TODAS as alas; a "ala em foco" vem do cookie `ala_atual`
-//             (troca de ala) ou cai na primeira ala.
-//  - member → UMA ala só (o vínculo aprovado dele).
 export type Contexto = {
     userId: string;
     nome: string;
     isOwner: boolean;
-    alaId: number | null; // ala atualmente em foco no painel
+    alaId: number | null;
 };
 
-// Usuário cru do Supabase Auth (ou null se não logado).
 export async function getUsuario() {
     const supabase = await criarSupabaseServidor();
     const {
@@ -28,8 +24,6 @@ export async function getUsuario() {
     return user;
 }
 
-// Monta o contexto completo (papel + ala em foco). Leitura via service-role para
-// não depender de RLS aqui no servidor. Retorna null se não houver login.
 export async function getContexto(): Promise<Contexto | null> {
     const user = await getUsuario();
     if (!user) return null;
@@ -44,7 +38,6 @@ export async function getContexto(): Promise<Contexto | null> {
     let alaId: number | null = null;
 
     if (isOwner) {
-        // Ala em foco: a escolhida (cookie) ou a primeira cadastrada.
         const cookieStore = await cookies();
         const selecionada = Number(cookieStore.get('ala_atual')?.value);
 
@@ -60,7 +53,6 @@ export async function getContexto(): Promise<Contexto | null> {
             alaId = primeira?.id ?? null;
         }
     } else {
-        // Member: a ala do vínculo aprovado (uma só).
         const { data: vinculo } = await supabaseServer
             .from('ala_membro')
             .select('ala_id')
@@ -79,9 +71,6 @@ export async function getContexto(): Promise<Contexto | null> {
     };
 }
 
-// Exige acesso ao painel:
-//  - sem login        → manda para o /admin (entrar);
-//  - logado sem ala   → manda para o /acesso (pedir/aguardar aprovação).
 export async function requireAcesso(): Promise<Contexto> {
     const ctx = await getContexto();
     if (!ctx) redirect('/admin');
@@ -89,7 +78,6 @@ export async function requireAcesso(): Promise<Contexto> {
     return ctx;
 }
 
-// O usuário pode editar a ala informada? (owner sempre; member só a sua, aprovada.)
 export async function podeEditarAla(userId: string, isOwner: boolean, alaId: number) {
     if (isOwner) return true;
     const { data } = await supabaseServer

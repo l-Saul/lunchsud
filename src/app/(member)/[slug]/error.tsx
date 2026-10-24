@@ -1,8 +1,8 @@
+/**
+ * Contexto e regras: leia CLAUDE.md e docs/routes_slug.md antes de alterar.
+ * Mudou o comportamento? Atualize o doc na mesma mudança.
+ */
 'use client'
-
-// Falha ao carregar o calendário (ex.: banco fora do ar ou internet caindo no
-// meio do carregamento). Em vez da tela padrão do Next (em inglês), explica com
-// calma e oferece tentar de novo.
 
 import { Flower } from '@/components/Flower'
 
@@ -20,7 +20,6 @@ export default function ErroCalendario({ retry }: { error: unknown; retry: () =>
                     Verifique a internet e toque no botão abaixo para tentar de novo.
                 </p>
 
-                {/* retry = busca os dados de novo no servidor e limpa o erro. */}
                 <button
                     onClick={retry}
                     className="min-h-13 w-full rounded-xl bg-secondary px-4 text-lg font-semibold text-white shadow-md transition duration-200 hover:-translate-y-0.5 hover:opacity-95 hover:shadow-lg cursor-pointer"
