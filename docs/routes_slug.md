@@ -16,15 +16,17 @@ src/app/(member)/[slug]/
   page.tsx                    Server Component: busca a ala e os dias ocupados; metadata
   error.tsx                   tela de erro ("Tentar de novo")
   _components/
-    WardBooking.tsx           estado da página, ao vivo, mensagens; abre o modal
-    BookingModal.tsx          modal de agendar (nome + telefone → /api/agendar)
-    MonthCalendar.tsx         grade do mês (só apresentação)
+    WardBooking.tsx           estado da página, ao vivo, avisos; abre o modal
+    BookingModal.tsx          modal de agendar (nome + telefone → /api/agendar) e confirmação
+    MonthCalendar.tsx         abas de mês + grade do mês (só apresentação)
 ```
 
 Dependências: `src/lib/server/public-ward.ts` (ala + ocupados),
-`src/lib/date.ts` (janela, P-day), `src/lib/phone.ts` (telefone),
-`src/hooks/use-bookings-realtime.ts` (WebSocket), `src/components/{Flower,Spinner}`.
-APIs: `POST /api/agendar`, `GET /api/agendamentos/[slug]` (ver [routes_api.md](routes_api.md)).
+`src/lib/date.ts` (janela, P-day, datas por extenso), `src/lib/phone.ts`
+(telefone), `src/lib/calendar-event.ts` (evento da agenda),
+`src/hooks/use-bookings-realtime.ts` (WebSocket), `src/components/{Flower,Spinner,NoticeBar}`.
+APIs: `POST /api/agendar`, `GET /api/agendamentos/[slug]`, `GET /api/agenda/[slug]`
+(ver [routes_api.md](routes_api.md)).
 
 ## Regras de negócio (não quebrar)
 
@@ -96,10 +98,8 @@ Dono do estado da página. Recebe do servidor `slug`, `alaId`, `nomeAla`,
 |---|---|
 | `diaSelecionado` | dia aberto no modal (`null` = modal fechado) |
 | `nome`, `telefone` | ficam **aqui**, não no modal: continuam preenchidos se a pessoa fechar o modal e abrir outro dia (ou depois de um conflito) |
-| `mensagem`, `tipoMensagem` | mensagem embaixo do calendário depois de agendar (`sucesso`) ou de o dia ser ocupado por outra pessoa (`erro`) |
 | `diasOcupados` | lista viva de `{ id, data, nome }`, começa com o que veio do servidor |
-| `ocupadoPor` | nome de quem ocupou o dia tocado |
-| `aviso` | `'pday'` ou `'passado'`: mensagem ao tocar num dia que não abre o agendamento |
+| `aviso` | `{ tipo: 'info' \| 'erro', conteudo }` mostrado na `NoticeBar`, ou `null` |
 | `baseDate` | 1º dia do mês visível (atual ou seguinte) |
 
 ### Janela navegável
@@ -135,35 +135,28 @@ na tela.
 
 | Toque | O que acontece |
 |---|---|
-| Dia livre | abre o `BookingModal` (`diaSelecionado`), limpa `ocupadoPor` e `aviso` |
-| Dia ocupado | mostra "Este dia já foi agendado por **\<nome\>**." |
-| Segunda | mostra "Segunda-feira é dia de **P-day**. Escolha outro dia." |
-| Dia passado | mostra "Esse dia **já passou**. Escolha outro dia." |
-| Aba de mês (`onSelectMonth`) | troca o mês e limpa seleção, `ocupadoPor` e `aviso` |
+| Dia livre | abre o `BookingModal` (`diaSelecionado`) e tira o aviso |
+| Dia ocupado | aviso: "Este dia já foi agendado por **\<nome\>**." |
+| Segunda | aviso: "Segunda-feira é **P-day**, o dia de descanso dos missionários. Escolha outro dia." (explica o termo na própria frase) |
+| Dia passado | aviso: "Esse dia **já passou**. Escolha outro dia." |
+| Aba de mês (`onSelectMonth`) | troca o mês, tira a seleção e o aviso |
 
-Cada toque limpa as outras mensagens, então só uma aparece por vez.
+Cada toque troca o aviso, então só um aparece por vez.
 
-### Mensagens embaixo do calendário
-
-Todas com `animate-aparecer` (fade de 200 ms para chamar o olho). A `key` muda
-com o conteúdo, então o fade roda de novo quando a mensagem troca.
-
-- Ocupado: `wrap-anywhere`, porque o nome vem do usuário e pode ter 80
-  caracteres sem espaço. Sem isso ele empurrava a página para o lado.
-- Resultado do agendamento (`role="status"`, `aria-live="polite"`):
-  - sucesso, em **azul** (`text-secondary`): "Almoço agendado com sucesso. Muito obrigado!"
-  - conflito, em **rosa** (`text-accent`): "Este dia acabou de ser ocupado. Escolha outro."
-  - Só aparece com o modal fechado.
+Os avisos aparecem no **`NoticeBar`** ([src_components.md](src_components.md)),
+no **topo da tela**, e ficam até a próxima ação ou até o X ("Fechar aviso"):
+explicam algo, então a pessoa precisa de tempo para ler. Ocupado e o texto do
+P-day em azul (`info`); conflito em rosa (`erro`).
 
 ### Callbacks do modal
 
-- `fecharModal`: fecha e limpa a mensagem; **mantém nome e telefone**.
+- `fecharModal`: fecha; **mantém nome e telefone**.
 - `aoAgendar({ id, data, nome })`: marca o dia na hora (o evento do WebSocket
-  chega depois com o mesmo `id` e só substitui), mostra o agradecimento, limpa
-  nome e telefone, fecha o modal.
-- `aoConflito()`: fecha o modal, mostra a mensagem de conflito e chama
-  `atualizarOcupados()`. Nome e telefone ficam, para a pessoa escolher outro dia
-  sem redigitar.
+  chega depois com o mesmo `id` e só substitui) e limpa nome e telefone. **Não
+  fecha o modal:** ele vira o cartão de confirmação.
+- `aoConflito()`: fecha o modal, mostra o aviso de erro "Este dia acabou de ser
+  ocupado. Escolha outro dia." e chama `atualizarOcupados()`. Nome e telefone
+  ficam, para a pessoa escolher outro dia sem redigitar.
 
 `dataSelecionada` (`YYYY-MM-DD` do dia no mês visível) também é a `key` do modal:
 trocar de dia monta um modal novo, sem erro antigo na tela (antes, o erro do
@@ -176,26 +169,26 @@ conflito aparecia de novo no modal seguinte).
   (opacidade baixa, `aria-hidden`). Altura contida: em 390×844 o calendário
   começa a ~290px e os dias livres ficam na primeira tela.
 - Abaixo, no `<main>` sobre o creme: "Toque em um dia livre para agendar o
-  almoço." (`text-lg`, texto escuro), o calendário e as mensagens (ocupado,
-  P-day, já passou), todas em texto escuro.
+  almoço." (`text-lg`, texto escuro) e o calendário. Os avisos são do
+  `NoticeBar`, no topo da tela.
 - Margens enxutas no celular (`px-2`): cada pixel vira largura dos 7 dias. Em
   360px os dias chegam a 44px, o alvo de toque recomendado (WCAG 2.5.5).
-- Calendário num cartão branco com fitinha framboesa→dourado→framboesa no topo. **Sem
+- Calendário num cartão branco (`pt-4`: as abas não encostam na fitinha) com fitinha framboesa→dourado→framboesa no topo. **Sem
   animação de entrada**: aparece junto com a página (vem do servidor).
 - O cartão do calendário: `ring-1 ring-primary/10` + `shadow-md` sobre o creme.
 
 ## `BookingModal.tsx` (client)
 
-Modal de agendar um dia. Exporta `BookingModal` e o tipo `Agendado = { id, data, nome }`.
+Modal de agendar um dia e, depois do sucesso, o **cartão de confirmação**.
+Exporta `BookingModal` e o tipo `Agendado = { id, data, nome }`.
 
 ### Props
 
 | Prop | Tipo | Uso |
 |---|---|---|
 | `slug` | `string` | enviado à API |
-| `dia` | `number` | dia do mês, para o título |
-| `nomeMes` | `string` | `'novembro'`, para o título |
-| `data` | `string` | `YYYY-MM-DD` enviado à API |
+| `nomeAla` | `string` | confirmação e evento da agenda |
+| `data` | `string` | `YYYY-MM-DD` enviado à API; vira o título por extenso (`tituloDoDia`: "Quinta-feira, 12 de novembro") |
 | `nome`, `telefone` | `string` | valores controlados pelo `WardBooking` |
 | `onNomeChange`, `onTelefoneChange` | `(v) => void` | atualizam o `WardBooking` |
 | `onClose` | `() => void` | Cancelar, X, Esc, toque fora |
@@ -220,8 +213,9 @@ Os erros (`erroNome`, `erroTelefone`, `erro`) e o `loading` são do modal.
    - **Outro erro** → mostra o `error` da API (escrito para o membro) ou "Não
      foi possível agendar. Tente de novo." O modal fica aberto, com nome e
      telefone, para tentar de novo.
-   - **Sucesso** → `onBooked({ id, data, nome: nome.trim() })`. O `id` devolvido
-     pela API casa com o evento do WebSocket que chega em seguida.
+   - **Sucesso** → `onBooked({ id, data, nome: nome.trim() })` e o modal vira a
+     confirmação. O `id` devolvido pela API casa com o evento do WebSocket que
+     chega em seguida.
 
 Mensagens de campo: nome → "Informe seu nome."; telefone → "Confira o telefone,
 com DDD. De outro país? Comece com + e o código do país."
@@ -234,8 +228,16 @@ telefone salvos, e a tecla "Ir" do teclado enviar (`type="submit"`). O
 
 | Campo | Atributos |
 |---|---|
-| Nome (`#nome`) | `name="name"`, `autoComplete="name"`, `autoCapitalize="words"`, `maxLength=80` |
-| Telefone (`#telefone`) | `name="tel"`, `type="tel"`, `autoComplete="tel"`, `inputMode="tel"`, `maxLength=25` |
+| Nome (`#nome`) | `name="name"`, `autoComplete="name"`, `autoCapitalize="words"`, `enterKeyHint="next"`, `maxLength=80` |
+| Telefone (`#telefone`) | `name="tel"`, `type="tel"`, `autoComplete="tel"`, `inputMode="tel"`, `enterKeyHint="done"`, `maxLength=25` |
+
+- A tecla do teclado diz **"Próximo"** no nome e **"OK"** no telefone. No nome,
+  Enter leva ao telefone (sem isso, o Enter enviaria o formulário pela metade e
+  mostraria erro no telefone vazio).
+- **Sem exemplo de telefone** embaixo do rótulo (o dono pediu para tirar): o
+  rótulo "Seu telefone (com DDD)" e o preenchimento automático bastam.
+- Campo com erro: `aria-invalid` e `aria-describedby` apontando para a mensagem
+  do campo (`#nome-erro`, `#telefone-erro`).
 
 - `inputMode="tel"`, não `"numeric"`: o teclado de telefone tem a tecla `+`.
 - **Sem máscara enquanto digita**, nem filtro de caractere: o campo guarda
@@ -256,12 +258,13 @@ telefone salvos, e a tecla "Ir" do teclado enviar (`type="submit"`). O
   `onClose` mais recente fica num `ref`, para o Esc sempre chamar a versão atual.
 - O fundo é um container rolável (`overflow-y-auto overscroll-contain`): com o
   teclado aberto o modal pode passar da tela e ainda dá para rolar até os botões.
-- `role="dialog"`, `aria-modal`, `aria-label="Agendar dia X de <mês>"`.
+- `role="dialog"`, `aria-modal`, `aria-labelledby` no título do momento
+  (`#agendar-titulo` ou `#agendado-titulo`).
 
 ### Botões
 
-- **Cancelar** (`type="button"`) e **Confirmar** (`type="submit"`) ficam em
-  `flex flex-wrap-reverse` com `basis-28` (em rem): **lado a lado quando cabem**,
+- **Cancelar** (`type="button"`) e **Confirmar almoço** (`type="submit"`) ficam em
+  `flex flex-wrap-reverse` com `basis-40` (em rem; "Confirmar almoço" não quebra dentro do botão): **lado a lado quando cabem**,
   um embaixo do outro em tela estreita ou letra grande. Como o `basis` é em rem,
   ele cresce com a letra. Antes, com letra 130%, o Confirmar saía da tela.
   `wrap-reverse`: empilhados, o Confirmar fica em cima.
@@ -271,6 +274,26 @@ telefone salvos, e a tecla "Ir" do teclado enviar (`type="submit"`). O
 - Confirmar enquanto envia: `disabled`, `aria-busy`, `<Spinner />` e
   **"Confirmando…"**. Tocar de novo não faz nada. Cancelar também fica desativado.
 - Erro geral: `role="alert"`, com `key={erro}` para o fade rodar a cada erro novo.
+
+### Confirmação (depois de agendar)
+
+O modal não fecha: troca o conteúdo pelo cartão de confirmação, e o **foco vai
+para o título** (leitor de tela anuncia na hora).
+
+- Círculo azul com ✓, **"Almoço agendado!"** (`h2` `text-2xl`), a data por
+  extenso ("Quinta-feira, 12 de novembro") e o nome da ala.
+- **"Adicionar à agenda do celular"** (botão principal, azul). Evento de **dia
+  inteiro**, com lembrete na véspera às 9h ([src_lib.md](src_lib.md),
+  `calendar-event.ts`). O destino depende do aparelho:
+  - **Apple** (iPhone, iPad, Mac; `navigator.userAgent`): link para
+    `GET /api/agenda/<slug>?data=…`, que devolve um `.ics`. Arquivo gerado no
+    navegador (blob) costuma não abrir a Agenda no Safari; servido pelo site, abre.
+  - **Outros** (Android, Windows): link do **Google Agenda**
+    (`calendar.google.com/calendar/render?action=TEMPLATE…`), em nova aba, que
+    abre o app direto. O lembrete fica o padrão da pessoa (o link não aceita).
+- **"Voltar ao calendário"** (contorno) fecha o modal. Esc e toque fora também.
+- "Precisa desmarcar? Fale com a liderança da ala." (a pessoa não desmarca
+  sozinha; "liderança" porque o líder pode ser homem ou mulher).
 
 ## `MonthCalendar.tsx` (client)
 
@@ -307,11 +330,16 @@ pessoa vê os dois de uma vez e toca no que quer, sem adivinhar para onde
 
 | Estado | Visual | Toque |
 |---|---|---|
-| Passado (`data < hoje`, comparação de texto `YYYY-MM-DD`) | número cinza `text-faded` (5,38:1: é clicável, então precisa ser legível), sem borda | `onSelectPassado` |
+| Passado (`data < hoje`, comparação de texto `YYYY-MM-DD`) | número cinza `text-faded` (5,38:1: é clicável, então precisa ser legível), sem fundo nem borda | `onSelectPassado` |
 | P-day (`isPday`) | listrinhas (`bg-pday`), número `text-muted`, borda cinza; sem texto "P-day" dentro do dia (não cabia sem letra minúscula) | `onSelectPday` |
-| Ocupado | framboesa (`bg-accent`), texto branco | `onSelectOcupado(nome)` |
-| Selecionado | azul (`bg-secondary`) com sombra | — |
-| Livre | branco com borda; hover azul-claro | `onSelectDay(dia)` |
+| Ocupado | rosa-claro (`bg-accent-soft`), número framboesa, florzinha no canto (`aria-hidden`) | `onSelectOcupado(nome)` |
+| Selecionado | azul cheio (`bg-secondary`), número branco, sombra | — |
+| **Livre** | **branco, número marinho em negrito, borda azul de 2px** (`border-secondary/60`); hover azul-claro | `onSelectDay(dia)` |
+
+O destaque é do **dia livre**: é o que a pessoa procura. O ocupado ficou suave
+(antes era framboesa cheio e chamava mais atenção que o livre). Cada estado tem
+um sinal além da cor: borda (livre), florzinha (ocupado), listras (P-day),
+sem borda (passado).
 
 Dia passado e P-day **não abrem o agendamento**: só a mensagem embaixo do
 calendário explica o porquê. Segunda que já passou aparece só como passada (sem
@@ -319,16 +347,18 @@ as listrinhas).
 
 ### Acessibilidade
 
-- Cada dia é `role="button"`, `tabIndex=0`, `aria-pressed` (selecionado) e
-  `aria-label` descritivo: "Dia 5, já passou, indisponível", "Dia 6, P-day,
-  indisponível", "Dia 7, ocupado por Maria", "Dia 8, selecionado", "Dia 9,
-  disponível".
-- Enter e Espaço ativam o dia.
+- Cada dia é um **`<button>` de verdade** (Enter e Espaço vêm do navegador),
+  **sem `aria-pressed`**: escolher um dia não é ligar e desligar algo, e o
+  leitor de tela anunciava "botão de alternância, não pressionado" em cada um.
+- `aria-label` começa pelo texto visível (comando de voz: "tocar em 12") e diz
+  a data por extenso (`rotuloDoDia`): "12 de novembro, quinta-feira, livre",
+  "…, ocupado por Maria", "…, P-day", "…, já passou", "…, escolhido".
 - `active:scale-95` ao tocar ("recebi seu toque").
 - Dias da semana "Dom Seg Ter…" (`text-base`, sem maiúsculas; iniciais no
   modo compacto); número do dia em `text-lg`.
-- Legenda: Disponível / Ocupado / P-day, quadradinhos de `h-5 w-5` com o mesmo
-  visual dos dias (o do P-day com listrinhas).
+- Legenda: **Livre** / Ocupado / P-day (a mesma palavra da instrução "Toque em
+  um dia livre"), quadradinhos de `h-5 w-5` com o mesmo visual dos dias (borda
+  azul, rosa-claro com florzinha, listrinhas).
 
 ### Modo compacto (letra grande ou tela estreita)
 

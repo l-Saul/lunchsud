@@ -75,6 +75,19 @@ export function dataPorExtenso(dateISO: string) {
         .format(new Date(`${dateISO}T12:00:00Z`));
 }
 
+export function tituloDoDia(dateISO: string) {
+    const texto = dataPorExtenso(dateISO);
+    return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+const DIA_E_MES = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', day: 'numeric', month: 'long' });
+const DIA_DA_SEMANA = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', weekday: 'long' });
+
+export function rotuloDoDia(dateISO: string) {
+    const data = new Date(`${dateISO}T12:00:00Z`);
+    return `${DIA_E_MES.format(data)}, ${DIA_DA_SEMANA.format(data)}`;
+}
+
 export function diaDaSemanaEDia(dateISO: string) {
     return new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', weekday: 'long', day: 'numeric' })
         .format(new Date(`${dateISO}T12:00:00Z`));

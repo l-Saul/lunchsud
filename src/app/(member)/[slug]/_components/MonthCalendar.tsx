@@ -5,7 +5,8 @@
 'use client'
 
 import { useState } from 'react'
-import { isPday, formatMonthLabel, nomeDoMes } from '@/lib/date'
+import { isPday, formatMonthLabel, nomeDoMes, rotuloDoDia } from '@/lib/date'
+import { Flower } from '@/components/Flower'
 
 type DiaOcupado = {
     data: string
@@ -133,58 +134,58 @@ export function MonthCalendar({
                         }
                     }
 
+                    const rotulo = rotuloDoDia(dataDoDia(dia))
                     const ariaLabel = passado
-                        ? `Dia ${dia}, já passou, indisponível`
+                        ? `${rotulo}, já passou`
                         : pday
-                            ? `Dia ${dia}, P-day, indisponível`
+                            ? `${rotulo}, P-day`
                             : ocupado && ocupacao
-                                ? `Dia ${dia}, ocupado por ${ocupacao.nome}`
+                                ? `${rotulo}, ocupado por ${ocupacao.nome}`
                                 : selecionado
-                                    ? `Dia ${dia}, selecionado`
-                                    : `Dia ${dia}, disponível`
+                                    ? `${rotulo}, escolhido`
+                                    : `${rotulo}, livre`
 
                     return (
-                        <div
+                        <button
                             key={`day-${index}`}
-                            role="button"
-                            tabIndex={0}
+                            type="button"
                             aria-label={ariaLabel}
-                            aria-pressed={selecionado}
                             onClick={ativar}
-                            onKeyDown={e => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                    e.preventDefault()
-                                    ativar()
-                                }
-                            }}
                             className={`
-                                aspect-square w-full rounded-lg text-lg font-medium
+                                relative aspect-square w-full rounded-lg text-lg
                                 flex items-center justify-center
                                 cursor-pointer transition duration-100 active:scale-95
                                 ${passado
-                                    ? 'text-faded'
+                                    ? 'font-medium text-faded'
                                     : pday
-                                    ? 'bg-pday text-muted border border-slate-300'
+                                    ? 'bg-pday font-medium text-muted border border-slate-300'
                                     : ocupado
-                                        ? 'bg-accent text-white'
+                                        ? 'bg-accent-soft font-semibold text-accent border border-accent/30'
                                         : selecionado
-                                            ? 'bg-secondary text-white shadow-md'
-                                            : 'bg-white text-primary border border-slate-200 hover:border-secondary hover:bg-secondary/10 hover:shadow-md'}
+                                            ? 'bg-secondary font-bold text-white shadow-md'
+                                            : 'bg-white font-bold text-primary border-2 border-secondary/60 hover:bg-secondary/10 hover:shadow-md'}
                             `}
                         >
                             {dia}
-                        </div>
+                            {ocupado && !passado && !pday && (
+                                <span aria-hidden="true" className="absolute right-0.5 top-0.5 leading-none">
+                                    <Flower size={11} />
+                                </span>
+                            )}
+                        </button>
                     )
                 })}
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-1 text-base text-text">
                 <span className="flex items-center gap-2">
-                    <span className="h-5 w-5 rounded border border-slate-300 bg-white" />
-                    Disponível
+                    <span className="h-5 w-5 rounded border-2 border-secondary/60 bg-white" />
+                    Livre
                 </span>
                 <span className="flex items-center gap-2">
-                    <span className="h-5 w-5 rounded bg-accent" />
+                    <span className="relative h-5 w-5 rounded border border-accent/30 bg-accent-soft">
+                        <span className="absolute right-px top-px leading-none"><Flower size={9} /></span>
+                    </span>
                     Ocupado
                 </span>
                 <span className="flex items-center gap-2">

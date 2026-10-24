@@ -335,6 +335,10 @@ o arquivo. Nunca coloque SMTP em migration. Tudo em [`docs/database.md`](docs/da
   (o iOS ignora `overflow: hidden`). Fecham por toque fora / Esc / botão.
   Confirmação de remover ou desligar em modal próprio ou inline (não
   `window.confirm`), alvos ≥48px e cor **rosa** (`accent`), não vermelho.
+- **Aviso na tela (toast):** sempre o `NoticeBar` (`src/components/`), **no
+  topo**, com o mesmo visual. O que **confirma** uma ação ("Link copiado!")
+  some sozinho em 3 s; o que **explica** algo (dia ocupado, P-day, erro) fica
+  até a pessoa tocar no X. Ele fica por cima da página: não abra espaço para ele.
 - `prefers-reduced-motion`: zera animações, **menos o spinner**, que gira
   devagar (parado, a pessoa acha que travou).
 - **iCloud:** o repositório local fica numa pasta sincronizada pelo iCloud. Ele

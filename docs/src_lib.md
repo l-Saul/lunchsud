@@ -36,11 +36,32 @@ mês "viraria" perto da meia-noite, e Manaus vira o dia 1 h depois de São Paulo
 | `somarDias('2026-10-30', 3)` | `'2026-11-02'` | soma dias em texto `YYYY-MM-DD` (conta em UTC, ao meio-dia, sem efeito de fuso) |
 | `dataPorExtenso('2026-04-16')` | `'quinta-feira, 16 de abril'` | data por extenso dos e-mails |
 | `diaDaSemanaEDia('2026-10-27')` | `'terça-feira, 27'` | linha do e-mail da semana |
+| `tituloDoDia('2026-11-12')` | `'Quinta-feira, 12 de novembro'` | título do modal de agendar e da confirmação (`dataPorExtenso` com maiúscula) |
+| `rotuloDoDia('2026-11-12')` | `'12 de novembro, quinta-feira'` | nome do dia para leitor de tela; começa pelo número, que é o texto visível do botão |
 
 `isPday` é usado no calendário público, na imagem do mês, no `/api/agendar` e
 nos avisos do cron.
 
 ---
+
+## `calendar-event.ts`: o almoço na agenda do celular
+
+Monta o evento do botão "Adicionar à agenda do celular" (confirmação do
+`BookingModal`). Sem dependência de servidor: o link do Google é usado no
+navegador e o `.ics` na rota.
+
+- Evento de **dia inteiro** ("Almoço dos missionários"), com a descrição
+  "Almoço dos missionários da \<ala\>. Precisa desmarcar? Fale com a liderança
+  da ala." (decisão do dono: dia inteiro, porque o horário muda de casa para casa).
+- `linkGoogleAgenda(dateISO, nomeAla)`: URL do Google Agenda
+  (`action=TEMPLATE`, `dates=AAAAMMDD/AAAAMMDD` com o fim **exclusivo**, o dia
+  seguinte). O link não aceita lembrete: vale o padrão da pessoa.
+- `arquivoIcs({ dateISO, nomeAla, slug, agora })`: texto `.ics` (RFC 5545)
+  com `DTSTART;VALUE=DATE` / `DTEND` (dia seguinte), `UID` estável por ala e
+  dia (adicionar duas vezes não duplica em quem respeita o UID) e um
+  **`VALARM` às 9h da véspera** (`TRIGGER:-PT15H`, contado da meia-noite do
+  dia). Texto escapado (`\`, `;`, `,`, quebra de linha), linhas dobradas em
+  75 bytes e `CRLF`, como a norma pede.
 
 ## `phone.ts`: telefone
 
@@ -263,6 +284,7 @@ Evita payloads gigantes e corpos malformados.
 | `parseMembroId` | `/api/acesso/aprovar`, `/remover` | `membroId` |
 | `parseAlaId` | `/api/acesso/solicitar`, `/api/ala-atual` | `alaId` |
 | `parseSlug` | slug da URL (`buscarAlaPorSlug`) | slug minúsculo |
+| `parseData` | `?data=` de `/api/agenda/[slug]` | `YYYY-MM-DD` válido |
 | `parseNovaAla` | `/api/alas/criar` | `{ nome, slug, endereco, pais, estado, cidade, fuso }` |
 | `parsePreferencias` | `/api/avisos/preferencias` | `{ novo_almoco, dia_sem_almoco, proximo_mes, semana, pedido_acesso }` |
 

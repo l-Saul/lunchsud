@@ -9,6 +9,7 @@ público**, em português: nunca renomeie as pastas.
 |---|---|---|---|
 | `POST /api/agendar` | `BookingModal` (página da ala) | público (sem conta) | não |
 | `GET /api/agendamentos/[slug]` | `WardBooking` (ressincronizar) | público | não |
+| `GET /api/agenda/[slug]?data=` | `BookingModal` (confirmação, aparelhos Apple) | público | não |
 | `GET /api/alas` | home (SWR) | público | não |
 | `POST /api/agendamentos/update` | `EditBookingModal` | líder, ala em foco | sim |
 | `POST /api/agendamentos/delete` | `EditBookingModal` | líder, ala em foco | sim |
@@ -101,6 +102,25 @@ mudanças do dia a dia chegam prontas pelo WebSocket.
 | erro no banco | 500 `{ error: 'Erro ao buscar agendamentos' }` |
 
 Usa `buscarAlaPorSlug` + `buscarOcupados` (as mesmas funções da página).
+
+## `GET /api/agenda/[slug]?data=AAAA-MM-DD`
+
+O almoço como arquivo de agenda (`.ics`), para o botão "Adicionar à agenda do
+celular" no iPhone/iPad/Mac. Servido pelo site porque `.ics` gerado no
+navegador costuma não abrir a Agenda no Safari.
+
+- `data` por `parseData`; ala por `buscarAlaPorSlug` (o nome vem **do banco**,
+  nunca da URL: nada do usuário entra no arquivo).
+- Resposta: `text/calendar; charset=utf-8`,
+  `Content-Disposition: attachment; filename="almoco-dos-missionarios.ics"`,
+  `Cache-Control: no-store`. Conteúdo: `arquivoIcs` de
+  [src_lib.md](src_lib.md) (dia inteiro + lembrete na véspera às 9h).
+- Não confere se existe agendamento: é só o evento de um dia, sem dado pessoal.
+
+| Situação | Resposta |
+|---|---|
+| `data` ausente ou inválida | 400 `{ error: 'Data inválida' }` |
+| slug inválido ou ala inexistente | 404 `{ error: 'Ala não encontrada' }` |
 
 ## `GET /api/alas`
 

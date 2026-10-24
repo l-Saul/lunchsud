@@ -114,6 +114,9 @@ Regras completas de animação no `CLAUDE.md`.
   tela (inclusive modais e mensagens) e listando `getComputedStyle().fontSize`
   de todo texto visível, agrupado pelo papel (título, botão, rótulo, campo,
   erro, rodapé). Nada pode sair abaixo de 16px.
+- `scroll-padding-top: var(--altura-aviso, 0px)`: com um aviso do `NoticeBar`
+  no topo, o elemento com foco do teclado rola para baixo dele, nunca fica
+  escondido (a variável é gravada pelo próprio `NoticeBar`).
 - `h1, h2, h3` com serifa (estética serena, como o site da Igreja).
 - `body`: suavização de fonte e `text-rendering: optimizeLegibility`.
 - `html { color-scheme: only light }` (e a meta do layout): o site é só claro.

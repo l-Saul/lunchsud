@@ -381,7 +381,7 @@ mandar o link da ala no grupo do WhatsApp. Props: `slug`, `nomeAla`. O link é
 
 | Botão | O que faz |
 |---|---|
-| **Copiar** (ícone de duas folhas) | copia o link (`navigator.clipboard`; se não houver, cópia por um campo escondido). O ícone vira ✓ e aparece o aviso **"Link copiado!"** por 3 s. Se nada funcionar: "Não foi possível copiar. O link é: \<link\>" |
+| **Copiar** (ícone de duas folhas) | copia o link (`navigator.clipboard`; se não houver, cópia por um campo escondido). O ícone vira ✓ e aparece o aviso **"Link copiado!"** (`NoticeBar`, no topo, tipo `sucesso`), que some em 3 s. Se nada funcionar: "Não foi possível copiar. O link é: \<link\>" (tipo `erro`), que **fica** com X para a pessoa ter tempo de copiar à mão |
 | **Compartilhar** (ícone de três pontos ligados) | no celular abre o menu de compartilhar do sistema (`navigator.share`), com título "Calendário de almoços da \<ala\>", texto "Agende seu almoço para nossos missionários ❤️" e o link (o mesmo da prévia da página da ala). Sem esse menu (computador) abre o WhatsApp (`wa.me`) numa aba nova com a mesma mensagem. Cancelar o menu não faz nada |
 
 - **Mesma cor do botão principal** (azul `bg-secondary`, ícone branco), cantos
@@ -390,8 +390,8 @@ mandar o link da ala no grupo do WhatsApp. Props: `slug`, `nomeAla`. O link é
 - Sem texto visível, então cada um tem `aria-label` ("Copiar o link do
   calendário da ala", "Compartilhar o link do calendário da ala") e `title`
   (dica no computador).
-- O aviso aparece **no alto da tela** (fixo, azul, `animate-aparecer`), sem
-  empurrar o painel. Para leitor de tela há uma região `role="status"` com o mesmo texto.
+- O aviso é o `NoticeBar` ([src_components.md](src_components.md)): no alto
+  da tela, por cima do painel (não empurra nada), anunciado ao leitor de tela.
 
 ## `LogoutButton.tsx` (client)
 

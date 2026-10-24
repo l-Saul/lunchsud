@@ -151,6 +151,10 @@ export function parsePreferencias(raw: unknown): PreferenciasEmail {
     return preferencias;
 }
 
+export function parseData(raw: unknown): string {
+    return dataSaneada(raw);
+}
+
 export function parseSlug(slug: string): string {
     const s = asString(slug).trim().toLowerCase();
     if (!SLUG_RE.test(s)) throw new ValidationError('Ala inválida');

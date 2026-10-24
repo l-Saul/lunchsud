@@ -10,6 +10,7 @@ import { BookingModal, type Agendado } from './BookingModal'
 import { useBookingsRealtime, type MudancaAgendamento } from '@/hooks/use-bookings-realtime'
 import { Flower } from '@/components/Flower'
 import { HeaderBand } from '@/components/HeaderBand'
+import { NoticeBar, type Aviso } from '@/components/NoticeBar'
 
 type DiaOcupado = {
     id: number
@@ -32,11 +33,8 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
     const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null)
     const [nome, setNome] = useState('')
     const [telefone, setTelefone] = useState('')
-    const [mensagem, setMensagem] = useState('')
-    const [tipoMensagem, setTipoMensagem] = useState<'sucesso' | 'erro' | null>(null)
     const [diasOcupados, setDiasOcupados] = useState<DiaOcupado[]>(ocupados)
-    const [ocupadoPor, setOcupadoPor] = useState<string | null>(null)
-    const [aviso, setAviso] = useState<'pday' | 'passado' | null>(null)
+    const [aviso, setAviso] = useState<Aviso | null>(null)
 
     const [anoBase, mesBase] = mesAtual.split('-').map(Number)
     const inicioMesAtual = new Date(anoBase, mesBase - 1, 1)
@@ -45,8 +43,6 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
     const [baseDate, setBaseDate] = useState(inicioMesAtual)
 
     const mesSeguinte = `${inicioMesSeguinte.getFullYear()}-${pad(inicioMesSeguinte.getMonth() + 1)}`
-
-    const mesNomeBase = baseDate.toLocaleDateString('pt-BR', { month: 'long' })
 
     const inicioJanela = hoje
     const aposJanela = new Date(anoBase, mesBase + 1, 1)
@@ -78,23 +74,16 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
 
     const fecharModal = useCallback(() => {
         setDiaSelecionado(null)
-        setMensagem('')
-        setTipoMensagem(null)
     }, [])
 
     const aoAgendar = useCallback((agendado: Agendado) => {
         setDiasOcupados(prev => [...prev.filter(o => o.data !== agendado.data), agendado])
-        setTipoMensagem('sucesso')
-        setMensagem('Almoço agendado com sucesso. Muito obrigado!')
         setNome('')
         setTelefone('')
-        setDiaSelecionado(null)
-        setOcupadoPor(null)
     }, [])
 
     const aoConflito = useCallback(() => {
-        setTipoMensagem('erro')
-        setMensagem('Este dia acabou de ser ocupado. Escolha outro.')
+        setAviso({ tipo: 'erro', conteudo: 'Este dia acabou de ser ocupado. Escolha outro dia.' })
         setDiaSelecionado(null)
         atualizarOcupados()
     }, [atualizarOcupados])
@@ -144,56 +133,32 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
                                 onSelectMonth={ym => {
                                     setBaseDate(ym === mesAtual ? inicioMesAtual : inicioMesSeguinte)
                                     setDiaSelecionado(null)
-                                    setOcupadoPor(null)
                                     setAviso(null)
                                 }}
                                 onSelectDay={day => {
                                     setDiaSelecionado(day)
-                                    setOcupadoPor(null)
                                     setAviso(null)
                                 }}
                                 onSelectOcupado={nome => {
-                                    setOcupadoPor(nome)
+                                    setAviso({ tipo: 'info', conteudo: <>Este dia já foi agendado por <strong>{nome}</strong>.</> })
                                     setDiaSelecionado(null)
-                                    setAviso(null)
                                 }}
                                 onSelectPday={() => {
-                                    setAviso('pday')
+                                    setAviso({ tipo: 'info', conteudo: <>Segunda-feira é <strong>P-day</strong>, o dia de descanso dos missionários. Escolha outro dia.</> })
                                     setDiaSelecionado(null)
-                                    setOcupadoPor(null)
                                 }}
                                 onSelectPassado={() => {
-                                    setAviso('passado')
+                                    setAviso({ tipo: 'info', conteudo: <>Esse dia <strong>já passou</strong>. Escolha outro dia.</> })
                                     setDiaSelecionado(null)
-                                    setOcupadoPor(null)
                                 }}
                             />
                         </div>
-
-                        {ocupadoPor && (
-                            <p key={ocupadoPor} className="animate-aparecer wrap-anywhere text-center text-lg font-medium text-text">
-                                Este dia já foi agendado por <strong>{ocupadoPor}</strong>.
-                            </p>
-                        )}
-
-                        {aviso === 'pday' && (
-                            <p className="animate-aparecer text-center text-lg font-medium text-text">
-                                Segunda-feira é dia de <strong>P-day</strong>. Escolha outro dia.
-                            </p>
-                        )}
-
-                        {aviso === 'passado' && (
-                            <p className="animate-aparecer text-center text-lg font-medium text-text">
-                                Esse dia <strong>já passou</strong>. Escolha outro dia.
-                            </p>
-                        )}
 
                         {diaSelecionado && (
                             <BookingModal
                                 key={dataSelecionada}
                                 slug={slug}
-                                dia={diaSelecionado}
-                                nomeMes={mesNomeBase}
+                                nomeAla={nomeAla}
                                 data={dataSelecionada}
                                 nome={nome}
                                 telefone={telefone}
@@ -205,20 +170,9 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
                             />
                         )}
 
-                        {mensagem && !diaSelecionado && (
-                            <p
-                                key={mensagem}
-                                role="status"
-                                aria-live="polite"
-                                className={`animate-aparecer text-center text-lg font-medium ${
-                                    tipoMensagem === 'erro' ? 'text-accent' : 'text-secondary'
-                                }`}
-                            >
-                                {mensagem}
-                            </p>
-                        )}
-
                     </div>
+
+                    <NoticeBar aviso={aviso} onClose={() => setAviso(null)} />
                 </div>
             </main>
         </>

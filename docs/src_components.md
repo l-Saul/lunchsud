@@ -9,6 +9,7 @@ na pasta dela, em `_components/`.
 | `Footer` | layout raiz (todas as páginas) |
 | `HeaderBand` | todas as páginas: home, ala, erro da ala, 404, login, acesso, redefinir senha, painel |
 | `LoadingOverlay` | `WardSwitcher` (painel) |
+| `NoticeBar` | página da ala (avisos do calendário), painel (`ShareLinkButtons`: "Link copiado!") |
 | `Spinner` | todos os botões de ação, `LoadingOverlay`, home |
 
 ## `Flower.tsx`
@@ -69,6 +70,34 @@ Carregamento **na tela toda**: fundo azul translúcido desfocado, Spinner grande
   isso é `'use client'`.
 - Aparece com fade curto e some na hora: **renderize condicionalmente**
   (`{texto && <LoadingOverlay texto={texto} />}`).
+
+## `NoticeBar.tsx`
+
+O **aviso na tela** do site (o "toast"), sempre **no topo**, com o mesmo
+visual em todo lugar: cartão branco, borda esquerda colorida, ícone e texto
+`text-lg`.
+
+- Props: `aviso` (`{ tipo: 'info' | 'sucesso' | 'erro', conteudo }` ou `null`)
+  e `onClose` (opcional). Exporta o tipo `Aviso`.
+- `info` (ícone "i") e `sucesso` (✓) com borda azul; `erro` ("!") com borda e
+  ícone rosa. Texto `wrap-anywhere` (pode ter nome de usuário ou link longo).
+- **Com `onClose`** aparece o X ("Fechar aviso", 44px) e o aviso **fica até a
+  pessoa fechar** (ou até a próxima ação de quem chamou): é o que **explica**
+  algo (dia ocupado, P-day, conflito, falha ao copiar). **Sem `onClose`**, quem
+  chama tira sozinho: o que só **confirma** uma ação ("Link copiado!") some em
+  3 s.
+- **Anunciado:** a região `role="status"` (`aria-live="polite"`) fica **sempre
+  montada** (o componente é renderizado mesmo com `aviso` nulo) e só o conteúdo
+  muda; região criada junto com o texto costuma não ser lida. O X fica fora
+  dela, para não ser lido junto.
+- `fixed` no topo, `z-70` (acima dos modais), largura até `max-w-xl`, respeita
+  o entalhe do iPhone (`env(safe-area-inset-top)`). Fade ao aparecer
+  (`animate-aparecer`).
+- **Não abre espaço na página:** fica por cima. Para o foco do teclado nunca
+  ficar escondido atrás dele (WCAG 2.4.11), mede a própria altura
+  (`ResizeObserver`) e grava em `--altura-aviso` no `<html>`, que vira o
+  `scroll-padding-top` do `globals.css`. Antes ele ficava no rodapé e
+  reservava um espaço no fim da página, que aparecia vazio.
 
 ## `Spinner.tsx`
 

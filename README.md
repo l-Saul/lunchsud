@@ -79,6 +79,7 @@ Sem framer-motion, sem biblioteca de UI: animações só em CSS.
 |---|---|---|
 | `POST /api/agendar` | público | cria agendamento (fonte da verdade das regras do membro) |
 | `GET /api/agendamentos/[slug]` | público | dias ocupados da janela (ressincronizar) |
+| `GET /api/agenda/[slug]?data=` | público | o almoço como arquivo de agenda (`.ics`), para o iPhone |
 | `GET /api/alas` | público | lista de alas da home |
 | `POST /api/agendamentos/update` | líder | edita data/nome/telefone (ala em foco) |
 | `POST /api/agendamentos/delete` | líder | remove (ala em foco) |

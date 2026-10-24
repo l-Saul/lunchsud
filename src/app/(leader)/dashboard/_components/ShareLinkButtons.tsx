@@ -5,6 +5,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { NoticeBar, type Aviso } from '@/components/NoticeBar';
 import { siteUrl } from '@/lib/site-url';
 
 type Props = { slug: string; nomeAla: string };
@@ -31,20 +32,11 @@ function copiarComFallback(texto: string) {
 }
 
 export function ShareLinkButtons({ slug, nomeAla }: Props) {
-    const [aviso, setAviso] = useState('');
+    const [aviso, setAviso] = useState<Aviso | null>(null);
     const [copiado, setCopiado] = useState(false);
     const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
     useEffect(() => () => clearTimeout(timer.current), []);
-
-    function mostrar(texto: string) {
-        setAviso(texto);
-        clearTimeout(timer.current);
-        timer.current = setTimeout(() => {
-            setAviso('');
-            setCopiado(false);
-        }, 3000);
-    }
 
     async function copiar() {
         const url = `${siteUrl()}/${slug}`;
@@ -55,11 +47,17 @@ export function ShareLinkButtons({ slug, nomeAla }: Props) {
         } catch {
             ok = copiarComFallback(url);
         }
+        clearTimeout(timer.current);
         if (ok) {
             setCopiado(true);
-            mostrar('Link copiado!');
+            setAviso({ tipo: 'sucesso', conteudo: 'Link copiado!' });
+            timer.current = setTimeout(() => {
+                setAviso(null);
+                setCopiado(false);
+            }, 3000);
         } else {
-            mostrar(`Não foi possível copiar. O link é: ${url}`);
+            setCopiado(false);
+            setAviso({ tipo: 'erro', conteudo: `Não foi possível copiar. O link é: ${url}` });
         }
     }
 
@@ -116,15 +114,7 @@ export function ShareLinkButtons({ slug, nomeAla }: Props) {
                     <path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98" />
                 </svg>
             </button>
-            <p role="status" aria-live="polite" className="sr-only">{aviso}</p>
-            {aviso && (
-                <div
-                    aria-hidden="true"
-                    className="fixed inset-x-4 top-6 z-70 mx-auto max-w-md animate-aparecer wrap-anywhere rounded-2xl bg-primary px-5 py-4 text-center text-base font-medium text-white shadow-2xl ring-1 ring-white/25"
-                >
-                    {aviso}
-                </div>
-            )}
+            <NoticeBar aviso={aviso} onClose={aviso?.tipo === 'erro' ? () => setAviso(null) : undefined} />
         </>
     );
 }

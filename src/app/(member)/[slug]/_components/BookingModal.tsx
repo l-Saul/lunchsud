@@ -6,6 +6,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { normalizarTelefone } from '@/lib/phone'
+import { tituloDoDia } from '@/lib/date'
+import { linkGoogleAgenda } from '@/lib/calendar-event'
 import { Spinner } from '@/components/Spinner'
 import { useScrollLock } from '@/hooks/use-scroll-lock'
 
@@ -17,8 +19,7 @@ export type Agendado = { id: number; data: string; nome: string }
 
 type Props = {
     slug: string
-    dia: number
-    nomeMes: string
+    nomeAla: string
     data: string
     nome: string
     telefone: string
@@ -30,13 +31,18 @@ type Props = {
 }
 
 export function BookingModal({
-    slug, dia, nomeMes, data, nome, telefone,
+    slug, nomeAla, data, nome, telefone,
     onNomeChange, onTelefoneChange, onClose, onBooked, onConflict,
 }: Props) {
     const [erroNome, setErroNome] = useState(false)
     const [erroTelefone, setErroTelefone] = useState(false)
     const [erro, setErro] = useState('')
     const [loading, setLoading] = useState(false)
+    const [confirmado, setConfirmado] = useState(false)
+    const [apple] = useState(() => /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent))
+    const telefoneRef = useRef<HTMLInputElement>(null)
+    const confirmadoRef = useRef<HTMLHeadingElement>(null)
+    const titulo = tituloDoDia(data)
 
     async function agendar() {
         if (loading) return
@@ -85,7 +91,12 @@ export function BookingModal({
 
         const { id } = await res.json().catch(() => ({ id: 0 }))
         onBooked({ id, data, nome: nome.trim() })
+        setConfirmado(true)
     }
+
+    useEffect(() => {
+        if (confirmado) confirmadoRef.current?.focus()
+    }, [confirmado])
 
     const onCloseRef = useRef(onClose)
     useEffect(() => {
@@ -112,12 +123,50 @@ export function BookingModal({
                 onClick={e => e.stopPropagation()}
                 role="dialog"
                 aria-modal="true"
-                aria-label={`Agendar dia ${dia} de ${nomeMes}`}
+                aria-labelledby={confirmado ? 'agendado-titulo' : 'agendar-titulo'}
                 className="w-full max-w-md animate-surgir rounded-2xl bg-background p-6 shadow-2xl"
             >
+                {confirmado ? (
+                    <div className="flex flex-col items-center gap-4 text-center">
+                        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-white" aria-hidden="true">
+                            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M20 6 9 17l-5-5" />
+                            </svg>
+                        </span>
+                        <div className="flex flex-col gap-1">
+                            <h2 id="agendado-titulo" ref={confirmadoRef} tabIndex={-1} className="text-2xl font-semibold text-text focus:outline-none">
+                                Almoço agendado!
+                            </h2>
+                            <p className="text-lg text-text">{titulo}</p>
+                            <p className="wrap-anywhere text-base text-muted">{nomeAla}</p>
+                        </div>
+                        <a
+                            href={apple ? `/api/agenda/${slug}?data=${data}` : linkGoogleAgenda(data, nomeAla)}
+                            {...(apple ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
+                            className="mt-2 flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-lg font-semibold text-white shadow-md transition duration-100 hover:opacity-95 active:scale-[0.98]"
+                        >
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+                                <rect x="3" y="4" width="18" height="18" rx="2" />
+                                <path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4" />
+                            </svg>
+                            Adicionar à agenda do celular
+                        </a>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="min-h-13 w-full rounded-xl border border-slate-300 px-4 text-lg font-medium text-text transition hover:bg-slate-100 active:scale-[0.98] cursor-pointer"
+                        >
+                            Voltar ao calendário
+                        </button>
+                        <p className="text-base text-muted">
+                            Precisa desmarcar? Fale com a liderança da ala.
+                        </p>
+                    </div>
+                ) : (
+                <>
                 <div className="mb-5 flex items-start justify-between gap-3">
-                    <h2 className="text-xl font-semibold text-text">
-                        Agendar dia {dia} de {nomeMes}
+                    <h2 id="agendar-titulo" className="text-xl font-semibold text-text">
+                        {titulo}
                     </h2>
                     <button
                         onClick={onClose}
@@ -148,18 +197,26 @@ export function BookingModal({
                             type="text"
                             autoComplete="name"
                             autoCapitalize="words"
+                            enterKeyHint="next"
                             maxLength={80}
                             placeholder="Digite seu nome aqui"
                             aria-invalid={erroNome}
+                            aria-describedby={erroNome ? 'nome-erro' : undefined}
                             className={`${campoBase} ${erroNome ? 'border-accent' : 'border-slate-300'}`}
                             value={nome}
                             onChange={e => {
                                 onNomeChange(e.target.value)
                                 if (erroNome) setErroNome(false)
                             }}
+                            onKeyDown={e => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault()
+                                    telefoneRef.current?.focus()
+                                }
+                            }}
                         />
                         {erroNome && (
-                            <p role="alert" className="text-base text-accent">
+                            <p id="nome-erro" role="alert" className="text-base text-accent">
                                 Informe seu nome.
                             </p>
                         )}
@@ -170,14 +227,17 @@ export function BookingModal({
                             Seu telefone (com DDD)
                         </label>
                         <input
+                            ref={telefoneRef}
                             id="telefone"
                             name="tel"
                             type="tel"
                             autoComplete="tel"
                             inputMode="tel"
+                            enterKeyHint="done"
                             placeholder="Digite seu telefone aqui"
                             maxLength={25}
                             aria-invalid={erroTelefone}
+                            aria-describedby={erroTelefone ? 'telefone-erro' : undefined}
                             className={`${campoBase} ${erroTelefone ? 'border-accent' : 'border-slate-300'}`}
                             value={telefone}
                             onChange={e => {
@@ -190,7 +250,7 @@ export function BookingModal({
                             }}
                         />
                         {erroTelefone && (
-                            <p role="alert" className="text-base text-accent">
+                            <p id="telefone-erro" role="alert" className="text-base text-accent">
                                 Confira o telefone, com DDD. De outro país? Comece com + e o código do país.
                             </p>
                         )}
@@ -208,7 +268,7 @@ export function BookingModal({
                         type="button"
                         onClick={onClose}
                         disabled={loading}
-                        className="min-h-13 grow basis-28 rounded-xl border border-slate-300 px-4 text-lg font-medium text-text transition hover:bg-slate-100 disabled:opacity-50 cursor-pointer"
+                        className="min-h-13 grow basis-40 rounded-xl border border-slate-300 px-4 text-lg font-medium text-text transition hover:bg-slate-100 disabled:opacity-50 cursor-pointer"
                     >
                         Cancelar
                     </button>
@@ -216,13 +276,15 @@ export function BookingModal({
                         type="submit"
                         disabled={loading}
                         aria-busy={loading}
-                        className="flex min-h-13 grow basis-28 items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-lg font-semibold text-white shadow-md transition duration-100 hover:opacity-95 hover:shadow-lg enabled:active:scale-[0.98] disabled:opacity-70 cursor-pointer"
+                        className="flex min-h-13 grow basis-40 items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-lg font-semibold text-white shadow-md transition duration-100 hover:opacity-95 hover:shadow-lg enabled:active:scale-[0.98] disabled:opacity-70 cursor-pointer"
                     >
                         {loading && <Spinner />}
-                        {loading ? 'Confirmando…' : 'Confirmar'}
+                        {loading ? 'Confirmando…' : 'Confirmar almoço'}
                     </button>
                 </div>
                 </form>
+                </>
+                )}
             </div>
             </div>
         </div>

@@ -312,7 +312,7 @@ e foco móvel; para duas opções isso é complexidade sem ganho (ver A13).
 - Dias da semana: de "DOM SEG…" (maiúsculo, 15,8px) para "Dom Seg…" em 16px.
 - Legenda: quadradinhos de 20px, texto de 16px, com os mesmos sinais da grade.
 
-**Lista de próximos dias livres (nova).** Logo abaixo do calendário (e antes
+~~**Lista de próximos dias livres (nova).**~~ ❌ **Cancelada pelo dono (24/10/2026).** Logo abaixo do calendário (e antes
 dele na ordem do leitor de tela), os próximos 5–7 dias livres como **botões
 grandes de largura total**:
 
@@ -350,7 +350,7 @@ embaixo do calendário (`WardBooking.tsx`, linhas 181–197).
   "Agendar dia 12 de outubro").
 - **Dica visível do telefone** abaixo do rótulo: "Exemplo: (41) 99999-9999".
   Hoje o formato só aparece no erro.
-- **Lembrar nome e telefone** da própria irmã (no aparelho dela), com "Não é a
+- ❌ **Cancelado pelo dono (24/10/2026): o celular já autopreenche.** ~~Lembrar nome e telefone~~ da própria irmã (no aparelho dela), com "Não é a
   senhora? Limpar". É o telefone **dela mesma**, digitado por ela; não expõe o
   de ninguém. Atende o WCAG 3.3.7 (não pedir de novo o que já foi informado).
 - **Teclado do celular:** `enterKeyHint="next"` no nome e `"done"` no telefone
@@ -367,7 +367,7 @@ embaixo do calendário (`WardBooking.tsx`, linhas 181–197).
   foco não entra nele, o Tab sai para os dias do fundo e, ao fechar, o foco se
   perde.
 
-### 6.5 Depois de agendar (confirmação) — maior ganho
+### 6.5 ✅ Depois de agendar (confirmação) — maior ganho (feito em 24/10/2026: dia inteiro + lembrete na véspera às 9h)
 
 Hoje o modal fecha e aparece uma frase embaixo do calendário. Proposta:
 **cartão de confirmação**, com o foco indo para o título dele:
@@ -518,16 +518,16 @@ Pastas: `(m)` = `src/app/(member)/[slug]/_components/`, `(d)` = `src/app/(leader
 | A5 ✅ | MAIÚSCULAS em rótulos (mais difíceis de ler). **Medido** | `(m)MonthCalendar.tsx:86,105,109,185`, `(d)BookingsCard.tsx:62`, `(d)month-image/MonthImage.tsx:103,177` | V C | Caixa normal | boa prática |
 | A6 ✅ | Escritura inteira em itálico. **Medido** | `(member)/page.tsx:76` | V | Sem itálico | boa prática |
 | A7 | Estados do dia só por cor | `(m)MonthCalendar.tsx` | V L | Segundo sinal (seção 6.3) | 1.4.1 |
-| A8 | Mensagem ao tocar no dia **não é anunciada** (fora de região "ao vivo"). **Medido** | `(m)WardBooking.tsx:181–197` | L, todos | Faixa fixa com `role="status"` **sempre montada** | 4.1.3 |
-| A9 | Região "ao vivo" do sucesso é criada junto com o texto; leitores costumam não anunciar | `(m)WardBooking.tsx:216–220` | L | Região sempre montada + cartão de confirmação recebe foco | 4.1.3 |
+| A8 ✅ | Mensagem ao tocar no dia **não é anunciada** (fora de região "ao vivo"). **Medido** | `(m)WardBooking.tsx:181–197` | L, todos | Faixa fixa com `role="status"` **sempre montada** | 4.1.3 |
+| A9 ✅ | Região "ao vivo" do sucesso é criada junto com o texto; leitores costumam não anunciar | `(m)WardBooking.tsx:216–220` | L | Região sempre montada + cartão de confirmação recebe foco | 4.1.3 |
 | A10 | Modais sem gestão de foco. **Medido:** o foco fica no dia tocado (fora do modal); o Tab sai para os dias do fundo; o fundo não é inerte; ao fechar, o foco vai para o `body` | `(m)BookingModal.tsx:127`, `(d)EditBookingModal.tsx:126`, `(d)UsersCard.tsx:143` | L M | `<dialog>` com `showModal()`: foco, fundo inerte e Esc vêm do navegador. **Continua precisando** da trava de rolagem do `body` (o `<dialog>` não trava) e de devolver o foco ao dia ao fechar. iOS ≥ 15.4 | 2.4.3, 2.1.2 |
 | A11 | Erro não ligado ao campo. **Medido:** `aria-invalid="true"` com `aria-describedby` vazio nos dois campos | `(m)BookingModal.tsx:167,194`, `(d)EditBookingModal.tsx:170,195` | L | `aria-describedby` → id do erro | 1.3.1, 3.3.1 |
-| A12 | Dia é `<div role="button">` e o leitor diz só "Dia 24, disponível" (sem mês nem dia da semana). **Medido** na árvore de acessibilidade | `(m)MonthCalendar.tsx:156–158` | L | `<button>` nativo + "Quinta-feira, 12 de novembro, livre" | 2.4.6 |
+| A12 ✅ | Dia é `<div role="button">` e o leitor diz só "Dia 24, disponível" (sem mês nem dia da semana). **Medido** na árvore de acessibilidade | `(m)MonthCalendar.tsx:156–158` | L | `<button>` nativo + "Quinta-feira, 12 de novembro, livre" | 2.4.6 |
 | A13 ✅ | Troca de mês não é anunciada | `(m)MonthCalendar.tsx` | L | Dois `<button aria-pressed>` com o nome do mês (seção 6.3); **não** o padrão "abas" do ARIA | 4.1.2 |
 | A14 | Erros do painel em `alert()` (texto do sistema, some com um toque, confunde) | `(d)EditBookingModal.tsx:69,72`, `(d)UsersCard.tsx:37,46` | C V | Mensagem dentro do modal/cartão, com o que fazer | 3.3.1 |
 | A15 | Regra da senha só aparece depois do erro | `LoginForm.tsx:74`, `ResetPasswordForm.tsx:36` | C | Dica visível antes | 3.3.2 |
-| A16 | Formato do telefone não é mostrado antes | `(m)BookingModal.tsx`, `(d)EditBookingModal.tsx` | C | "Exemplo: (41) 99999-9999" | 3.3.2 |
-| A17 | ✅ Enter confirma no agendar (`<form>`). Falta `enterKeyHint` (medido: ausente) e `<form>` no modal de edição | `(m)BookingModal.tsx:147`, `(d)EditBookingModal.tsx` | M C | `enterKeyHint` + `<form>` no painel | boa prática |
+| A16 ❌ (dica feita e retirada pelo dono) | Formato do telefone não é mostrado antes | `(m)BookingModal.tsx`, `(d)EditBookingModal.tsx` | C | "Exemplo: (41) 99999-9999" | 3.3.2 |
+| A17 ✅ (agendar) | ✅ Enter confirma no agendar (`<form>`). Falta `enterKeyHint` (medido: ausente) e `<form>` no modal de edição | `(m)BookingModal.tsx:147`, `(d)EditBookingModal.tsx` | M C | `enterKeyHint` + `<form>` no painel | boa prática |
 | A18 | Link externo abre outra aba sem avisar | `Footer.tsx:19` | C L | "(abre em outra aba)" | 3.2.5 |
 | A19 ✅ | Sem `color-scheme` (**medido: ausente em todas as páginas**): o modo escuro forçado do Chrome/Samsung Internet pode inverter as cores | `layout.tsx` (`viewport`) | V A | `colorScheme` no `viewport` = `only light`; testar no Samsung Internet | — |
 | A20 | No iPhone, o Safari não segue o tamanho de letra do sistema | `globals.css:35` | V | Ver nota técnica na seção 8.1 | 1.4.4 |
@@ -537,22 +537,22 @@ Pastas: `(m)` = `src/app/(member)/[slug]/_components/`, `(d)` = `src/app/(leader
 | A24 | Botão fechar do modal só com "X" | modais | C | Manter "Cancelar" sempre visível ao lado da ação (já é assim no agendar) | — |
 | A25 | Base fixa em 18px em qualquer tela (**medido: 18px a 1366px**): no computador o painel fica pequeno, e o `text-sm` vira 15,8px | `globals.css:35`, `(leader)/dashboard/*` | V | Letra que cresce com a tela (8.1) + painel (8.2) | boa prática |
 | A26 ✅ | Nomes e e-mails cortados com "…" (`truncate`): a informação some | `(leader)/dashboard/page.tsx:119`, `(d)BookingsCard.tsx:65`, `(d)UsersCard.tsx:76,77` | V C | Quebrar a linha | 1.4.4, 1.4.10 (sem perda de conteúdo) |
-| **A27** | **Novo.** `aria-pressed` nos 31 dias: o leitor anuncia "botão de alternância, não pressionado" em cada um, e escolher dia não é alternar | `(m)MonthCalendar.tsx:159` | L | Tirar `aria-pressed`; estado no nome ("…, escolhido") | 4.1.2 |
+| **A27** ✅ | **Novo.** `aria-pressed` nos 31 dias: o leitor anuncia "botão de alternância, não pressionado" em cada um, e escolher dia não é alternar | `(m)MonthCalendar.tsx:159` | L | Tirar `aria-pressed`; estado no nome ("…, escolhido") | 4.1.2 |
 | **A28** ✅ | **Novo.** Home com letra a 200% num celular de 320px: título e botões das alas não quebram e a página vai para **401px** (o celular afasta o zoom) | `(member)/page.tsx` (título `text-3xl` e botões das alas) | V | `min-w-0` no texto dos botões + `wrap-anywhere`/`hyphens-auto` (com `lang="pt-BR"` hifeniza certo) | 1.4.4, 1.4.10 |
 | **A29** ✅ | **Novo.** Home sem `<main>` (axe: `landmark-one-main`, `region`) | `(member)/page.tsx:47` | L | Trocar `<section>` por `<main>` | 1.3.1 (boa prática) |
 | **A30** ✅ | **Novo.** Dias que já passaram com contraste de **1,81:1**, e eles são clicáveis (não valem como "inativos") | `(m)MonthCalendar.tsx:172` | V | `#676b6e` (5,38:1), sem borda/fundo para diferenciar | 1.4.3 |
-| **A31** | **Novo.** Texto visível fora do nome acessível: "VOLTAR" → "Mês anterior", "AVANÇAR" → "Próximo mês", "26 P-DAY" → "Dia 26, P-day…" (axe: `label-content-name-mismatch`). Comando de voz falha | `(m)MonthCalendar.tsx:80,99,158` | L M | Nome acessível começando pelo texto visível | 2.5.3 |
+| **A31** ✅ | **Novo.** Texto visível fora do nome acessível: "VOLTAR" → "Mês anterior", "AVANÇAR" → "Próximo mês", "26 P-DAY" → "Dia 26, P-day…" (axe: `label-content-name-mismatch`). Comando de voz falha | `(m)MonthCalendar.tsx:80,99,158` | L M | Nome acessível começando pelo texto visível | 2.5.3 |
 | **A32** | **Novo.** "Esqueci minha senha" e "Não tem conta? Criar conta" com **23px de altura**, fora de frase | `(leader)/admin/_components/LoginForm.tsx` | M | Botões secundários de 48px | 2.5.8 |
 | **A33** | **Novo.** Confirmar vazio dispara **3 `role="alert"` ao mesmo tempo**, lidos embaralhados | `(m)BookingModal.tsx:176,207,215` | L C | Erros por campo via `aria-describedby`, um resumo anunciado, foco no 1º campo com erro | 3.3.1, 4.1.3 |
 
 ### 7.3 Soluções novas de acessibilidade (além de corrigir a lista)
 
-1. **Lista de próximos dias livres** (seção 6.3): alternativa à grade, para
+1. ❌ (cancelada) **Lista de próximos dias livres** (seção 6.3): alternativa à grade, para
    visão baixa, tremor, letra grande e leitor de tela (que hoje passa por todos
    os dias que já passaram antes de achar um livre).
-2. **Faixa de mensagens fixa** no rodapé da tela: um único lugar onde toda
+2. ✅ **Faixa de mensagens fixa** no rodapé da tela: um único lugar onde toda
    resposta aparece, visível e anunciada, sem cobrir o foco.
-3. **Cartão de confirmação + agenda do celular** (seção 6.5), com o caminho
+3. ✅ **Cartão de confirmação + agenda do celular** (seção 6.5), com o caminho
    certo para iPhone e Android.
 4. **Botão "Letra maior"** (opcional) na faixa: aumenta a base e fica salvo no
    aparelho. Não substitui o zoom nem a letra do sistema; só soma.
@@ -755,7 +755,7 @@ tremor. Os 24px são o piso legal, não a meta.
 |---|---|---|---|
 | **1. Cores + fundo claro** | Tokens novos, faixa de cabeçalho, fundo creme, `<main>` na home, flor, fitinha, imagem exportada, e-mails, `color-scheme`, `CLAUDE.md` | `globals.css`, `layout.tsx`, novo componente de cabeçalho, todas as páginas (texto branco → escuro), `Flower.tsx`, `month-image/MonthImage.tsx`, `supabase/email/*`, `email-templates.ts`, `CLAUDE.md` | Grande |
 | **2. Letra e contraste** ✅ (base menor, por decisão do dono) | **Letra que cresce com a tela** (8.1), **painel no computador** (8.2), eliminar textos < 16px e px fixo, MAIÚSCULAS, itálico; dias passados ≥ 4,5:1; `muted` mais escuro; placeholders; home sem estourar com letra a 200% | `globals.css`, `(leader)/dashboard/*`, `MonthCalendar.tsx`, `(member)/page.tsx`, lista da seção 8 | Médio |
-| **3. Agendamento** | Botões de mês com nome, estados do dia, `<button>` nos dias sem `aria-pressed`, nome acessível com o texto visível, lista de dias livres, faixa de mensagens, título por extenso, dicas, `enterKeyHint`, lembrar nome/telefone, cartão de confirmação + agenda (iPhone e Android) | `MonthCalendar.tsx`, `WardBooking.tsx`, `BookingModal.tsx`, `src/lib/date.ts`, nova rota do `.ics` | Grande |
+| **3. Agendamento** ✅ (sem lista de dias livres nem lembrar dados, por decisão do dono) | Botões de mês com nome, estados do dia, `<button>` nos dias sem `aria-pressed`, nome acessível com o texto visível, lista de dias livres, faixa de mensagens, título por extenso, dicas, `enterKeyHint`, lembrar nome/telefone, cartão de confirmação + agenda (iPhone e Android) | `MonthCalendar.tsx`, `WardBooking.tsx`, `BookingModal.tsx`, `src/lib/date.ts`, nova rota do `.ics` | Grande |
 | **4. Modais e leitor de tela** | `<dialog>`/foco/`inert`/retorno do foco, `aria-describedby`, um alerta por vez, regiões "ao vivo", `alert()` → mensagem, tirar `backdrop-blur` | `BookingModal.tsx`, `EditBookingModal.tsx`, `UsersCard.tsx`, `LoadingOverlay.tsx`, `WardSwitcher.tsx` | Médio |
 | **5. Painel** | "owner" em português, Ligar/WhatsApp (só no painel), nomes de botões, mês recolhível, interruptores com texto e contraste, regra da senha visível, links do login como botões de 48px | `(leader)/dashboard/*`, `NotificationsCard.tsx`, `LoginForm.tsx`, `ResetPasswordForm.tsx` | Médio |
 | **6. Toques finais** | Lembrar última ala, lema, botão "Letra maior", prévia do link com imagem, título do 404 | `(member)/page.tsx`, `(member)/[slug]/page.tsx`, `not-found.tsx` | Pequeno |
@@ -792,7 +792,7 @@ agendamentos só combinando com a líder e apagando depois.
 
 1. ✅ Marinho `#003057` (Igreja) adotado em 24/10/2026.
 2. Onde vai o lema "A caridade nunca falha": faixa da home, rodapé ou os dois?
-3. Lembrar nome e telefone no aparelho: ok para celulares compartilhados na família?
+3. ✅ Lembrar nome e telefone: **não** (o celular já autopreenche).
 4. Botão "Letra maior": com a letra crescendo sozinha (8.1), ainda precisa? Decidir no teste com as irmãs.
-5. Lista de dias livres: sempre visível abaixo do calendário, ou atrás de um botão "Ver como lista"?
+5. ✅ Lista de dias livres: **não fazer**.
 6. Prévia do link do WhatsApp com imagem: vale o esforço agora?
