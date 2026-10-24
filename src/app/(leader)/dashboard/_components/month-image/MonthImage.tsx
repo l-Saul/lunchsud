@@ -21,9 +21,10 @@ type Props = {
 
 const SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
-const AZUL = '#143157';
-const VERDE = '#1fb9a0';
-const ROSA = '#e0588f';
+const AZUL = '#003057';
+const ROSA = '#bd0057';
+const DOURADO = '#ffb81c';
+const CINZA = '#676b6e';
 
 export default function MonthImage({ diasDoMes }: Props) {
     if (diasDoMes.length === 0) return null;
@@ -33,12 +34,12 @@ export default function MonthImage({ diasDoMes }: Props) {
     const mesAno = formatMonthLabel(`${y}-${String(m).padStart(2, '0')}`);
 
     return (
-        <div style={{ backgroundColor: '#f4f8f7', padding: 28 }}>
+        <div style={{ backgroundColor: '#faf7f5', padding: 28 }}>
             <div
                 style={{
                     backgroundColor: '#ffffff',
                     borderRadius: 28,
-                    border: '1px solid #e6eceb',
+                    border: '1px solid #e0e2e2',
                     overflow: 'hidden',
                 }}
             >
@@ -78,9 +79,9 @@ export default function MonthImage({ diasDoMes }: Props) {
                             marginTop: 14,
                         }}
                     >
-                        <span style={{ height: 3, width: 40, backgroundColor: VERDE, borderRadius: 999 }} />
+                        <span style={{ height: 3, width: 40, backgroundColor: DOURADO, borderRadius: 999 }} />
                         <Flower size={20} />
-                        <span style={{ height: 3, width: 40, backgroundColor: VERDE, borderRadius: 999 }} />
+                        <span style={{ height: 3, width: 40, backgroundColor: DOURADO, borderRadius: 999 }} />
                     </div>
                 </div>
 
@@ -102,7 +103,7 @@ export default function MonthImage({ diasDoMes }: Props) {
                                     fontSize: 14,
                                     textTransform: 'uppercase',
                                     letterSpacing: 1,
-                                    color: i === 0 || i === 6 ? VERDE : AZUL,
+                                    color: i === 0 || i === 6 ? ROSA : AZUL,
                                 }}
                             >
                                 {dia}
@@ -132,15 +133,15 @@ export default function MonthImage({ diasDoMes }: Props) {
                                         minHeight: 128,
                                         borderRadius: 16,
                                         border: temAlmoco
-                                            ? '1px solid #f6d6e6'
-                                            : '1px solid #e6eceb',
+                                            ? '1px solid #fda1b2'
+                                            : '1px solid #e0e2e2',
                                         padding: 8,
                                         display: 'flex',
                                         flexDirection: 'column',
                                         backgroundColor: pday
-                                            ? '#f1f5f9'
+                                            ? '#eff0f0'
                                             : temAlmoco
-                                                ? '#fdf2f8'
+                                                ? '#fdecf1'
                                                 : '#ffffff',
                                     }}
                                 >
@@ -156,7 +157,7 @@ export default function MonthImage({ diasDoMes }: Props) {
                                             fontWeight: 700,
                                             color: '#ffffff',
                                             backgroundColor: pday
-                                                ? '#cbd5e1'
+                                                ? CINZA
                                                 : temAlmoco
                                                     ? ROSA
                                                     : AZUL,
@@ -176,7 +177,7 @@ export default function MonthImage({ diasDoMes }: Props) {
                                                 fontWeight: 700,
                                                 textTransform: 'uppercase',
                                                 letterSpacing: 1,
-                                                color: '#94a3b8',
+                                                color: CINZA,
                                             }}
                                         >
                                             P-day
@@ -223,7 +224,7 @@ export default function MonthImage({ diasDoMes }: Props) {
                                                     <div
                                                         style={{
                                                             fontSize: 15,
-                                                            color: '#475569',
+                                                            color: '#53575b',
                                                             maxWidth: '100%',
                                                             overflowWrap: 'anywhere',
                                                         }}
@@ -247,7 +248,7 @@ export default function MonthImage({ diasDoMes }: Props) {
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: 8,
-                        color: '#64748b',
+                        color: '#53575b',
                         fontSize: 14,
                     }}
                 >

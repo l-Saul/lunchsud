@@ -86,17 +86,17 @@ function montar(c: Conteudo): Email {
     const topo = () => (blocos.length ? '20px' : '0');
 
     if (c.destaque) {
-        blocos.push(`<div style="margin:${topo()} 0 0;padding:16px 18px;border-radius:14px;background-color:#fdf2f8;border:1px solid #f6d6e6;font-size:20px;line-height:1.45;color:#0f172a;text-align:left;">${escapar(c.destaque.texto)}<br>Telefone: ${escapar(c.destaque.telefone)}</div>`);
+        blocos.push(`<div style="margin:${topo()} 0 0;padding:16px 18px;border-radius:14px;background-color:#fdecf1;border:1px solid #fda1b2;font-size:20px;line-height:1.45;color:#212225;text-align:left;">${escapar(c.destaque.texto)}<br>Telefone: ${escapar(c.destaque.telefone)}</div>`);
     }
     for (const p of c.paragrafos) {
-        blocos.push(`<p style="margin:${topo()} 0 0;font-size:20px;line-height:1.5;color:#0f172a;">${escapar(p)}</p>`);
+        blocos.push(`<p style="margin:${topo()} 0 0;font-size:20px;line-height:1.5;color:#212225;">${escapar(p)}</p>`);
     }
     if (c.lista) {
         const titulo = c.lista.titulo
-            ? `<p style="margin:0 0 4px;font-size:18px;font-weight:700;line-height:1.4;color:#0f172a;text-align:left;">${escapar(c.lista.titulo)}</p>`
+            ? `<p style="margin:0 0 4px;font-size:18px;font-weight:700;line-height:1.4;color:#212225;text-align:left;">${escapar(c.lista.titulo)}</p>`
             : '';
         const linhas = c.lista.itens
-            .map(item => `<tr><td style="padding:12px 0;border-bottom:1px solid #e2e8f0;font-size:20px;line-height:1.45;color:${item.vazio ? '#64748b' : '#0f172a'};text-align:left;">${escapar(item.texto)}${item.telefone ? `<br>${escapar(item.telefone)}` : ''}</td></tr>`)
+            .map(item => `<tr><td style="padding:12px 0;border-bottom:1px solid #e0e2e2;font-size:20px;line-height:1.45;color:${item.vazio ? '#53575b' : '#212225'};text-align:left;">${escapar(item.texto)}${item.telefone ? `<br>${escapar(item.telefone)}` : ''}</td></tr>`)
             .join('');
         blocos.push(`<div style="margin:${topo()} 0 0;">${titulo}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${linhas}</table></div>`);
     }

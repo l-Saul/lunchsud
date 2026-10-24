@@ -80,9 +80,9 @@ Substitui a tela padrão do Next (em inglês) por um cartão calmo:
 - Título: **"Não foi possível abrir o calendário"**
 - Texto: "Verifique a internet e toque no botão abaixo para tentar de novo."
 - Botão **"Tentar de novo"** → `retry()` (busca os dados de novo no servidor e
-  limpa o erro). Alvo grande (`min-h-13`), verde.
+  limpa o erro). Alvo grande (`min-h-13`), azul.
 
-Visual igual ao do 404: cartão branco, fitinha verde→rosa→verde no topo,
+Visual igual ao do 404: cartão branco, fitinha framboesa→dourado→framboesa no topo,
 florzinha.
 
 ## `WardBooking.tsx` (client)
@@ -151,9 +151,10 @@ com o conteúdo, então o fade roda de novo quando a mensagem troca.
 - Ocupado: `wrap-anywhere`, porque o nome vem do usuário e pode ter 80
   caracteres sem espaço. Sem isso ele empurrava a página para o lado.
 - Resultado do agendamento (`role="status"`, `aria-live="polite"`):
-  - sucesso, em **verde** (`text-secondary`): "Almoço agendado com sucesso. Muito obrigado!"
-  - conflito, em **rosa** (`text-accent`): "Este dia acabou de ser ocupado. Escolha outro."
-  - Antes ficava azul sobre o fundo azul, invisível. Só aparece com o modal fechado.
+  - sucesso, em **branco** (`text-white`): "Almoço agendado com sucesso. Muito obrigado!"
+  - conflito, em **rosa claro** (`text-accent-on-dark`): "Este dia acabou de ser ocupado. Escolha outro."
+  - A frase fica **sobre o céu azul**: o azul de ação e o framboesa sumiriam
+    ali (menos de 2,1:1). Só aparece com o modal fechado.
 
 ### Callbacks do modal
 
@@ -176,7 +177,7 @@ conflito aparecia de novo no modal seguinte).
   estáticas nos cantos (opacidade baixa, `aria-hidden`).
 - Margens enxutas no celular (`px-2`): cada pixel vira largura dos 7 dias. Em
   360px os dias chegam a 44px, o alvo de toque recomendado (WCAG 2.5.5).
-- Calendário num cartão branco com fitinha verde→rosa→verde no topo. **Sem
+- Calendário num cartão branco com fitinha framboesa→dourado→framboesa no topo. **Sem
   animação de entrada**: aparece junto com a página (vem do servidor).
 - `main` com fundo transparente, para o "céu" do `body` aparecer.
 
@@ -286,9 +287,9 @@ antes disso o dia está bloqueado), `selectedDay`, `onSelectDay`,
 |---|---|---|
 | Passado (`data < hoje`, comparação de texto `YYYY-MM-DD`) | esmaecido (`text-primary/30`) | `onSelectPassado` |
 | P-day (`isPday`) | cinza-azulado, número + "P-day" em letra pequena | `onSelectPday` |
-| Ocupado | rosa (`bg-accent`), texto branco | `onSelectOcupado(nome)` |
-| Selecionado | verde (`bg-secondary`) com sombra | — |
-| Livre | branco com borda; hover verde-claro | `onSelectDay(dia)` |
+| Ocupado | framboesa (`bg-accent`), texto branco | `onSelectOcupado(nome)` |
+| Selecionado | azul (`bg-secondary`) com sombra | — |
+| Livre | branco com borda; hover azul-claro | `onSelectDay(dia)` |
 
 Dia passado e P-day **não abrem o agendamento**: só a mensagem embaixo do
 calendário explica o porquê. Segunda que já passou aparece só como passada (sem

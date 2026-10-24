@@ -200,7 +200,7 @@ cadastrado.") e `preferenciasIniciais`.
 
 - Linha do título: "Notificações" à esquerda e, à direita, o estado do
   salvamento (`role="status"`, `aria-live`): "Salvando…" com Spinner →
-  **"Salvo."** (verde). Fica na mesma linha do título para não deixar um espaço
+  **"Salvo."** (azul). Fica na mesma linha do título para não deixar um espaço
   vazio entre o texto e as chaves.
 - "Escolha quais e-mails quer receber sobre esta ala. Eles chegam em
   **\<e-mail\>**." (`wrap-anywhere`; sem e-mail: "Esta conta ainda não tem
@@ -230,7 +230,7 @@ mês abriu: não há outro aviso no dia 1.
 
 - Nada vem ligado: o líder escolhe o que quer receber.
 - Cada chave é um `<button role="switch" aria-checked>` do tamanho da linha
-  (≥ 56px), com título, frase e o interruptor (verde ligado / cinza desligado,
+  (≥ 56px), com título, frase e o interruptor (azul ligado / cinza desligado,
   bolinha muda de lado: não depende só da cor).
 - A lista está em `AVISOS`, no próprio componente.
 - Não há aviso de almoço editado ou removido: quem faz isso é o próprio líder.
@@ -370,7 +370,7 @@ mandar o link da ala no grupo do WhatsApp. Props: `slug`, `nomeAla`. O link é
 | **Copiar** (ícone de duas folhas) | copia o link (`navigator.clipboard`; se não houver, cópia por um campo escondido). O ícone vira ✓ e aparece o aviso **"Link copiado!"** por 3 s. Se nada funcionar: "Não foi possível copiar. O link é: \<link\>" |
 | **Compartilhar** (ícone de três pontos ligados) | no celular abre o menu de compartilhar do sistema (`navigator.share`), com título "Calendário de almoços da \<ala\>", texto "Agende seu almoço para nossos missionários ❤️" e o link (o mesmo da prévia da página da ala). Sem esse menu (computador) abre o WhatsApp (`wa.me`) numa aba nova com a mesma mensagem. Cancelar o menu não faz nada |
 
-- **Mesma cor do botão principal** (verde `bg-secondary`, ícone branco), cantos
+- **Mesma cor do botão principal** (azul `bg-secondary`, ícone branco), cantos
   iguais e mesma altura; largura 3rem no celular e 3.5rem a partir de `sm`
   (≥ 44px de alvo).
 - Sem texto visível, então cada um tem `aria-label` ("Copiar o link do
@@ -440,10 +440,13 @@ O calendário **desenhado para a imagem**, separado do calendário público.
 
 - **Estilos inline + SVG, de propósito**: o `html-to-image` não depende do
   Tailwind, então a imagem sai igual em qualquer aparelho. Não troque por classes
-  Tailwind nem por emojis. Cores em hex: azul `#143157`, verde `#1fb9a0`, rosa
-  `#e0588f`.
+  Tailwind nem por emojis. Cores em hex, da paleta do site:
+  marinho `#003057` (cabeçalho, dias livres, nomes), framboesa `#bd0057` (dia
+  com almoço, sábado e domingo), rosa-claro `#fdecf1` com borda `#fda1b2`
+  (fundo do dia com almoço), dourado `#ffb81c` (divisória do cabeçalho), cinza
+  `#676b6e` sobre `#eff0f0` (P-day), fundo creme `#faf7f5`.
 - Cabeçalho azul: "Almoço dos Missionários", mês e ano, divisória com florzinha.
-- Dias da semana (sábado e domingo em verde) e grade com
+- Dias da semana (sábado e domingo em framboesa) e grade com
   **`repeat(7, minmax(0, 1fr))`**: 7 colunas sempre iguais. Só `1fr` deixava um
   nome longo sem espaço esticar a coluna e empurrar o sábado para fora da imagem
   (achado com Playwright).

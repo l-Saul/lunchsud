@@ -6,12 +6,16 @@
 @import "tailwindcss";
 
 @theme {
-    --color-primary: #143157;
-    --color-secondary: #1fb9a0;
-    --color-accent: #e0588f;
+    --color-primary: #003057;
+    --color-secondary: #006184;
+    --color-accent: #bd0057;
+    --color-accent-soft: #fdecf1;
+    --color-accent-on-dark: #fda1b2;
+    --color-gold: #ffb81c;
+    --color-cream: #faf7f5;
     --color-background: #ffffff;
-    --color-text: #0f172a;
-    --color-muted: #64748b;
+    --color-text: #212225;
+    --color-muted: #53575b;
 
     --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
     --font-serif: var(--font-source-serif), Georgia, 'Times New Roman', serif;
@@ -58,9 +62,8 @@
         inset: 0;
         z-index: -1;
         background:
-            radial-gradient(55% 35% at 50% -8%, rgba(246, 196, 83, 0.13), transparent 70%),
-            radial-gradient(45% 40% at 15% 8%, rgba(31, 185, 160, 0.18), transparent 70%),
-            radial-gradient(45% 40% at 88% 10%, rgba(224, 88, 143, 0.18), transparent 70%);
+            radial-gradient(55% 35% at 50% -8%, rgba(255, 184, 28, 0.13), transparent 70%),
+            radial-gradient(45% 40% at 88% 10%, rgba(237, 58, 101, 0.16), transparent 70%);
     }
 
     :focus-visible {

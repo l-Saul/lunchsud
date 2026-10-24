@@ -225,7 +225,7 @@ API pública, nem pelo WebSocket, nem pela REST do Supabase com a chave anon
 ## Templates de e-mail (`supabase/email/`)
 
 HTML dos e-mails do **Supabase Auth**, com a identidade do site (céu azul,
-cartão branco, fitinha verde→rosa, florzinha, fonte Source Sans/Serif, texto em
+cartão branco, fitinha framboesa→dourado, florzinha, fonte Source Sans/Serif, texto em
 português e botão grande). **Não são enviados pelo app**: são colados no painel
 do Supabase em **Authentication → Email Templates**, com o assunto do arquivo
 `.subject.txt` correspondente. O Supabase os envia pelo **SMTP próprio**

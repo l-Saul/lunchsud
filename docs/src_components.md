@@ -12,13 +12,15 @@ na pasta dela, em `_components/`.
 
 ## `Flower.tsx`
 
-Florzinha decorativa rosa (5 pétalas em elipse girando de 72 em 72 graus +
-miolo dourado `#f6c453`), em SVG.
+Florzinha decorativa (5 pétalas em elipse girando de 72 em 72 graus), em SVG:
+pétalas rosa `#ed3a65` e miolo dourado `#ffb81c`, da paleta da Igreja.
 
 - Prop: `size` (padrão 18).
 - Sempre `aria-hidden="true"`: é enfeite.
-- Cor em **hex** (`#e0588f` = `--color-accent`), não token do tema: ela também
-  é desenhada na imagem do mês, e o `html-to-image` captura estilos resolvidos.
+- Cor em **hex**, não token do tema: ela também é desenhada na imagem do mês,
+  e o `html-to-image` captura estilos resolvidos. As pétalas são um rosa mais
+  claro que o `accent` (`#bd0057`) de propósito: parecem flor, e enfeite não
+  precisa de contraste de texto.
 - Aparece nas divisórias ("linha · flor · linha") e nos cantos do cabeçalho da
   página da ala. É o toque feminino e delicado do site.
 
@@ -52,7 +54,7 @@ O "estou trabalhando" dos botões. Um círculo com a borda de cima transparente,
 girando com `animate-spin` (só CSS, sem JavaScript).
 
 - Prop: `className` (padrão `h-5 w-5`; nos botões pequenos `h-4 w-4`).
-- Usa a **cor do texto do botão** (`border-current`): branco no botão verde, rosa
+- Usa a **cor do texto do botão** (`border-current`): branco no botão azul, rosa
   no botão de remover.
 - `aria-hidden`: fica **sempre ao lado de um verbo** ("Confirmando…",
   "Salvando…"). É o texto que diz o que acontece; o círculo é só visual.

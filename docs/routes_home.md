@@ -31,12 +31,13 @@ por ala**. Tocar leva a `/[slug]` (ver [routes_slug.md](routes_slug.md)).
 - Mostra o nome da ala e uma seta (`›`).
 - Ao tocar: `loadingSlug = slug`, **todos os botões ficam desativados** (um toque
   só) e `router.push('/<slug>')`.
-- O botão tocado fica verde. **O nome continua visível** (a pessoa vê qual ala
+- O botão tocado fica azul (`bg-secondary`). **O nome continua visível** (a pessoa vê qual ala
   tocou) e "Abrindo…" + `<Spinner />` aparecem no lugar da seta até a página da
   ala abrir. O loading não é desligado de propósito: a navegação desmonta a tela.
 - `aria-busy` no botão tocado; `active:scale-[0.98]` ao tocar.
-- Visual: cartão branco, borda verde à esquerda, texto azul, `text-xl`; hover
-  verde com texto branco.
+- Visual: cartão branco, borda azul (`secondary`) à esquerda, texto marinho,
+  `text-xl`; hover azul com texto branco. Divisória do título: linhas douradas
+  (`gold`) com a florzinha.
 
 ## Escritura sorteada
 
@@ -47,7 +48,8 @@ por ala**. Tocar leva a `/[slug]` (ver [routes_slug.md](routes_slug.md)).
   fica no efeito, com a exceção pontual `eslint-disable-next-line
   react-hooks/set-state-in-effect`: é uma inicialização única e intencional.
 - O texto é dividido em verso e referência pelo separador ` — `. A referência
-  aparece embaixo, em verde. O bloco entra com `animate-aparecer`.
+  aparece embaixo, em dourado (`text-gold`: está sobre o céu, onde o azul de
+  ação some). O bloco entra com `animate-aparecer`.
 
 ## Layout
 

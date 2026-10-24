@@ -64,9 +64,9 @@ export default function IndexPage() {
                             Almoço dos Missionários
                         </h1>
                         <div className="flex items-center gap-3" aria-hidden="true">
-                            <span className="h-px w-10 bg-linear-to-r from-transparent to-secondary/70" />
+                            <span className="h-px w-10 bg-linear-to-r from-transparent to-gold/70" />
                             <Flower size={22} />
-                            <span className="h-px w-10 bg-linear-to-l from-transparent to-secondary/70" />
+                            <span className="h-px w-10 bg-linear-to-l from-transparent to-gold/70" />
                         </div>
                         <p className="text-lg text-white/80">
                             Toque na sua ala para agendar.
@@ -76,7 +76,7 @@ export default function IndexPage() {
                             <p className="max-w-sm animate-aparecer text-balance text-base italic leading-relaxed text-white/70">
                                 {verso}
                                 {referencia && (
-                                    <span className="mt-1 block text-sm not-italic text-secondary">
+                                    <span className="mt-1 block text-sm not-italic text-gold">
                                         {referencia}
                                     </span>
                                 )}

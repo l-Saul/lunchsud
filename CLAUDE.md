@@ -162,8 +162,12 @@ de data/fuso/P-day em componentes. Detalhes: [`docs/src_lib.md`](docs/src_lib.md
   demais (parece que toda mudança manda e-mail); "Quando alguém agenda um almoço
   para um dia deste mês, chega um e-mail com o nome, o dia e o telefone" é claro.
 - **Cores:** use os tokens do tema (`bg-primary`, `text-secondary`, etc.),
-  definidos em `src/app/globals.css`. Azul `#143157` / verde `#1fb9a0` / rosa
-  `#e0588f` / branco.
+  definidos em `src/app/globals.css`, com a paleta da Igreja: marinho `#003057`
+  (`primary`), azul de ação `#006184` (`secondary`: botões, dia escolhido,
+  foco), framboesa `#bd0057` (`accent`: ocupado, erro, remover, toque
+  feminino), dourado `#ffb81c` (`gold`, **só enfeite**, nunca texto sobre
+  claro), branco. **Não existe verde no site:** sucesso = azul + texto. Tabela
+  completa em [`docs/src_app.md`](docs/src_app.md).
 - **Fontes:** Source Sans (corpo) + Source Serif (títulos) via `next/font` no layout;
   `h1/h2/h3` já recebem serifa por regra base no CSS.
 - **Acessibilidade:** texto grande (base ~18px), foco visível, alvos ≥44px,

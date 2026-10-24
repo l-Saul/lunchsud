@@ -38,7 +38,7 @@ src/proxy.ts         renova a sessão nas rotas do líder
   - `appleWebApp` (título "Almoço"), `manifest: /manifest.webmanifest`;
   - `formatDetection.telephone: false`: o iPhone não transforma números em link
     sozinho (o painel mostra telefones e controla isso).
-- **Viewport**: `themeColor #143157` (barra do navegador azul), largura do aparelho.
+- **Viewport**: `themeColor #003057` (barra do navegador marinho, igual ao `primary`), largura do aparelho.
 - `<html lang="pt-BR">`. `<body>` em coluna com `min-h-screen`: o conteúdo fica
   num `flex-1` e o **`Footer`** vai para o fim, em todas as páginas.
 - O `bg-primary` do `body` vira a cor do canvas (aparece, por exemplo, quando o
@@ -48,17 +48,29 @@ src/proxy.ts         renova a sessão nas rotas do líder
 
 ### Tokens do tema (`@theme`, Tailwind 4)
 
-| Token | Cor | Uso |
-|---|---|---|
-| `primary` | `#143157` azul | céu, textos do calendário, medalhões |
-| `secondary` | `#1fb9a0` verde | ação: botões, dia selecionado, foco, sucesso |
-| `accent` | `#e0588f` rosa | dia ocupado, remover, mensagens de erro, detalhes femininos |
-| `background` | `#ffffff` | cartões |
-| `text` | `#0f172a` | texto principal |
-| `muted` | `#64748b` | texto secundário |
+Paleta da Igreja (valores do site oficial, `churchofjesuschrist.org`); só
+`cream` e `accent-soft` são tons de apoio, clareados para fundo.
+
+| Token | Cor | Uso | Contraste |
+|---|---|---|---|
+| `primary` | `#003057` marinho | textos do calendário, medalhões, fundo de modal e de aviso | branco sobre ele 13,46:1 |
+| `secondary` | `#006184` azul de ação | botões, dia escolhido, links, foco, interruptor ligado, "Salvo." | branco sobre ele 6,90:1 |
+| `accent` | `#bd0057` framboesa | dia ocupado, remover, erros, fitinha, toque feminino | sobre branco 6,36:1 |
+| `accent-soft` | `#fdecf1` rosa-claro | fundo de destaque suave (dia ocupado, caixa de erro) | framboesa sobre ele 5,59:1 |
+| `accent-on-dark` | `#fda1b2` rosa | texto rosa **sobre o azul** (o framboesa some ali) | sobre o céu ≥ 5,56:1 |
+| `gold` | `#ffb81c` dourado | **só enfeite**: fitinha, divisórias, miolo da flor; texto só sobre o azul | sobre o céu ≥ 6,17:1; sobre branco 1,7:1 (nunca texto) |
+| `cream` | `#faf7f5` creme | fundo claro da página (ainda não usado; vem com o fundo claro) | — |
+| `background` | `#ffffff` | cartões | — |
+| `text` | `#212225` | texto principal | sobre branco 15,91:1 |
+| `muted` | `#53575b` | texto secundário | sobre branco 7,29:1 |
+
+**Não existe verde no site** (o verde-água antigo, `#1fb9a0`, dava 2,46:1 com
+texto branco). Sucesso = azul + texto. O rosa não é cor de botão de confirmar:
+ele já diz "ocupado", "erro" e "remover".
 
 Use os tokens (`bg-primary`, `text-secondary`…), não hex solto. Exceções que
-**precisam** de hex: a imagem do mês e a `Flower` (capturadas pelo `html-to-image`).
+**precisam** de hex: a imagem do mês e a `Flower` (capturadas pelo
+`html-to-image`) e os e-mails (estilos inline).
 `--font-sans` e `--font-serif` apontam para as fontes do layout, com fallbacks.
 
 ### Animações (`--animate-aparecer`, `--animate-surgir`)
@@ -82,12 +94,14 @@ Regras completas de animação no `CLAUDE.md`.
   do celular):
   - `body::before` (`z-index: -2`): gradiente azul profundo, de `#1c3e6e` a `#0d1f3a`;
   - `body::after` (`z-index: -1`): "auroras" estáticas em `radial-gradient`: luz
-    dourada no alto, verde à esquerda, rosa à direita.
+    dourada no alto e rosa à direita (as cores de `gold` e da `Flower`).
 
   As páginas usam fundo **transparente** de propósito para o céu aparecer. **Não
   ponha `bg-primary` em `main`/`section`.**
-- `:focus-visible`: contorno verde de 3px com afastamento de 2px. Foco bem
-  visível para teclado e baixa visão.
+- `:focus-visible`: contorno azul (`secondary`) de 3px com afastamento de 2px.
+  Foco bem visível para teclado e baixa visão sobre fundo claro (6,90:1).
+  **Sobre o céu ele quase some (1,89:1)**: resolver com o fundo claro, dando
+  outra cor de foco à faixa azul.
 
 ### `prefers-reduced-motion`
 
@@ -117,7 +131,7 @@ Também é usado pelo `notFound()` da página da ala (slug inexistente).
 
 Web App Manifest (`/manifest.webmanifest`): nome "Almoço dos Missionários",
 nome curto "Almoço", `pt-BR`, `start_url: /`, `display: standalone`, fundo e
-tema `#143157`, ícones 512 e 1024.
+tema `#003057`, ícones 512 e 1024.
 
 ## `robots.ts`
 

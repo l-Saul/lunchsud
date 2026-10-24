@@ -121,9 +121,9 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
                         </h1>
 
                         <div className="flex items-center gap-3" aria-hidden="true">
-                            <span className="h-px w-10 bg-linear-to-r from-transparent to-accent/70 sm:w-16" />
+                            <span className="h-px w-10 bg-linear-to-r from-transparent to-gold/70 sm:w-16" />
                             <Flower size={26} />
-                            <span className="h-px w-10 bg-linear-to-l from-transparent to-accent/70 sm:w-16" />
+                            <span className="h-px w-10 bg-linear-to-l from-transparent to-gold/70 sm:w-16" />
                         </div>
 
                         <p className="text-xl leading-relaxed text-white/90">
@@ -135,7 +135,7 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
                 <div className="px-2 sm:px-6 py-6 space-y-6">
 
                     <div className="relative overflow-hidden bg-background text-secondary rounded-2xl p-1.5 sm:p-4 shadow-xl ring-1 ring-white/40 border border-muted/10">
-                        <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-secondary via-accent to-secondary" />
+                        <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-accent via-gold to-accent" />
                         <MonthCalendar
                             ocupados={diasOcupados}
                             baseDate={baseDate}
@@ -219,7 +219,7 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
                             role="status"
                             aria-live="polite"
                             className={`animate-aparecer text-center text-lg font-medium ${
-                                tipoMensagem === 'erro' ? 'text-accent' : 'text-secondary'
+                                tipoMensagem === 'erro' ? 'text-accent-on-dark' : 'text-white'
                             }`}
                         >
                             {mensagem}

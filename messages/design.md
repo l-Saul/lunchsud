@@ -143,6 +143,13 @@ podem ficar parecidos para quem não distingue o vermelho. Por isso os estados
 nunca dependem só da tonalidade. Por exemplo: o dia escolhido é um **fundo azul
 cheio + ✓**, e o dia ocupado é um **fundo rosa-claro + flor**.
 
+> ✅ **Feito em 24/10/2026** (tokens e cores fixas). Nomes dos tokens novos, em
+> inglês como os outros: `cream`, `accent-soft` (rosa-claro), `accent-on-dark`
+> (rosa sobre o azul, `#fda1b2`) e `gold`. Detalhes em `docs/src_app.md`.
+> Ficou para o **fundo claro**: o céu (`body::before/::after` e o cabeçalho dos
+> e-mails), o foco sobre o céu (1,89:1) e a armadilha "Fundo celestial" do
+> `CLAUDE.md`.
+
 ### Como trocar (tokens em `src/app/globals.css`, linhas 9–14)
 
 | Token atual | Valor atual | Novo valor |
@@ -161,13 +168,14 @@ Pode manter os nomes `secondary`/`accent` para não mexer nos 21 arquivos.
 
 **Cores escritas direto no código (não usam o token), trocar à mão:**
 
-- [ ] `src/app/(leader)/dashboard/_components/month-image/MonthImage.tsx` — o verde `#1fb9a0` da imagem exportada (divisória e Dom/Sáb).
-- [ ] `src/components/Flower.tsx` — pétalas `#e0588f` → `#ed3a65` (`red12`) e miolo → `#ffb81c`.
+- [x] `src/app/(leader)/dashboard/_components/month-image/MonthImage.tsx` — divisória dourada, Dom/Sáb framboesa, cinzas e fundo da paleta.
+- [x] `src/components/Flower.tsx` — pétalas `#e0588f` → `#ed3a65` (`red12`) e miolo → `#ffb81c`.
 - [ ] `src/app/globals.css` — o céu (`body::before`/`::after`) sai do fundo da página (seção 5).
-- [ ] `src/app/layout.tsx` — `themeColor` (cor da barra do navegador) = marinho da faixa.
-- [ ] `supabase/email/*.html` — botão `#1fb9a0` → `#006184`; fitinha; divisória `#79d5c6`; caixa do código `#e9f8f5`; flor `#e0588f`.
-- [ ] E-mails de aviso (`src/lib/server/email-templates.ts` + o modelo HTML que ele lê) — texto `#0f172a` → `#212225`, secundário `#64748b` → `#53575b`; tons rosados `#fdf2f8`/`#f6d6e6` podem virar `#fdecf1`.
-- [ ] `CLAUDE.md` — seção "Cores" (cita o verde) e armadilha "Fundo celestial" (regra antiga do fundo transparente).
+- [x] `src/app/layout.tsx` e `manifest.ts` — `themeColor` = `#003057`.
+- [x] `supabase/email/*.html` — botão, fitinha, divisória, caixa do código, flor e textos. **Colar de novo no Supabase** depois do fundo claro (que mexe neles de novo).
+- [x] E-mails de aviso (`src/lib/server/email-templates.ts` + `src/lib/server/email/aviso.html`) — mesmas trocas; destaque `#fdecf1` com borda `#fda1b2`.
+- [x] `CLAUDE.md` — seção "Cores".
+- [ ] `CLAUDE.md` — armadilha "Fundo celestial" (regra antiga do fundo transparente): com o fundo claro.
 
 ---
 
@@ -456,10 +464,8 @@ Revisão de código (o painel exige login e não entrou na auditoria automática
   claro: corpo creme, faixa azul só no cabeçalho, como no site.
 - **Avisos ao líder (`src/lib/server/email-templates.ts`):** ✅ letra de
   18–20px, dentro da regra. Trocar as cores (seção 3).
-- ⚠️ **Em andamento:** o `email-templates.ts` lê o modelo
-  `messages/email/aviso.html`, que **não estava no disco** durante esta
-  revisão. Se continuar assim, todo envio de aviso falha (`readFileSync`).
-  Conferir ao terminar os ajustes.
+- ✅ O modelo dos avisos agora fica em `src/lib/server/email/aviso.html`, e o
+  build para se ele faltar.
 
 ### 6.13 Rodapé — `src/components/Footer.tsx`
 
@@ -772,7 +778,7 @@ agendamentos só combinando com a líder e apagando depois.
 
 ## 12. Decisões em aberto
 
-1. Marinho `#003057` (Igreja) ou manter `#143157`?
+1. ✅ Marinho `#003057` (Igreja) adotado em 24/10/2026.
 2. Onde vai o lema "A caridade nunca falha": faixa da home, rodapé ou os dois?
 3. Lembrar nome e telefone no aparelho: ok para celulares compartilhados na família?
 4. Botão "Letra maior": com a letra crescendo sozinha (8.1), ainda precisa? Decidir no teste com as irmãs.

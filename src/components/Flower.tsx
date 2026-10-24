@@ -6,7 +6,7 @@
 export function Flower({ size = 18 }: { size?: number }) {
     return (
         <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-            <g fill="#e0588f">
+            <g fill="#ed3a65">
                 {[0, 72, 144, 216, 288].map(deg => (
                     <ellipse
                         key={deg}
@@ -18,7 +18,7 @@ export function Flower({ size = 18 }: { size?: number }) {
                     />
                 ))}
             </g>
-            <circle cx="12" cy="12" r="2.8" fill="#f6c453" />
+            <circle cx="12" cy="12" r="2.8" fill="#ffb81c" />
         </svg>
     );
 }

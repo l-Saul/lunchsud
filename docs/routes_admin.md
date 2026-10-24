@@ -41,7 +41,7 @@ Dependências: `src/lib/server/session.ts` (`getUsuario`),
 
 ## `LoginCard.tsx`
 
-Cartão branco com fitinha verde→rosa→verde no topo, título **"Acesso do líder"**,
+Cartão branco com fitinha framboesa→dourado→framboesa no topo, título **"Acesso do líder"**,
 divisória com florzinha e "Entre para gerenciar os almoços da sua ala.". Repassa
 `erroInicial` ao formulário.
 
@@ -145,7 +145,7 @@ Formulário `<form>` real, botão principal `type="submit"` (a tecla "Ir" envia)
 
 ### Feedback
 
-- Erro: `role="alert"`, rosa. Aviso: `role="status"`, verde.
+- Erro: `role="alert"`, rosa. Aviso: `role="status"`, azul.
 - Botão principal enquanto trabalha: `disabled`, `aria-busy`, `<Spinner />` e
   "Entrando…" / "Criando conta…".
 - `loading` também bloqueia "Esqueci minha senha" e desativa os campos.
