@@ -151,7 +151,7 @@ export function NotificationsCard({ alaId, email, preferenciasIniciais }: Props)
     const avisoConfirmando = AVISOS.find(a => a.tipo === confirmar);
 
     return (
-        <section className="flex flex-col gap-5 rounded-3xl bg-background p-4 shadow-xl ring-1 ring-white/40 sm:p-8">
+        <section className="flex flex-col gap-5 rounded-3xl bg-background p-4 shadow-md ring-1 ring-primary/10 sm:p-8">
             <div className="flex flex-col gap-2">
                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                     <div className="flex items-center gap-2">

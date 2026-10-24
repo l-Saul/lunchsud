@@ -5,6 +5,7 @@
 
 import type { Metadata } from 'next';
 import { requireAcesso } from '@/lib/server/session';
+import { HeaderBand } from '@/components/HeaderBand';
 import DashboardClientGuard from './_components/DashboardClientGuard';
 import { DashboardRealtime } from './_components/DashboardRealtime';
 import { LogoutButton } from './_components/LogoutButton';
@@ -110,21 +111,23 @@ export default async function DashboardPage() {
     return (
         <DashboardClientGuard>
             {alaId !== null && <DashboardRealtime alaId={alaId} />}
-            <main className="min-h-screen px-4 py-8 sm:px-6 sm:py-12">
-                <section className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-                    <header className="flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                            <h1 className="text-2xl font-semibold text-white sm:text-3xl">
-                                Painel da ala
-                            </h1>
-                            <p className="truncate text-sm text-white/70 sm:text-base">
-                                {ala?.nome ?? 'Selecione uma ala'}
-                                {ctx.isOwner && ' · owner'}
-                            </p>
-                        </div>
-                        <LogoutButton />
-                    </header>
+            <HeaderBand className="sm:px-6">
+                <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 py-6 text-left sm:py-8">
+                    <div className="min-w-0">
+                        <h1 className="text-2xl font-semibold sm:text-3xl">
+                            Painel da ala
+                        </h1>
+                        <p className="truncate text-sm text-white/80 sm:text-base">
+                            {ala?.nome ?? 'Selecione uma ala'}
+                            {ctx.isOwner && ' · owner'}
+                        </p>
+                    </div>
+                    <LogoutButton />
+                </div>
+            </HeaderBand>
 
+            <main className="px-4 py-8 sm:px-6 sm:py-10">
+                <section className="mx-auto flex w-full max-w-3xl flex-col gap-6">
                     {ctx.isOwner && alasParaTroca.length > 0 && (
                         <WardSwitcher alas={alasParaTroca} atualId={alaId} />
                     )}

@@ -9,6 +9,7 @@ import { MonthCalendar } from './MonthCalendar'
 import { BookingModal, type Agendado } from './BookingModal'
 import { useBookingsRealtime, type MudancaAgendamento } from '@/hooks/use-bookings-realtime'
 import { Flower } from '@/components/Flower'
+import { HeaderBand } from '@/components/HeaderBand'
 
 type DiaOcupado = {
     id: number
@@ -104,130 +105,130 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
         : ''
 
     return (
-        <main className="min-h-screen flex justify-center text-text">
-            <div className="w-full max-w-2xl">
+        <>
+            <HeaderBand>
+                <span aria-hidden="true" className="pointer-events-none absolute left-4 top-5 opacity-25 sm:left-10">
+                    <Flower size={32} />
+                </span>
+                <span aria-hidden="true" className="pointer-events-none absolute right-5 top-12 opacity-20 sm:right-12">
+                    <Flower size={22} />
+                </span>
 
-                <div className="relative overflow-hidden px-3 pt-12 pb-7 text-center sm:px-6">
-                    <span aria-hidden="true" className="pointer-events-none absolute left-4 top-6 opacity-25 sm:left-10">
-                        <Flower size={32} />
-                    </span>
-                    <span aria-hidden="true" className="pointer-events-none absolute right-5 top-14 opacity-20 sm:right-12">
-                        <Flower size={22} />
-                    </span>
+                <div className="relative mx-auto flex max-w-2xl flex-col items-center gap-4 pt-9 pb-7">
+                    <h1 className="wrap-anywhere text-4xl font-bold drop-shadow-sm">
+                        {nomeAla}
+                    </h1>
 
-                    <div className="relative z-10 flex flex-col items-center gap-4">
-                        <h1 className="text-4xl font-bold text-white drop-shadow-sm">
-                            {nomeAla}
-                        </h1>
+                    <div className="flex items-center gap-3" aria-hidden="true">
+                        <span className="h-px w-10 bg-linear-to-r from-transparent to-gold/70 sm:w-16" />
+                        <Flower size={26} />
+                        <span className="h-px w-10 bg-linear-to-l from-transparent to-gold/70 sm:w-16" />
+                    </div>
+                </div>
+            </HeaderBand>
 
-                        <div className="flex items-center gap-3" aria-hidden="true">
-                            <span className="h-px w-10 bg-linear-to-r from-transparent to-gold/70 sm:w-16" />
-                            <Flower size={26} />
-                            <span className="h-px w-10 bg-linear-to-l from-transparent to-gold/70 sm:w-16" />
-                        </div>
-
-                        <p className="text-xl leading-relaxed text-white/90">
+            <main className="flex justify-center text-text">
+                <div className="w-full max-w-2xl">
+                    <div className="px-2 sm:px-6 py-6 space-y-6">
+                        <p className="px-2 text-center text-xl leading-relaxed text-text">
                             Toque em um dia livre para agendar o almoço.
                         </p>
+
+                        <div className="relative overflow-hidden bg-background text-secondary rounded-2xl p-1.5 sm:p-4 shadow-md ring-1 ring-primary/10">
+                            <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-accent via-gold to-accent" />
+                            <MonthCalendar
+                                ocupados={diasOcupados}
+                                baseDate={baseDate}
+                                hoje={hoje}
+                                selectedDay={diaSelecionado}
+                                canPrev={canPrev}
+                                canNext={canNext}
+                                onPrev={() => {
+                                    setBaseDate(inicioMesAtual)
+                                    setDiaSelecionado(null)
+                                    setOcupadoPor(null)
+                                    setAviso(null)
+                                }}
+                                onNext={() => {
+                                    setBaseDate(inicioMesSeguinte)
+                                    setDiaSelecionado(null)
+                                    setOcupadoPor(null)
+                                    setAviso(null)
+                                }}
+                                onSelectDay={day => {
+                                    setDiaSelecionado(day)
+                                    setOcupadoPor(null)
+                                    setAviso(null)
+                                }}
+                                onSelectOcupado={nome => {
+                                    setOcupadoPor(nome)
+                                    setDiaSelecionado(null)
+                                    setAviso(null)
+                                }}
+                                onSelectPday={() => {
+                                    setAviso('pday')
+                                    setDiaSelecionado(null)
+                                    setOcupadoPor(null)
+                                }}
+                                onSelectPassado={() => {
+                                    setAviso('passado')
+                                    setDiaSelecionado(null)
+                                    setOcupadoPor(null)
+                                }}
+                            />
+                        </div>
+
+                        {ocupadoPor && (
+                            <p key={ocupadoPor} className="animate-aparecer wrap-anywhere text-center text-lg font-medium text-text">
+                                Este dia já foi agendado por <strong>{ocupadoPor}</strong>.
+                            </p>
+                        )}
+
+                        {aviso === 'pday' && (
+                            <p className="animate-aparecer text-center text-lg font-medium text-text">
+                                Segunda-feira é dia de <strong>P-day</strong>. Escolha outro dia.
+                            </p>
+                        )}
+
+                        {aviso === 'passado' && (
+                            <p className="animate-aparecer text-center text-lg font-medium text-text">
+                                Esse dia <strong>já passou</strong>. Escolha outro dia.
+                            </p>
+                        )}
+
+                        {diaSelecionado && (
+                            <BookingModal
+                                key={dataSelecionada}
+                                slug={slug}
+                                dia={diaSelecionado}
+                                nomeMes={mesNomeBase}
+                                data={dataSelecionada}
+                                nome={nome}
+                                telefone={telefone}
+                                onNomeChange={setNome}
+                                onTelefoneChange={setTelefone}
+                                onClose={fecharModal}
+                                onBooked={aoAgendar}
+                                onConflict={aoConflito}
+                            />
+                        )}
+
+                        {mensagem && !diaSelecionado && (
+                            <p
+                                key={mensagem}
+                                role="status"
+                                aria-live="polite"
+                                className={`animate-aparecer text-center text-lg font-medium ${
+                                    tipoMensagem === 'erro' ? 'text-accent' : 'text-secondary'
+                                }`}
+                            >
+                                {mensagem}
+                            </p>
+                        )}
+
                     </div>
                 </div>
-
-                <div className="px-2 sm:px-6 py-6 space-y-6">
-
-                    <div className="relative overflow-hidden bg-background text-secondary rounded-2xl p-1.5 sm:p-4 shadow-xl ring-1 ring-white/40 border border-muted/10">
-                        <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-accent via-gold to-accent" />
-                        <MonthCalendar
-                            ocupados={diasOcupados}
-                            baseDate={baseDate}
-                            hoje={hoje}
-                            selectedDay={diaSelecionado}
-                            canPrev={canPrev}
-                            canNext={canNext}
-                            onPrev={() => {
-                                setBaseDate(inicioMesAtual)
-                                setDiaSelecionado(null)
-                                setOcupadoPor(null)
-                                setAviso(null)
-                            }}
-                            onNext={() => {
-                                setBaseDate(inicioMesSeguinte)
-                                setDiaSelecionado(null)
-                                setOcupadoPor(null)
-                                setAviso(null)
-                            }}
-                            onSelectDay={day => {
-                                setDiaSelecionado(day)
-                                setOcupadoPor(null)
-                                setAviso(null)
-                            }}
-                            onSelectOcupado={nome => {
-                                setOcupadoPor(nome)
-                                setDiaSelecionado(null)
-                                setAviso(null)
-                            }}
-                            onSelectPday={() => {
-                                setAviso('pday')
-                                setDiaSelecionado(null)
-                                setOcupadoPor(null)
-                            }}
-                            onSelectPassado={() => {
-                                setAviso('passado')
-                                setDiaSelecionado(null)
-                                setOcupadoPor(null)
-                            }}
-                        />
-                    </div>
-
-                    {ocupadoPor && (
-                        <p key={ocupadoPor} className="animate-aparecer wrap-anywhere text-center text-lg font-medium text-white">
-                            Este dia já foi agendado por <strong>{ocupadoPor}</strong>.
-                        </p>
-                    )}
-
-                    {aviso === 'pday' && (
-                        <p className="animate-aparecer text-center text-lg font-medium text-white">
-                            Segunda-feira é dia de <strong>P-day</strong>. Escolha outro dia.
-                        </p>
-                    )}
-
-                    {aviso === 'passado' && (
-                        <p className="animate-aparecer text-center text-lg font-medium text-white">
-                            Esse dia <strong>já passou</strong>. Escolha outro dia.
-                        </p>
-                    )}
-
-                    {diaSelecionado && (
-                        <BookingModal
-                            key={dataSelecionada}
-                            slug={slug}
-                            dia={diaSelecionado}
-                            nomeMes={mesNomeBase}
-                            data={dataSelecionada}
-                            nome={nome}
-                            telefone={telefone}
-                            onNomeChange={setNome}
-                            onTelefoneChange={setTelefone}
-                            onClose={fecharModal}
-                            onBooked={aoAgendar}
-                            onConflict={aoConflito}
-                        />
-                    )}
-
-                    {mensagem && !diaSelecionado && (
-                        <p
-                            key={mensagem}
-                            role="status"
-                            aria-live="polite"
-                            className={`animate-aparecer text-center text-lg font-medium ${
-                                tipoMensagem === 'erro' ? 'text-accent-on-dark' : 'text-white'
-                            }`}
-                        >
-                            {mensagem}
-                        </p>
-                    )}
-
-                </div>
-            </div>
-        </main>
+            </main>
+        </>
     )
 }

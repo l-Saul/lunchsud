@@ -4,6 +4,7 @@
  */
 
 import type { Metadata } from 'next';
+import { HeaderBand } from '@/components/HeaderBand';
 import { redirect } from 'next/navigation';
 import { getContexto } from '@/lib/server/session';
 import { supabaseServer } from '@/lib/supabase/service-role';
@@ -39,10 +40,13 @@ export default async function AcessoPage() {
         : null;
 
     return (
-        <main className="flex min-h-screen items-center justify-center px-4 py-12">
-            <section className="w-full max-w-md">
-                <RequestAccess nome={ctx.nome} alas={lista} pendenteEm={pendenteEm} />
-            </section>
-        </main>
+        <>
+            <HeaderBand />
+            <main className="flex justify-center px-4 py-10">
+                <section className="w-full max-w-md">
+                    <RequestAccess nome={ctx.nome} alas={lista} pendenteEm={pendenteEm} />
+                </section>
+            </main>
+        </>
     );
 }

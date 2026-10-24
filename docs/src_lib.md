@@ -359,9 +359,10 @@ html, texto }`. Devolve, para cada e-mail, `'enviado' | 'falhou' | 'desligado'`.
 
 O **padrão visual de todo aviso** fica em `src/lib/server/email/aviso.html`
 (junto do código que o usa), com o
-mesmo visual dos e-mails do Supabase (`supabase/email/`): fundo azul em degradê,
-ícone e nome do site, cartão branco com fitinha framboesa→dourado, florzinha, título
-com serifa e o rodapé "Site independente…". Estilos **inline**, sem Tailwind.
+mesmo visual do site e dos e-mails do Supabase (`supabase/email/`): faixa azul
+no topo com o ícone e o nome do site, fundo creme, cartão branco (borda
+`#e0e2e2`) com fitinha framboesa→dourado, florzinha, título com serifa e o
+rodapé "Site independente…" em cinza. Estilos **inline**, sem Tailwind.
 Para mudar o visual de todos os avisos, edite esse arquivo.
 
 Marcadores que o código preenche:

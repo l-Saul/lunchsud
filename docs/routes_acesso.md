@@ -32,6 +32,8 @@ Dependências: `src/lib/server/session.ts` (`getContexto`),
 
 - `dynamic = 'force-dynamic'`, `revalidate = 0`. Metadata: título "Acesso",
   `robots: noindex, nofollow`.
+- Estrutura: `<HeaderBand />` (faixa azul com o ícone e "Almoço dos
+  Missionários") e, abaixo, o `<main>` com o cartão sobre o fundo creme.
 - Sem login → `/admin`. Já tem ala em foco (`ctx.alaId !== null`) →
   `/dashboard`.
 - Busca o vínculo do usuário (`ala_membro`: `status`, `ala_id`) e todas as alas

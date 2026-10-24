@@ -38,11 +38,14 @@ src/proxy.ts         renova a sessão nas rotas do líder
   - `appleWebApp` (título "Almoço"), `manifest: /manifest.webmanifest`;
   - `formatDetection.telephone: false`: o iPhone não transforma números em link
     sozinho (o painel mostra telefones e controla isso).
-- **Viewport**: `themeColor #003057` (barra do navegador marinho, igual ao `primary`), largura do aparelho.
+- **Viewport**: `themeColor #003057` (barra do navegador marinho, emendando na
+  faixa azul), `colorScheme: 'only light'` (vira `<meta name="color-scheme">`;
+  ver abaixo), largura do aparelho.
 - `<html lang="pt-BR">`. `<body>` em coluna com `min-h-screen`: o conteúdo fica
   num `flex-1` e o **`Footer`** vai para o fim, em todas as páginas.
-- O `bg-primary` do `body` vira a cor do canvas (aparece, por exemplo, quando o
-  iPhone "estica" a rolagem); o céu é desenhado por cima, em `body::before/::after`.
+- `body` com **fundo creme** (`bg-cream`) e texto escuro (`text-text`). O azul é
+  só a faixa do cabeçalho de cada página (`HeaderBand`, ver
+  [src_components.md](src_components.md)).
 
 ## `globals.css`: tema e CSS global
 
@@ -57,9 +60,9 @@ Paleta da Igreja (valores do site oficial, `churchofjesuschrist.org`); só
 | `secondary` | `#006184` azul de ação | botões, dia escolhido, links, foco, interruptor ligado, "Salvo." | branco sobre ele 6,90:1 |
 | `accent` | `#bd0057` framboesa | dia ocupado, remover, erros, fitinha, toque feminino | sobre branco 6,36:1 |
 | `accent-soft` | `#fdecf1` rosa-claro | fundo de destaque suave (dia ocupado, caixa de erro) | framboesa sobre ele 5,59:1 |
-| `accent-on-dark` | `#fda1b2` rosa | texto rosa **sobre o azul** (o framboesa some ali) | sobre o céu ≥ 5,56:1 |
-| `gold` | `#ffb81c` dourado | **só enfeite**: fitinha, divisórias, miolo da flor; texto só sobre o azul | sobre o céu ≥ 6,17:1; sobre branco 1,7:1 (nunca texto) |
-| `cream` | `#faf7f5` creme | fundo claro da página (ainda não usado; vem com o fundo claro) | — |
+| `accent-on-dark` | `#fda1b2` rosa | texto rosa **sobre o azul** (o framboesa some ali). Hoje sem uso: avisos ficam no claro | sobre a faixa ≥ 5,5:1 |
+| `gold` | `#ffb81c` dourado | **só enfeite**: fitinha, divisórias, miolo da flor; e o foco dentro da faixa azul | sobre a faixa ≥ 6:1; sobre branco 1,7:1 (nunca texto no claro) |
+| `cream` | `#faf7f5` creme | fundo de todas as páginas (`body`) | texto secundário sobre ele 6,83:1 |
 | `background` | `#ffffff` | cartões | — |
 | `text` | `#212225` | texto principal | sobre branco 15,91:1 |
 | `muted` | `#53575b` | texto secundário | sobre branco 7,29:1 |
@@ -90,18 +93,22 @@ Regras completas de animação no `CLAUDE.md`.
   `scroll-behavior: smooth`.
 - `h1, h2, h3` com serifa (estética serena, como o site da Igreja).
 - `body`: suavização de fonte e `text-rendering: optimizeLegibility`.
-- **Fundo celestial**, em duas camadas fixas atrás de tudo (não pesam na rolagem
-  do celular):
-  - `body::before` (`z-index: -2`): gradiente azul profundo, de `#1c3e6e` a `#0d1f3a`;
-  - `body::after` (`z-index: -1`): "auroras" estáticas em `radial-gradient`: luz
-    dourada no alto e rosa à direita (as cores de `gold` e da `Flower`).
+- `html { color-scheme: only light }` (e a meta do layout): o site é só claro.
+  Sem isso, o modo escuro forçado do Chrome/Samsung Internet pode inverter as
+  cores e estragar o contraste medido.
+- `:focus-visible`: contorno de 3px com afastamento de 2px na cor
+  `var(--focus-color, var(--color-secondary))`: **azul** no fundo claro
+  (6,90:1); a `HeaderBand` troca `--focus-color` para **dourado**, porque o azul
+  some sobre o azul (1,89:1). Componente que precise de outra cor de foco muda
+  a variável, não o `outline`.
 
-  As páginas usam fundo **transparente** de propósito para o céu aparecer. **Não
-  ponha `bg-primary` em `main`/`section`.**
-- `:focus-visible`: contorno azul (`secondary`) de 3px com afastamento de 2px.
-  Foco bem visível para teclado e baixa visão sobre fundo claro (6,90:1).
-  **Sobre o céu ele quase some (1,89:1)**: resolver com o fundo claro, dando
-  outra cor de foco à faixa azul.
+### `bg-band`: o "céu" da faixa do cabeçalho
+
+Utilitário próprio (`@utility bg-band`), usado só pela `HeaderBand`: gradiente
+marinho (`#0b3a66` → `#003057` → `#00284a`) com duas "auroras" estáticas em
+`radial-gradient`, luz dourada no alto e rosa à direita (as cores de `gold` e
+da `Flower`). **Sem verde.** O `background-color` é o `primary`, para o caso de
+o gradiente não carregar.
 
 ### `prefers-reduced-motion`
 
@@ -121,6 +128,7 @@ Na prática, link de ala digitado errado ou de uma ala que não existe mais. Em
 vez da tela padrão do Next (em inglês), um cartão calmo leva à lista de alas da
 home, onde a pessoa acha a sua com um toque:
 
+- `<HeaderBand />` no topo e o cartão num `<main>` sobre o creme.
 - Título: **"Não encontramos essa página"**
 - Texto: "Confira o link que você recebeu ou escolha a sua ala na lista."
 - Botão **"Ver as alas"** → `/`.

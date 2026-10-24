@@ -8,7 +8,7 @@ import { Flower } from '@/components/Flower';
 
 export default function LoginCard({ erroInicial }: { erroInicial?: string }) {
     return (
-        <div className="relative flex flex-col items-center gap-7 overflow-hidden rounded-3xl bg-background px-6 py-10 shadow-2xl ring-1 ring-white/40 sm:px-10">
+        <div className="relative flex flex-col items-center gap-7 overflow-hidden rounded-3xl bg-background px-6 py-10 shadow-lg ring-1 ring-primary/10 sm:px-10">
             <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-accent via-gold to-accent" />
 
             <div className="flex flex-col items-center gap-3 text-center">

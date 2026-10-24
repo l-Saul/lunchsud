@@ -35,8 +35,8 @@ por ala**. Tocar leva a `/[slug]` (ver [routes_slug.md](routes_slug.md)).
   tocou) e "Abrindo…" + `<Spinner />` aparecem no lugar da seta até a página da
   ala abrir. O loading não é desligado de propósito: a navegação desmonta a tela.
 - `aria-busy` no botão tocado; `active:scale-[0.98]` ao tocar.
-- Visual: cartão branco, borda azul (`secondary`) à esquerda, texto marinho,
-  `text-xl`; hover azul com texto branco. Divisória do título: linhas douradas
+- Visual: cartão branco com contorno fino (`ring-primary/10`), borda azul
+  (`secondary`) à esquerda, texto marinho, `text-xl`; hover azul com texto branco. Divisória do título: linhas douradas
   (`gold`) com a florzinha.
 
 ## Escritura sorteada
@@ -48,15 +48,15 @@ por ala**. Tocar leva a `/[slug]` (ver [routes_slug.md](routes_slug.md)).
   fica no efeito, com a exceção pontual `eslint-disable-next-line
   react-hooks/set-state-in-effect`: é uma inicialização única e intencional.
 - O texto é dividido em verso e referência pelo separador ` — `. A referência
-  aparece embaixo, em dourado (`text-gold`: está sobre o céu, onde o azul de
-  ação some). O bloco entra com `animate-aparecer`.
+  aparece embaixo, em azul (`text-secondary`). O bloco entra com `animate-aparecer`.
 
 ## Layout
 
-- Logo `public/lds.jpg` (180×180, `priority`), título `h1`, divisória com
-  florzinha, "Toque na sua ala para agendar.", escritura.
-- `section` com fundo transparente (o "céu" do `body` aparece), largura máxima
-  `max-w-xl`.
+- `HeaderBand` (faixa azul): logo `public/lds.jpg` (160×160, `priority`, branca,
+  por isso fica na faixa), título `h1` e divisória com florzinha.
+- `<main>` no fundo creme, largura máxima `max-w-xl`: "Toque na sua ala para
+  agendar." (`text-xl`, texto escuro), escritura (cinza) e a lista de alas.
+  Erro da lista em rosa (`text-accent`).
 
 ## Planejado (não implementado)
 

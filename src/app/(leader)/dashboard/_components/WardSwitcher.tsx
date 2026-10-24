@@ -51,23 +51,22 @@ export function WardSwitcher({ alas, atualId }: { alas: Ala[]; atualId: number |
         <>
             {transicao && <LoadingOverlay texto={transicao} />}
 
-            <div className="relative rounded-2xl bg-linear-to-br from-white/15 to-white/5 p-px shadow-lg ring-1 ring-white/20">
-            <div className="flex flex-col gap-3 rounded-2xl bg-primary/40 px-4 py-4 backdrop-blur-sm">
+            <section className="flex flex-col gap-3 rounded-3xl bg-background p-4 shadow-md ring-1 ring-primary/10 sm:p-6">
                 <div className="flex items-center gap-2.5">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white ring-1 ring-white/20">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary/10 text-secondary">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                             <circle cx="12" cy="7" r="4" />
                         </svg>
                     </span>
                     <div className="flex flex-col leading-tight">
-                        <span className="text-sm font-semibold text-white">Acesso owner</span>
-                        <span className="text-xs text-white/60">Acesso a todas as alas</span>
+                        <span className="text-sm font-semibold text-text">Acesso owner</span>
+                        <span className="text-xs text-muted">Acesso a todas as alas</span>
                     </div>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                    <label htmlFor="trocar-ala" className="text-sm font-medium text-white/90">
+                    <label htmlFor="trocar-ala" className="text-sm font-medium text-text">
                         Trocar de ala
                     </label>
                     <div className="relative">
@@ -76,7 +75,7 @@ export function WardSwitcher({ alas, atualId }: { alas: Ala[]; atualId: number |
                             value={atualId ?? ''}
                             onChange={trocar}
                             disabled={transicao !== null}
-                            className="min-h-12 w-full appearance-none rounded-xl border border-white/20 bg-white px-4 pr-11 text-base font-medium text-text shadow-sm transition hover:border-secondary/70 focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary disabled:opacity-60 cursor-pointer"
+                            className="min-h-12 w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 pr-11 text-base font-medium text-text shadow-sm transition hover:border-secondary/70 focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary disabled:opacity-60 cursor-pointer"
                         >
                             {atualId === null && <option value="">Selecione uma ala…</option>}
                             {alas.map(a => (
@@ -91,11 +90,10 @@ export function WardSwitcher({ alas, atualId }: { alas: Ala[]; atualId: number |
                     </div>
                 </div>
 
-                <div className="border-t border-white/10 pt-3">
+                <div className="border-t border-slate-200 pt-3">
                     <CreateWardForm onCreated={entrarNaNova} />
                 </div>
-            </div>
-            </div>
+            </section>
         </>
     );
 }

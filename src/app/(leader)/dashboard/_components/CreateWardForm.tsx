@@ -10,7 +10,7 @@ import { FUSO_PADRAO, PAISES, UFS, fusosDasAmericas } from '@/lib/location';
 import { Spinner } from '@/components/Spinner';
 
 const campoClasse =
-    'min-h-12 w-full rounded-xl border border-white/20 bg-white px-4 text-base text-text shadow-sm focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary disabled:opacity-60';
+    'min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-base text-text shadow-sm focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary disabled:opacity-60';
 
 export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | undefined) => Promise<void> }) {
     const [criando, setCriando] = useState(false);
@@ -105,7 +105,7 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
             <button
                 type="button"
                 onClick={() => setCriando(true)}
-                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/30 px-4 text-sm font-semibold text-white/90 transition hover:border-solid hover:border-secondary hover:bg-secondary/15 hover:text-white cursor-pointer"
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 text-sm font-semibold text-secondary transition hover:border-solid hover:border-secondary hover:bg-secondary/10 cursor-pointer"
             >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M12 5v14M5 12h14" />
@@ -118,13 +118,13 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
     return (
         <form onSubmit={criarAla} className="flex animate-aparecer flex-col gap-3">
             <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-white">Nova ala</h3>
+                <h3 className="text-sm font-semibold text-text">Nova ala</h3>
                 <button
                     type="button"
                     onClick={resetForm}
                     disabled={salvando}
                     aria-label="Cancelar"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 disabled:opacity-50 cursor-pointer"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition hover:bg-slate-100 disabled:opacity-50 cursor-pointer"
                 >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M18 6 6 18M6 6l12 12" />
@@ -133,7 +133,7 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
             </div>
 
             <div className="flex flex-col gap-1.5">
-                <label htmlFor="nova-ala-nome" className="text-sm font-medium text-white/90">
+                <label htmlFor="nova-ala-nome" className="text-sm font-medium text-text">
                     Nome da nova ala
                 </label>
                 <input
@@ -148,8 +148,8 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
                     className={campoClasse}
                 />
                 {nome.trim() && (
-                    <p className="text-xs text-white/70">
-                        Será salva como <span className="font-medium text-white">{nomePreview}</span>
+                    <p className="text-xs text-muted">
+                        Será salva como <span className="font-medium text-text">{nomePreview}</span>
                         {linkPreview && (
                             <> · link <span className="font-mono text-secondary">/{linkPreview}</span></>
                         )}
@@ -158,7 +158,7 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
             </div>
 
             <div className="flex flex-col gap-1.5">
-                <label htmlFor="nova-ala-pais" className="text-sm font-medium text-white/90">
+                <label htmlFor="nova-ala-pais" className="text-sm font-medium text-text">
                     País
                 </label>
                 <select
@@ -175,7 +175,7 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
             </div>
 
             <div className="flex flex-col gap-1.5">
-                <label htmlFor="nova-ala-estado" className="text-sm font-medium text-white/90">
+                <label htmlFor="nova-ala-estado" className="text-sm font-medium text-text">
                     {pais === 'BR' ? 'Estado' : 'Estado ou província'}
                 </label>
                 {pais === 'BR' ? (
@@ -206,7 +206,7 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
             </div>
 
             <div className="flex flex-col gap-1.5">
-                <label htmlFor="nova-ala-cidade" className="text-sm font-medium text-white/90">
+                <label htmlFor="nova-ala-cidade" className="text-sm font-medium text-text">
                     Cidade
                 </label>
                 <input
@@ -223,7 +223,7 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
 
             {pais !== 'BR' && (
                 <div className="flex flex-col gap-1.5">
-                    <label htmlFor="nova-ala-fuso" className="text-sm font-medium text-white/90">
+                    <label htmlFor="nova-ala-fuso" className="text-sm font-medium text-text">
                         Fuso horário
                     </label>
                     <select
@@ -241,8 +241,8 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
             )}
 
             <div className="flex flex-col gap-1.5">
-                <label htmlFor="nova-ala-endereco" className="text-sm font-medium text-white/90">
-                    Endereço <span className="font-normal text-white/50">(opcional)</span>
+                <label htmlFor="nova-ala-endereco" className="text-sm font-medium text-text">
+                    Endereço <span className="font-normal text-muted">(opcional)</span>
                 </label>
                 <input
                     id="nova-ala-endereco"

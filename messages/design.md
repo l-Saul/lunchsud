@@ -146,9 +146,7 @@ cheio + ✓**, e o dia ocupado é um **fundo rosa-claro + flor**.
 > ✅ **Feito em 24/10/2026** (tokens e cores fixas). Nomes dos tokens novos, em
 > inglês como os outros: `cream`, `accent-soft` (rosa-claro), `accent-on-dark`
 > (rosa sobre o azul, `#fda1b2`) e `gold`. Detalhes em `docs/src_app.md`.
-> Ficou para o **fundo claro**: o céu (`body::before/::after` e o cabeçalho dos
-> e-mails), o foco sobre o céu (1,89:1) e a armadilha "Fundo celestial" do
-> `CLAUDE.md`.
+> O fundo claro (seção 5) também já foi feito, na mesma data.
 
 ### Como trocar (tokens em `src/app/globals.css`, linhas 9–14)
 
@@ -170,12 +168,12 @@ Pode manter os nomes `secondary`/`accent` para não mexer nos 21 arquivos.
 
 - [x] `src/app/(leader)/dashboard/_components/month-image/MonthImage.tsx` — divisória dourada, Dom/Sáb framboesa, cinzas e fundo da paleta.
 - [x] `src/components/Flower.tsx` — pétalas `#e0588f` → `#ed3a65` (`red12`) e miolo → `#ffb81c`.
-- [ ] `src/app/globals.css` — o céu (`body::before`/`::after`) sai do fundo da página (seção 5).
+- [x] `src/app/globals.css` — o céu saiu do `body` e virou o utilitário `bg-band` da `HeaderBand`.
 - [x] `src/app/layout.tsx` e `manifest.ts` — `themeColor` = `#003057`.
 - [x] `supabase/email/*.html` — botão, fitinha, divisória, caixa do código, flor e textos. **Colar de novo no Supabase** depois do fundo claro (que mexe neles de novo).
 - [x] E-mails de aviso (`src/lib/server/email-templates.ts` + `src/lib/server/email/aviso.html`) — mesmas trocas; destaque `#fdecf1` com borda `#fda1b2`.
 - [x] `CLAUDE.md` — seção "Cores".
-- [ ] `CLAUDE.md` — armadilha "Fundo celestial" (regra antiga do fundo transparente): com o fundo claro.
+- [x] `CLAUDE.md` — armadilha "Fundo celestial" virou "Fundo claro + faixa azul".
 
 ---
 
@@ -194,7 +192,13 @@ Pode manter os nomes `secondary`/`accent` para não mexer nos 21 arquivos.
 
 ---
 
-## 5. ✅ Fundo claro (aprovado)
+## 5. ✅ Fundo claro (aprovado e feito em 24/10/2026)
+
+> Feito: `HeaderBand` (`src/components/`) em todas as páginas, `body` creme,
+> `<main>` em toda página (inclusive a home), foco dourado na faixa,
+> `color-scheme: only light`, e-mails com faixa azul + fundo creme. No painel, o
+> cabeçalho com "Sair" foi para a faixa e o cartão do owner ficou branco (sem
+> desfoque). A imagem da home continua branca, dentro da faixa.
 
 **Estrutura de toda página:**
 
@@ -524,7 +528,7 @@ Pastas: `(m)` = `src/app/(member)/[slug]/_components/`, `(d)` = `src/app/(leader
 | A16 | Formato do telefone não é mostrado antes | `(m)BookingModal.tsx`, `(d)EditBookingModal.tsx` | C | "Exemplo: (41) 99999-9999" | 3.3.2 |
 | A17 | ✅ Enter confirma no agendar (`<form>`). Falta `enterKeyHint` (medido: ausente) e `<form>` no modal de edição | `(m)BookingModal.tsx:147`, `(d)EditBookingModal.tsx` | M C | `enterKeyHint` + `<form>` no painel | boa prática |
 | A18 | Link externo abre outra aba sem avisar | `Footer.tsx:19` | C L | "(abre em outra aba)" | 3.2.5 |
-| A19 | Sem `color-scheme` (**medido: ausente em todas as páginas**): o modo escuro forçado do Chrome/Samsung Internet pode inverter as cores | `layout.tsx` (`viewport`) | V A | `colorScheme` no `viewport` = `only light`; testar no Samsung Internet | — |
+| A19 ✅ | Sem `color-scheme` (**medido: ausente em todas as páginas**): o modo escuro forçado do Chrome/Samsung Internet pode inverter as cores | `layout.tsx` (`viewport`) | V A | `colorScheme` no `viewport` = `only light`; testar no Samsung Internet | — |
 | A20 | No iPhone, o Safari não segue o tamanho de letra do sistema | `globals.css:35` | V | Ver nota técnica na seção 8.1 | 1.4.4 |
 | A21 | `backdrop-blur` em 5 telas: pesado em Android simples (tela trava, toque "não responde") | `(m)BookingModal.tsx:120`, `(d)EditBookingModal.tsx:119`, `(d)UsersCard.tsx:143`, `(d)WardSwitcher.tsx:55`, `LoadingOverlay.tsx:13` | A M | Fundo sólido semitransparente, sem desfoque | — |
 | A22 | Dias de 37×37px em 320px (medido): passa o mínimo WCAG (24px), abaixo do ideal para tremor | `(m)MonthCalendar.tsx` | V M | Lista de dias livres (seção 6.3) | 2.5.8 ✅ / 2.5.5 |
@@ -534,7 +538,7 @@ Pastas: `(m)` = `src/app/(member)/[slug]/_components/`, `(d)` = `src/app/(leader
 | A26 | Nomes e e-mails cortados com "…" (`truncate`): a informação some | `(leader)/dashboard/page.tsx:119`, `(d)BookingsCard.tsx:65`, `(d)UsersCard.tsx:76,77` | V C | Quebrar a linha | 1.4.4, 1.4.10 (sem perda de conteúdo) |
 | **A27** | **Novo.** `aria-pressed` nos 31 dias: o leitor anuncia "botão de alternância, não pressionado" em cada um, e escolher dia não é alternar | `(m)MonthCalendar.tsx:159` | L | Tirar `aria-pressed`; estado no nome ("…, escolhido") | 4.1.2 |
 | **A28** | **Novo.** Home com letra a 200% num celular de 320px: título e botões das alas não quebram e a página vai para **401px** (o celular afasta o zoom) | `(member)/page.tsx` (título `text-3xl` e botões das alas) | V | `min-w-0` no texto dos botões + `wrap-anywhere`/`hyphens-auto` (com `lang="pt-BR"` hifeniza certo) | 1.4.4, 1.4.10 |
-| **A29** | **Novo.** Home sem `<main>` (axe: `landmark-one-main`, `region`) | `(member)/page.tsx:47` | L | Trocar `<section>` por `<main>` | 1.3.1 (boa prática) |
+| **A29** ✅ | **Novo.** Home sem `<main>` (axe: `landmark-one-main`, `region`) | `(member)/page.tsx:47` | L | Trocar `<section>` por `<main>` | 1.3.1 (boa prática) |
 | **A30** | **Novo.** Dias que já passaram com contraste de **1,81:1**, e eles são clicáveis (não valem como "inativos") | `(m)MonthCalendar.tsx:172` | V | `#676b6e` (5,38:1), sem borda/fundo para diferenciar | 1.4.3 |
 | **A31** | **Novo.** Texto visível fora do nome acessível: "VOLTAR" → "Mês anterior", "AVANÇAR" → "Próximo mês", "26 P-DAY" → "Dia 26, P-day…" (axe: `label-content-name-mismatch`). Comando de voz falha | `(m)MonthCalendar.tsx:80,99,158` | L M | Nome acessível começando pelo texto visível | 2.5.3 |
 | **A32** | **Novo.** "Esqueci minha senha" e "Não tem conta? Criar conta" com **23px de altura**, fora de frase | `(leader)/admin/_components/LoginForm.tsx` | M | Botões secundários de 48px | 2.5.8 |
@@ -728,7 +732,7 @@ tremor. Os 24px são o piso legal, não a meta.
 - [ ] Botões nativos (`<button>`), não `div` com `role`.
 
 **Aparelho**
-- [ ] `color-scheme: only light` declarado.
+- [x] `color-scheme: only light` declarado.
 - [ ] Sem `backdrop-blur` nem efeitos pesados.
 - [ ] Testado num Android simples (de preferência Samsung) e no iPhone.
 

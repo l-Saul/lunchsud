@@ -79,6 +79,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
     themeColor: "#003057",
+    colorScheme: "only light",
     width: "device-width",
     initialScale: 1,
 }
@@ -90,7 +91,7 @@ export default function RootLayout({
 }) {
     return (
         <html lang="pt-BR" className={`${fontSans.variable} ${fontSerif.variable}`}>
-            <body className="bg-primary flex min-h-screen flex-col font-sans">
+            <body className="bg-cream flex min-h-screen flex-col font-sans text-text">
                 <div className="flex-1">
                     {children}
                 </div>

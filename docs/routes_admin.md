@@ -31,6 +31,8 @@ Dependências: `src/lib/server/session.ts` (`getUsuario`),
 ## `page.tsx`
 
 - `dynamic = 'force-dynamic'`, `revalidate = 0`: sempre lê a sessão atual.
+- Estrutura: `<HeaderBand />` (faixa azul com o ícone e "Almoço dos
+  Missionários") e, abaixo, o `<main>` com o cartão sobre o fundo creme.
 - Metadata: `title: { absolute: 'Entrar' }` (a aba mostra só "Entrar", sem o
   sufixo do site) e `robots: noindex, nofollow`.
 - Já logado (`getUsuario()`) → `redirect('/dashboard')`. O painel, por sua vez,

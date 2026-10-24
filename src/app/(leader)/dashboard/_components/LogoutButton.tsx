@@ -28,12 +28,12 @@ export function LogoutButton() {
             onClick={handleLogout}
             disabled={loading}
             className={`
-                px-4 py-2 rounded-lg font-medium text-white
-                transition duration-200 cursor-pointer
+                min-h-11 shrink-0 px-4 py-2 rounded-lg font-medium text-white ring-1 ring-white/40
+                transition duration-100 cursor-pointer
                 flex items-center justify-center gap-2
                 ${loading
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-secondary shadow-sm hover:opacity-95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0'}
+                    ? 'bg-white/20 cursor-not-allowed'
+                    : 'bg-white/10 hover:bg-white/20 active:scale-[0.98]'}
             `}
         >
             {loading && <Spinner className="h-4 w-4" />}

@@ -82,8 +82,8 @@ Substitui a tela padrão do Next (em inglês) por um cartão calmo:
 - Botão **"Tentar de novo"** → `retry()` (busca os dados de novo no servidor e
   limpa o erro). Alvo grande (`min-h-13`), azul.
 
-Visual igual ao do 404: cartão branco, fitinha framboesa→dourado→framboesa no topo,
-florzinha.
+Visual igual ao do 404: `<HeaderBand />` no topo e, no creme, cartão branco com
+fitinha framboesa→dourado→framboesa e florzinha.
 
 ## `WardBooking.tsx` (client)
 
@@ -151,10 +151,9 @@ com o conteúdo, então o fade roda de novo quando a mensagem troca.
 - Ocupado: `wrap-anywhere`, porque o nome vem do usuário e pode ter 80
   caracteres sem espaço. Sem isso ele empurrava a página para o lado.
 - Resultado do agendamento (`role="status"`, `aria-live="polite"`):
-  - sucesso, em **branco** (`text-white`): "Almoço agendado com sucesso. Muito obrigado!"
-  - conflito, em **rosa claro** (`text-accent-on-dark`): "Este dia acabou de ser ocupado. Escolha outro."
-  - A frase fica **sobre o céu azul**: o azul de ação e o framboesa sumiriam
-    ali (menos de 2,1:1). Só aparece com o modal fechado.
+  - sucesso, em **azul** (`text-secondary`): "Almoço agendado com sucesso. Muito obrigado!"
+  - conflito, em **rosa** (`text-accent`): "Este dia acabou de ser ocupado. Escolha outro."
+  - Só aparece com o modal fechado.
 
 ### Callbacks do modal
 
@@ -172,14 +171,18 @@ conflito aparecia de novo no modal seguinte).
 
 ### Layout
 
-- Cabeçalho: nome da ala (`h1`, 4xl, branco), divisória com florzinha,
-  "Toque em um dia livre para agendar o almoço." Duas florzinhas decorativas
-  estáticas nos cantos (opacidade baixa, `aria-hidden`).
+- `HeaderBand` (faixa azul): nome da ala (`h1`, 4xl, branco, `wrap-anywhere`) e
+  divisória com florzinha. Duas florzinhas decorativas estáticas nos cantos
+  (opacidade baixa, `aria-hidden`). Altura contida: em 390×844 o calendário
+  começa a ~290px e os dias livres ficam na primeira tela.
+- Abaixo, no `<main>` sobre o creme: "Toque em um dia livre para agendar o
+  almoço." (`text-xl`, texto escuro), o calendário e as mensagens (ocupado,
+  P-day, já passou), todas em texto escuro.
 - Margens enxutas no celular (`px-2`): cada pixel vira largura dos 7 dias. Em
   360px os dias chegam a 44px, o alvo de toque recomendado (WCAG 2.5.5).
 - Calendário num cartão branco com fitinha framboesa→dourado→framboesa no topo. **Sem
   animação de entrada**: aparece junto com a página (vem do servidor).
-- `main` com fundo transparente, para o "céu" do `body` aparecer.
+- O cartão do calendário: `ring-1 ring-primary/10` + `shadow-md` sobre o creme.
 
 ## `BookingModal.tsx` (client)
 

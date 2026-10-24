@@ -23,7 +23,7 @@ export function OpenCalendarButton({ slug }: { slug: string }) {
             onClick={abrir}
             disabled={loading}
             aria-busy={loading}
-            className="flex min-w-0 flex-1 items-center justify-center gap-3 rounded-2xl bg-secondary px-3 py-4 sm:px-4 text-center text-balance text-base font-semibold text-white shadow-lg transition duration-100 hover:opacity-95 hover:shadow-xl active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 disabled:opacity-80 sm:text-lg cursor-pointer"
+            className="flex min-w-0 flex-1 items-center justify-center gap-3 rounded-2xl bg-secondary px-3 py-4 sm:px-4 text-center text-balance text-base font-semibold text-white shadow-lg transition duration-100 hover:opacity-95 hover:shadow-xl active:scale-[0.98] disabled:opacity-80 sm:text-lg cursor-pointer"
         >
             {loading ? (
                 <>

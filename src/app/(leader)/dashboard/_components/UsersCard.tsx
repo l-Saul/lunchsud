@@ -106,7 +106,7 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
     }
 
     return (
-        <section className="flex flex-col gap-5 rounded-3xl bg-background p-4 shadow-xl ring-1 ring-white/40 sm:p-8">
+        <section className="flex flex-col gap-5 rounded-3xl bg-background p-4 shadow-md ring-1 ring-primary/10 sm:p-8">
             <div className="flex items-center gap-2">
                 <span className="h-5 w-1.5 rounded-full bg-accent" />
                 <h2 className="text-lg font-semibold text-text">Usuários</h2>

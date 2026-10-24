@@ -7,6 +7,7 @@ na pasta dela, em `_components/`.
 |---|---|
 | `Flower` | página da ala, home, 404, erro da ala, login, acesso, redefinir senha, imagem do mês |
 | `Footer` | layout raiz (todas as páginas) |
+| `HeaderBand` | todas as páginas: home, ala, erro da ala, 404, login, acesso, redefinir senha, painel |
 | `LoadingOverlay` | `WardSwitcher` (painel) |
 | `Spinner` | todos os botões de ação, `LoadingOverlay`, home |
 
@@ -26,7 +27,8 @@ pétalas rosa `#ed3a65` e miolo dourado `#ffb81c`, da paleta da Igreja.
 
 ## `Footer.tsx`
 
-Rodapé global, renderizado pelo layout em todas as páginas:
+Rodapé global, renderizado pelo layout em todas as páginas, sobre o creme: texto
+cinza (`text-muted`, 6,83:1) e uma linha fina acima (`border-primary/10`).
 
 1. Aviso: "Site independente, sem vínculo institucional ou oficial com a Igreja
    de Jesus Cristo dos Santos dos Últimos Dias."
@@ -34,6 +36,26 @@ Rodapé global, renderizado pelo layout em todas as páginas:
    com ícone de link externo (indica que abre em outra página), abre o portfólio
    **numa nova aba, já na seção de contato**: `https://luishsaul.com.br/#contato`.
    `target="_blank"` sempre com `rel="noopener noreferrer"` (segurança).
+
+## `HeaderBand.tsx`
+
+A **faixa azul do cabeçalho**, no topo de toda página. É o "céu" do site
+(utilitário `bg-band` do `globals.css`); o resto da página fica no fundo creme.
+
+- `<header>` de largura total: é o `banner` da página. A página põe o conteúdo
+  num `<main>` **depois** dele (header → main → footer).
+- Texto branco e centralizado, `px-4`, `overflow-hidden` (as florzinhas
+  decorativas da página da ala ficam presas nela).
+- **Foco dourado:** define `--focus-color: var(--color-gold)`. Dentro da faixa o
+  contorno de foco azul quase não aparece (1,89:1); o dourado tem ≥ 6:1.
+- Props: `children` (o conteúdo da página: logo e título na home, nome da ala,
+  "Painel da ala" + Sair) e `className` (ex.: `sm:px-6` no painel).
+- **Sem `children`**: mostra a identidade do site, o ícone
+  `lunchsud180x180.png` (56px, `alt=""`, porque o nome vem logo ao lado) e
+  "Almoço dos Missionários" em serifa (`<p>`, não título: o `h1` é o do cartão
+  da página). Usado no login, acesso, redefinir senha, 404 e erro da ala.
+- Altura contida: na página da ala o calendário precisa começar na primeira
+  tela do celular, sem rolar.
 
 ## `LoadingOverlay.tsx`
 

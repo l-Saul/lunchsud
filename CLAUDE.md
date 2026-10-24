@@ -304,9 +304,13 @@ o arquivo. Nunca coloque SMTP em migration. Tudo em [`docs/database.md`](docs/da
   calendário usa container query em `rem` (`@max-[15rem]`), e fileiras de botões
   usam `flex-wrap` com `basis` em rem para empilhar. Teste em 320px com fonte
   130% antes de mudar layout.
-- **Fundo celestial:** o "céu" vive em `body::before/::after` no `globals.css`.
-  As páginas usam fundo **transparente**: **não** ponha `bg-primary` em
-  `main`/`section`.
+- **Fundo claro + faixa azul:** o `body` é creme (`bg-cream`) e o "céu" azul
+  é só a faixa do cabeçalho, o componente `HeaderBand` (utilitário `bg-band` do
+  `globals.css`). Toda página começa com ele e põe o conteúdo num `<main>`
+  abaixo, em texto escuro. Mensagens, avisos e confirmações ficam sempre no
+  claro. Dentro da faixa o foco é dourado (`--focus-color`): o azul de ação
+  some sobre o azul. Cartão sobre o creme: `bg-background` +
+  `ring-1 ring-primary/10` + sombra leve.
 - **Todo modal** (e tela por cima, como o `LoadingOverlay`): **fundo desfocado**
   (`bg-primary/40`–`50` + `backdrop-blur-sm`) e **página atrás travada** com
   `useScrollLock` (`src/hooks/use-scroll-lock.ts`); nunca reescreva a trava à mão

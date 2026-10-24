@@ -10,7 +10,7 @@ import { siteUrl } from '@/lib/site-url';
 type Props = { slug: string; nomeAla: string };
 
 const botaoIcone =
-    'flex w-12 shrink-0 items-center justify-center rounded-2xl bg-secondary text-white shadow-lg transition duration-100 hover:opacity-95 active:scale-95 sm:w-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 cursor-pointer';
+    'flex w-12 shrink-0 items-center justify-center rounded-2xl bg-secondary text-white shadow-lg transition duration-100 hover:opacity-95 active:scale-95 sm:w-14 cursor-pointer';
 
 function copiarComFallback(texto: string) {
     const campo = document.createElement('textarea');

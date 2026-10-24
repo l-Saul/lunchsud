@@ -5,20 +5,20 @@
 
 export function Footer() {
     return (
-        <footer className="mt-16 w-full border-t border-white/10 px-4 py-7 text-white sm:mt-24">
+        <footer className="mt-16 w-full border-t border-primary/10 px-4 py-7 text-muted sm:mt-24">
             <div className="mx-auto flex max-w-2xl flex-col items-center gap-3 text-center">
-                <p className="text-sm text-white/70">
+                <p className="text-sm">
                     Site independente, sem vínculo institucional ou oficial com a Igreja de
                     Jesus Cristo dos Santos dos Últimos Dias.
                 </p>
 
-                <p className="text-sm text-white/60">
+                <p className="text-sm">
                     Desenvolvido por{' '}
                     <a
                         href="https://luishsaul.com.br/#contato"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 underline underline-offset-4 transition hover:text-white"
+                        className="inline-flex items-center gap-1 underline underline-offset-4 transition hover:text-text"
                     >
                         Luis Henrique Engel Saul
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

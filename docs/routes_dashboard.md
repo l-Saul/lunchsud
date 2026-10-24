@@ -83,15 +83,17 @@ cada um.
 ### Layout (de cima para baixo)
 
 1. `DashboardClientGuard` envolvendo tudo; `DashboardRealtime` se houver ala em foco.
-2. Cabeçalho: "Painel da ala", nome da ala (ou "Selecione uma ala") + " · owner",
-   e o `LogoutButton`.
+2. `HeaderBand` (faixa azul): "Painel da ala", nome da ala (ou "Selecione uma
+   ala") + " · owner", e o `LogoutButton`, em `max-w-3xl`.
 3. `WardSwitcher`: só owner, e só se houver alas.
 4. Se a ala tem slug, uma linha com `OpenCalendarButton` (ocupa o espaço que sobra) e
    os dois botões de ícone do `ShareLinkButtons` (copiar e compartilhar), todos com
    a mesma altura (`items-stretch`, `gap-2`, `sm:gap-3`).
 5. `BookingsCard` → `HistoryCard` → `NotificationsCard` (só com ala em foco) → `UsersCard`.
 
-`main` sem fundo (o "céu" do `body` aparece); conteúdo em `max-w-3xl`.
+Do item 3 em diante tudo fica no `<main>`, sobre o fundo creme, em
+`max-w-3xl`. Os cartões são brancos com `ring-1 ring-primary/10` e
+`shadow-md`.
 
 ## `BookingsCard.tsx` (Server Component)
 
@@ -290,7 +292,8 @@ Exporta `UsersCard` e o tipo `Usuario = { id (do vínculo ala_membro), nome, ema
 
 ## `WardSwitcher.tsx` (client, só owner)
 
-Card translúcido "Acesso owner / Acesso a todas as alas" com:
+Cartão branco, como os outros (`<section>`), com o ícone num quadradinho azul
+claro e "Acesso owner / Acesso a todas as alas":
 
 1. **Trocar de ala**: `<select id="trocar-ala">` do sistema (chevron próprio com
    `appearance-none`). Opção "Selecione uma ala…" só quando não há ala em foco.
@@ -316,8 +319,9 @@ aparece na lista.
 
 ## `CreateWardForm.tsx` (client, só owner)
 
-Fechado: botão tracejado **"+ Criar nova ala"**. Aberto: o formulário (com X
-"Cancelar" no canto, que limpa tudo).
+Fechado: botão tracejado **"+ Criar nova ala"** (texto azul). Aberto: o
+formulário (com X "Cancelar" no canto, que limpa tudo). Fica dentro do cartão
+branco do `WardSwitcher`: rótulos em texto escuro, campos com borda cinza.
 
 ### Campos
 
@@ -389,6 +393,10 @@ mandar o link da ala no grupo do WhatsApp. Props: `slug`, `nomeAla`. O link é
    e sem cache de RSC. Evita o vaivém `/admin` ↔ `/dashboard` que prendia a tela.
 
 Enquanto sai: Spinner e "Tchau".
+
+Fica **na faixa azul**: botão translúcido (`bg-white/10`, contorno
+`ring-white/40`, texto branco, ≥ 44px), que não compete com o "Abrir
+calendário". Foco dourado, o da faixa.
 
 ## `DashboardClientGuard.tsx` (client)
 

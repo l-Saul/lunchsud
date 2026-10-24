@@ -31,6 +31,8 @@ O convite (`invite-user.html`) usa o mesmo destino: `type=invite&next=/redefinir
 
 - `dynamic = 'force-dynamic'`, `revalidate = 0`. Metadata: título "Nova senha",
   `robots: noindex, nofollow`.
+- Estrutura: `<HeaderBand />` (faixa azul com o ícone e "Almoço dos
+  Missionários") e, abaixo, o `<main>` com o cartão sobre o fundo creme.
 - Lê o usuário da sessão e passa o `email` dele ao formulário, ou `null` **sem
   sessão** (link expirado, já usado, ou alguém abriu `/redefinir-senha` direto).
 
