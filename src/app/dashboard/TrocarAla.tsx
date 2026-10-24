@@ -5,9 +5,10 @@
 //  2. Criar uma nova ala — seção separada, logo abaixo da troca. O link (slug) é
 //     gerado automático do nome; "Endereço" é um campo livre (rua/número) do banco.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { gerarSlug, normalizarNomeAla } from '@/lib/alas';
+import { FUSO_PADRAO, PAISES, UFS, fusosDasAmericas } from '@/lib/localizacao';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
 import { Spinner } from '@/components/Spinner';
 
@@ -23,11 +24,31 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
     const [criando, setCriando] = useState(false);
     const [nome, setNome] = useState('');
     const [endereco, setEndereco] = useState('');
+    // Localização da nova ala. Começa no Brasil/Paraná, onde estão as alas hoje.
+    const [pais, setPais] = useState('BR');
+    const [estado, setEstado] = useState('PR');
+    const [cidade, setCidade] = useState('');
+    const [fuso, setFuso] = useState(FUSO_PADRAO);
     const [salvando, setSalvando] = useState(false);
     const [erro, setErro] = useState('');
 
     const nomePreview = normalizarNomeAla(nome);
     const linkPreview = gerarSlug(nomePreview); // slug automático (só leitura)
+
+    // Fusos das Américas (só aparecem fora do Brasil). Garante que o sugerido
+    // para o país esteja na lista mesmo se o navegador não listar fusos.
+    const fusos = useMemo(() => {
+        const lista = fusosDasAmericas();
+        return lista.includes(fuso) ? lista : [fuso, ...lista];
+    }, [fuso]);
+
+    // Trocar o país zera o estado e sugere o fuso principal dele.
+    function trocarPais(codigo: string) {
+        setPais(codigo);
+        setEstado(codigo === 'BR' ? 'PR' : '');
+        setFuso(PAISES.find(p => p.codigo === codigo)?.fuso ?? FUSO_PADRAO);
+        setErro('');
+    }
 
     // Quando a ala em foco muda (após o refresh do servidor renderizar os dados
     // novos), encerra o overlay de transição.
@@ -62,13 +83,28 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
             setErro('Digite o nome da ala.');
             return;
         }
+        if (!estado.trim()) {
+            setErro(pais === 'BR' ? 'Escolha o estado.' : 'Informe o estado ou província.');
+            return;
+        }
+        if (cidade.trim().length < 2) {
+            setErro('Informe a cidade.');
+            return;
+        }
 
         setErro('');
         setSalvando(true);
         const res = await fetch('/api/alas/criar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nome: nome.trim(), endereco: endereco.trim() }),
+            body: JSON.stringify({
+                nome: nome.trim(),
+                endereco: endereco.trim(),
+                pais,
+                estado: estado.trim(),
+                cidade: cidade.trim(),
+                fuso,
+            }),
         });
         const json = await res.json().catch(() => ({}));
 
@@ -98,8 +134,15 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
         setCriando(false);
         setNome('');
         setEndereco('');
+        setPais('BR');
+        setEstado('PR');
+        setCidade('');
+        setFuso(FUSO_PADRAO);
         setErro('');
     }
+
+    const campoClasse =
+        'min-h-12 w-full rounded-xl border border-white/20 bg-white px-4 text-base text-text shadow-sm focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary disabled:opacity-60';
 
     return (
         <>
@@ -204,6 +247,89 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
                                     </p>
                                 )}
                             </div>
+
+                            {/* Localização: país → estado → cidade (e fuso fora do Brasil).
+                                O fuso define o "hoje" e a virada do mês dessa ala. */}
+                            <div className="flex flex-col gap-1.5">
+                                <label htmlFor="nova-ala-pais" className="text-sm font-medium text-white/90">
+                                    País
+                                </label>
+                                <select
+                                    id="nova-ala-pais"
+                                    value={pais}
+                                    onChange={e => trocarPais(e.target.value)}
+                                    disabled={salvando}
+                                    className={campoClasse}
+                                >
+                                    {PAISES.map(p => (
+                                        <option key={p.codigo} value={p.codigo}>{p.nome}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                                <label htmlFor="nova-ala-estado" className="text-sm font-medium text-white/90">
+                                    {pais === 'BR' ? 'Estado' : 'Estado ou província'}
+                                </label>
+                                {pais === 'BR' ? (
+                                    <select
+                                        id="nova-ala-estado"
+                                        value={estado}
+                                        onChange={e => { setEstado(e.target.value); setErro(''); }}
+                                        disabled={salvando}
+                                        className={campoClasse}
+                                    >
+                                        <option value="">Selecione…</option>
+                                        {UFS.map(uf => (
+                                            <option key={uf.sigla} value={uf.sigla}>{uf.nome}</option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <input
+                                        id="nova-ala-estado"
+                                        type="text"
+                                        placeholder="Ex.: Utah, Buenos Aires"
+                                        value={estado}
+                                        onChange={e => { setEstado(e.target.value); setErro(''); }}
+                                        disabled={salvando}
+                                        className={campoClasse}
+                                    />
+                                )}
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                                <label htmlFor="nova-ala-cidade" className="text-sm font-medium text-white/90">
+                                    Cidade
+                                </label>
+                                <input
+                                    id="nova-ala-cidade"
+                                    type="text"
+                                    placeholder="Ex.: Curitiba"
+                                    value={cidade}
+                                    onChange={e => { setCidade(e.target.value); setErro(''); }}
+                                    disabled={salvando}
+                                    className={campoClasse}
+                                />
+                            </div>
+
+                            {pais !== 'BR' && (
+                                <div className="flex flex-col gap-1.5">
+                                    <label htmlFor="nova-ala-fuso" className="text-sm font-medium text-white/90">
+                                        Fuso horário
+                                    </label>
+                                    <select
+                                        id="nova-ala-fuso"
+                                        value={fuso}
+                                        onChange={e => { setFuso(e.target.value); setErro(''); }}
+                                        disabled={salvando}
+                                        className={campoClasse}
+                                    >
+                                        {fusos.map(f => (
+                                            <option key={f} value={f}>{f.replace('America/', '').replaceAll('_', ' ')}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
 
                             {/* Endereço (rua/número) — campo livre, opcional */}
                             <div className="flex flex-col gap-1.5">

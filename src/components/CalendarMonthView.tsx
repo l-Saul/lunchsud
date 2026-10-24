@@ -87,11 +87,13 @@ export default function CalendarMonthView({ diasDoMes }: Props) {
 
                 {/* Corpo */}
                 <div style={{ padding: 24 }}>
-                    {/* Dias da semana */}
+                    {/* Dias da semana. minmax(0, 1fr) = 7 colunas sempre iguais: com
+                        só 1fr, um nome longo sem espaço esticava a coluna e empurrava
+                        o sábado para fora da imagem. */}
                     <div
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(7, 1fr)',
+                            gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
                             gap: 8,
                             marginBottom: 10,
                         }}
@@ -117,7 +119,7 @@ export default function CalendarMonthView({ diasDoMes }: Props) {
                     <div
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(7, 1fr)',
+                            gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
                             gap: 8,
                         }}
                     >
@@ -209,12 +211,21 @@ export default function CalendarMonthView({ diasDoMes }: Props) {
                                                         gap: 3,
                                                     }}
                                                 >
+                                                    {/* Nome: cabe na célula. Quebra até palavra sem
+                                                        espaço, fonte menor se for longo e no máximo
+                                                        3 linhas (o nome completo fica no painel). */}
                                                     <div
                                                         style={{
-                                                            fontSize: 18,
+                                                            fontSize: a.nome.length > 16 ? 15 : 18,
                                                             fontWeight: 700,
                                                             lineHeight: 1.2,
                                                             color: AZUL,
+                                                            maxWidth: '100%',
+                                                            overflowWrap: 'anywhere',
+                                                            display: '-webkit-box',
+                                                            WebkitLineClamp: 3,
+                                                            WebkitBoxOrient: 'vertical',
+                                                            overflow: 'hidden',
                                                         }}
                                                     >
                                                         {a.nome}
@@ -223,6 +234,8 @@ export default function CalendarMonthView({ diasDoMes }: Props) {
                                                         style={{
                                                             fontSize: 15,
                                                             color: '#475569',
+                                                            maxWidth: '100%',
+                                                            overflowWrap: 'anywhere',
                                                         }}
                                                     >
                                                         {a.telefone}

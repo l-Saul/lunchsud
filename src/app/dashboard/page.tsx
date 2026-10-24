@@ -8,6 +8,7 @@ import { TrocarAla } from './TrocarAla';
 import { UsuariosCard, type Usuario } from './UsuariosCard';
 import { supabaseServer } from '@/lib/supabase/server';
 import { getDashboardRange, getHistoricoRange, formatMonthLabel, diaTile, diasDisponiveisNoMes } from '@/lib/date';
+import { FUSO_PADRAO } from '@/lib/localizacao';
 import EditModal from '@/components/EditModal';
 import CalendarExportImage from '@/components/CalendarExportImage';
 import { MesColapsavel } from './MesColapsavel';
@@ -28,10 +29,12 @@ export default async function DashboardPage() {
 
     // Ala em foco.
     const { data: ala } = alaId !== null
-        ? await supabaseServer.from('ala').select('nome, slug').eq('id', alaId).single()
+        ? await supabaseServer.from('ala').select('nome, slug, fuso_horario').eq('id', alaId).single()
         : { data: null };
 
-    const { inicio, fim, mesAtual, mesSeguinte } = getDashboardRange();
+    // Mês atual/seguinte e histórico no fuso da ala (sem ala em foco: o padrão).
+    const fuso = ala?.fuso_horario ?? FUSO_PADRAO;
+    const { inicio, fim, mesAtual, mesSeguinte } = getDashboardRange(fuso);
 
     // Agendamentos do mês atual + seguinte (vazio se owner sem ala em foco).
     const { data: agData } = alaId !== null
@@ -46,7 +49,7 @@ export default async function DashboardPage() {
     const agendamentos = agData ?? [];
 
     // Histórico: só os 3 meses anteriores ao atual.
-    const { inicio: histInicio, fim: histFim } = getHistoricoRange(3);
+    const { inicio: histInicio, fim: histFim } = getHistoricoRange(3, fuso);
     const { data: historicoRaw } = alaId !== null
         ? await supabaseServer
             .from('agendamento')

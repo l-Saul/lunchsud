@@ -24,12 +24,28 @@ alter default privileges for role postgres in schema public
 -- ─── Tabelas ────────────────────────────────────────────────────────────────
 
 create table public.ala (
-    id        integer generated always as identity primary key,
-    nome      varchar(100) not null,
-    descricao varchar(150),
-    endereco  varchar(200),
-    slug      text not null unique, -- link público, gerado do nome por gerarSlug()
-    constraint ala_slug_formato check (slug ~ '^[a-z0-9_-]{1,60}$')
+    id           integer generated always as identity primary key,
+    nome         varchar(100) not null,
+    descricao    varchar(150),
+    endereco     varchar(200),
+    slug         text not null unique, -- link público, gerado do nome por gerarSlug()
+    -- Localização (src/lib/localizacao.ts). O fuso define o "hoje" (dia passado
+    -- bloqueado), a janela de 2 meses e a virada do mês DESSA ala.
+    pais         char(2) not null,     -- ISO 3166-1: 'BR', 'AR', 'US'…
+    estado       varchar(60) not null, -- Brasil: UF ('PR'); outros países: texto livre
+    cidade       varchar(80) not null,
+    fuso_horario varchar(64) not null, -- IANA: 'America/Sao_Paulo', 'America/Manaus'…
+    constraint ala_slug_formato check (slug ~ '^[a-z0-9_-]{1,60}$'),
+    constraint ala_pais_formato check (pais ~ '^[A-Z]{2}$'),
+    constraint ala_estado_valido check (
+        length(btrim(estado)) between 1 and 60
+        and estado !~ '[<>]' and estado !~ '[[:cntrl:]]'
+        and (pais <> 'BR' or estado in (
+            'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA',
+            'PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'))
+    ),
+    constraint ala_cidade_valida check (length(btrim(cidade)) between 2 and 80 and cidade !~ '[<>]' and cidade !~ '[[:cntrl:]]'),
+    constraint ala_fuso_formato check (fuso_horario ~ '^[A-Za-z]+(/[A-Za-z0-9_+-]+)+$')
 );
 
 create table public.agendamento (

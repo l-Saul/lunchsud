@@ -1,6 +1,7 @@
 import { supabaseServer } from '@/lib/supabase/server'
 import { isPday, getDashboardRange } from '@/lib/date'
 import { lerJson, parseAgendar, ValidationError } from '@/lib/validation'
+import { buscarAlaPorSlug } from '@/lib/ala-publica'
 import { NextResponse } from 'next/server'
 
 // Cria um agendamento público (sem conta). É a fonte da verdade: validação
@@ -31,9 +32,14 @@ export async function POST(req: Request) {
         )
     }
 
-    // 3) Janela permitida: de hoje (fuso de SP) até o fim do mês seguinte. Dia que
-    // já passou não recebe almoço; o limite do fim impede encher anos de calendário.
-    const { hoje, fim } = getDashboardRange()
+    const ala = await buscarAlaPorSlug(slug)
+    if (!ala) {
+        return NextResponse.json({ error: 'Ala não encontrada.' }, { status: 404 })
+    }
+
+    // 3) Janela permitida: de hoje (no fuso da ala) até o fim do mês seguinte. Dia
+    // que já passou não recebe almoço; o limite do fim impede encher anos de calendário.
+    const { hoje, fim } = getDashboardRange(ala.fuso_horario)
     if (data < hoje) {
         return NextResponse.json(
             { error: 'Esse dia já passou. Escolha outro dia.' },
@@ -47,15 +53,6 @@ export async function POST(req: Request) {
         )
     }
 
-    const { data: ala, error: alaError } = await supabaseServer
-        .from('ala')
-        .select('id')
-        .eq('slug', slug)
-        .single()
-
-    if (alaError || !ala) {
-        return NextResponse.json({ error: 'Ala não encontrada.' }, { status: 404 })
-    }
 
     // Devolve o id (RETURNING, sem consulta extra) para a tela casar com o evento
     // do WebSocket que chega em seguida.

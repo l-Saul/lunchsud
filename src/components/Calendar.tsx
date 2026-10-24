@@ -12,6 +12,10 @@ type DiaOcupado = {
     nome: string
 }
 
+const SEMANA = [
+    ['Dom', 'D'], ['Seg', 'S'], ['Ter', 'T'], ['Qua', 'Q'], ['Qui', 'Q'], ['Sex', 'S'], ['Sáb', 'S'],
+] as const
+
 type Props = {
     ocupados: DiaOcupado[]
     baseDate: Date
@@ -67,9 +71,14 @@ export function Calendar({
         ...Array.from({ length: diasNoMes }, (_, i) => i + 1),
     ]
 
+    // Modo compacto (@max-[15rem]): calendário estreito para o tamanho da letra —
+    // celular pequeno e/ou letra aumentada no sistema. O limite é em rem, então
+    // cresce junto com a letra: com fonte 130% o compacto entra antes. Nele, o mês
+    // vai para cima dos botões e os dias da semana viram iniciais. Sem isso, com
+    // letra grande o "Avançar" saía da tela e "SEG TER QUA" se encavalavam.
     return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between gap-2">
+        <div className="@container space-y-4">
+            <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 @max-[15rem]:grid-cols-2">
                 <button
                     onClick={() => {
                         setTrocouDeMes(true)
@@ -77,7 +86,7 @@ export function Calendar({
                     }}
                     disabled={!canPrev}
                     aria-label="Mês anterior"
-                    className="flex flex-col items-center gap-0.5 rounded-xl bg-secondary px-2.5 py-2 text-white shadow-sm transition duration-200 hover:opacity-90 enabled:hover:scale-105 enabled:active:scale-95 disabled:opacity-30 disabled:cursor-default cursor-pointer"
+                    className="flex flex-col items-center gap-0.5 rounded-xl bg-secondary px-2.5 py-2 text-white shadow-sm transition duration-200 hover:opacity-90 enabled:active:scale-95 disabled:opacity-30 disabled:cursor-default cursor-pointer @max-[15rem]:order-2"
                 >
                     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M15 18l-6-6 6-6" />
@@ -85,7 +94,7 @@ export function Calendar({
                     <span className="text-xs font-semibold uppercase tracking-wide">Voltar</span>
                 </button>
 
-                <h2 className="text-center text-base sm:text-xl font-semibold text-text">
+                <h2 className="text-center text-base sm:text-xl font-semibold text-text @max-[15rem]:order-1 @max-[15rem]:col-span-2">
                     {formatMonthLabel(`${anoNum}-${String(mesNum + 1).padStart(2, '0')}`)}
                 </h2>
 
@@ -96,7 +105,7 @@ export function Calendar({
                     }}
                     disabled={!canNext}
                     aria-label="Próximo mês"
-                    className="flex flex-col items-center gap-0.5 rounded-xl bg-secondary px-2.5 py-2 text-white shadow-sm transition duration-200 hover:opacity-90 enabled:hover:scale-105 enabled:active:scale-95 disabled:opacity-30 disabled:cursor-default cursor-pointer"
+                    className="flex flex-col items-center gap-0.5 rounded-xl bg-secondary px-2.5 py-2 text-white shadow-sm transition duration-200 hover:opacity-90 enabled:active:scale-95 disabled:opacity-30 disabled:cursor-default cursor-pointer @max-[15rem]:order-3"
                 >
                     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M9 18l6-6-6-6" />
@@ -105,9 +114,14 @@ export function Calendar({
                 </button>
             </div>
 
+            {/* Dias da semana: abreviados; no modo compacto, só a inicial
+                (D S T Q Q S S, como no calendário de papel). */}
             <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-sm font-semibold uppercase tracking-wide text-muted">
-                {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => (
-                    <div key={d}>{d}</div>
+                {SEMANA.map(([abrev, inicial]) => (
+                    <div key={abrev}>
+                        <span className="@max-[15rem]:hidden">{abrev}</span>
+                        <span className="hidden @max-[15rem]:inline">{inicial}</span>
+                    </div>
                 ))}
             </div>
 

@@ -82,4 +82,4 @@ Stack: Next.js 16 · React 19 · TypeScript · Tailwind 4 · Supabase · Vercel.
 
 ---
 
-Desenvolvido por **Luis Henrique Engel Saul** — [luishsaul.com.br](https://luishsaul.com.br) · Uso interno.
+Desenvolvido por **Luis Henrique Engel Saul** — [luishsaul.com.br](https://luishsaul.com.br/#contato) · Uso interno.

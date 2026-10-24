@@ -75,8 +75,8 @@ export function UsuariosCard({ usuarios }: { usuarios: Usuario[] }) {
         const removendo = emAndamento?.id === u.id && emAndamento.acao === 'remover';
 
         return (
-            <li className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3">
-                <div className="min-w-0 flex-1">
+            <li className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-slate-200 p-3">
+                <div className="min-w-0 flex-1 basis-40">
                     <p className="truncate font-medium text-text">{u.nome || '(sem nome)'}</p>
                     <p className="truncate text-sm text-muted">{u.email}</p>
                 </div>
@@ -163,16 +163,16 @@ export function UsuariosCard({ usuarios }: { usuarios: Usuario[] }) {
                             Para voltar, a pessoa precisará pedir acesso de novo.
                         </p>
 
-                        <div className="mt-6 flex gap-3">
+                        <div className="mt-6 flex flex-wrap gap-3">
                             <button
                                 onClick={() => setConfirmar(null)}
-                                className="min-h-12 flex-1 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 cursor-pointer"
+                                className="min-h-12 grow basis-28 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 cursor-pointer"
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={confirmarRemocao}
-                                className="min-h-12 flex-1 rounded-xl bg-accent px-4 text-base font-semibold text-white shadow-md transition duration-100 hover:opacity-95 active:scale-[0.98] cursor-pointer"
+                                className="min-h-12 grow basis-28 rounded-xl bg-accent px-4 text-base font-semibold text-white shadow-md transition duration-100 hover:opacity-95 active:scale-[0.98] cursor-pointer"
                             >
                                 Remover
                             </button>

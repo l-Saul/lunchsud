@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getContexto } from '@/lib/session';
 import { supabaseServer } from '@/lib/supabase/server';
-import { lerJson, parseNovaAla, ValidationError } from '@/lib/validation';
+import { lerJson, parseNovaAla, ValidationError, type NovaAlaInput } from '@/lib/validation';
 
-// Cria uma nova ala na tabela `ala` (nome + slug gerado do nome). Só owner.
-// Pensado para o owner cadastrar alas rapidamente direto do painel.
+// Cria uma nova ala na tabela `ala` (nome + slug gerado do nome + localização e
+// fuso). Só owner. Pensado para o owner cadastrar alas rapidamente pelo painel.
 export async function POST(req: Request) {
     const ctx = await getContexto();
     if (!ctx) {
@@ -14,15 +14,16 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
-    let nome: string, slug: string, endereco: string | null;
+    let entrada: NovaAlaInput;
     try {
-        ({ nome, slug, endereco } = parseNovaAla(await lerJson(req)));
+        entrada = parseNovaAla(await lerJson(req));
     } catch (e) {
         if (e instanceof ValidationError) {
             return NextResponse.json({ error: e.message }, { status: 400 });
         }
         return NextResponse.json({ error: 'Requisição inválida' }, { status: 400 });
     }
+    const { nome, slug, endereco, pais, estado, cidade, fuso } = entrada;
 
     // Slug já usado? (o endereço público precisa ser único)
     const { data: existente } = await supabaseServer
@@ -40,7 +41,7 @@ export async function POST(req: Request) {
 
     const { data: nova, error } = await supabaseServer
         .from('ala')
-        .insert({ nome, slug, endereco })
+        .insert({ nome, slug, endereco, pais, estado, cidade, fuso_horario: fuso })
         .select('id, nome, slug')
         .single();
 

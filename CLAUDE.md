@@ -51,8 +51,10 @@ passos, sem aglomerar informação.
    - `src/app/api/agendar/route.ts` (backend, fonte da verdade)
    O **banco não barra** segunda de propósito: o líder pode mover um almoço para
    segunda pelo painel (`/api/agendamentos/update`).
-3. **Janela = mês atual + seguinte.** Público e painel usam `getDashboardRange`
-   ("hoje" em `America/Sao_Paulo` para o servidor UTC não virar o mês). A página
+3. **Janela = mês atual + seguinte, no fuso DA ALA.** Público, painel e
+   `/api/agendar` usam `getDashboardRange(ala.fuso_horario)` — "hoje" e a virada do
+   mês são os da ala (Manaus vira o dia 1h depois de SP; o servidor é UTC). Nunca
+   chame sem o fuso quando houver uma ala em contexto. A página
    pública e `/api/agendamentos/[slug]` **só carregam essa janela**
    (`src/lib/ala-publica.ts`), e o mês base chega à `ClientPage` pela prop
    `mesAtual` — não calcule o mês com o relógio do celular.
@@ -126,7 +128,8 @@ de data/fuso/P-day em componentes.
   sessão do Supabase Auth), `session.ts` (papel owner/member + ala em foco),
   `date.ts`, `phone.ts`, `alas.ts` (nome/slug ao criar ala; também usado no client),
   `ala-publica.ts` (servidor: ala por slug + dias ocupados da janela, p/ a página
-  pública), `escrituras.ts`, `site-url.ts` (URL pública p/ links de e-mail),
+  pública), `localizacao.ts` (países do foco, UFs → fuso, `fusoValido`; usado no
+  formulário de nova ala e na validação), `escrituras.ts`, `site-url.ts` (URL pública p/ links de e-mail),
   `validation.ts` (saneamento de entrada).
 - `src/hooks/` — `use-ocupados-realtime.ts`: Realtime via **WebSocket**
   (Supabase Realtime, não polling) que **entrega a mudança pronta** (id, data,
@@ -202,7 +205,9 @@ novo). Mudou o banco? Atualize-o e escreva o SQL da mudança em
 usuário; depois de aplicada, ele pede para apagar o arquivo.
 
 - `ala`: `id`, `nome`, `slug` (link público, gerado do nome; check de formato),
-  `endereco` (texto livre, até 200), `descricao` (opcional).
+  `endereco` (texto livre, até 200), `descricao` (opcional), `pais` (ISO 2 letras),
+  `estado` (UF no Brasil; texto livre fora), `cidade`, `fuso_horario` (IANA). No
+  Brasil o fuso sai da UF (`UFS` em `localizacao.ts`); fora, o owner escolhe.
 - `agendamento`: `id`, `ala_id`, `data` (`YYYY-MM-DD`), `nome`, `telefone`,
   `criado_em` (NULL nas linhas anteriores a 2026-10-24). Único em (ala_id, data)
   → 1 por dia; esse índice atende todas as consultas. Checks espelham a
@@ -222,7 +227,17 @@ usuário; depois de aplicada, ele pede para apagar o arquivo.
 
 - **Imagem gerada** (`CalendarMonthView`): usa **estilos inline + SVG** de
   propósito, para o `html-to-image` renderizar igual em qualquer aparelho. Não
-  troque por classes Tailwind nem por emojis.
+  troque por classes Tailwind nem por emojis. Grade com
+  `repeat(7, minmax(0, 1fr))` — só `1fr` deixa um nome sem espaço esticar a coluna
+  e empurrar o sábado para fora da imagem (achado com Playwright). Nome: quebra
+  palavra (`overflowWrap: anywhere`) e no máximo 3 linhas.
+- **Nome/telefone vêm do usuário:** qualquer texto exibido precisa aguentar 80
+  caracteres sem espaço (`wrap-anywhere` ou `truncate`). Telefone internacional
+  é mais longo que o brasileiro.
+- **Tela estreita + letra grande** (senhoras aumentam a fonte do sistema): o
+  calendário usa container query em `rem` (`@max-[15rem]`, modo compacto: mês em
+  cima, dias da semana em iniciais), e fileiras de botões usam `flex-wrap` com
+  `basis` em rem para empilhar. Teste em 320px com fonte 130% antes de mudar layout.
 - **macOS é case-insensitive:** ao renomear arquivos só mudando maiúsculas, use
   `git mv -f` e atualize os imports (os caminhos são case-sensitive no build Linux/Vercel).
 - **Fundo celestial:** o "céu" (gradiente + auroras) vive em `body::before` no

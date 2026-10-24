@@ -228,10 +228,10 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
 
                         {/* Ações: empilhadas e largas (mobile-first). */}
                         <div className="mt-6 flex flex-col gap-3">
-                            <div className="flex gap-3">
+                            <div className="flex flex-wrap gap-3">
                                 <button
                                     onClick={fechar}
-                                    className="min-h-12 flex-1 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 cursor-pointer"
+                                    className="min-h-12 grow basis-28 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 cursor-pointer"
                                 >
                                     Cancelar
                                 </button>
@@ -239,7 +239,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                                     onClick={handleSave}
                                     disabled={ocupado}
                                     aria-busy={acao === 'salvar'}
-                                    className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-secondary px-5 text-base font-semibold text-white transition duration-100 hover:opacity-90 enabled:active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+                                    className="flex min-h-12 grow basis-28 items-center justify-center gap-2 rounded-xl bg-secondary px-5 text-base font-semibold text-white transition duration-100 hover:opacity-90 enabled:active:scale-[0.98] disabled:opacity-60 cursor-pointer"
                                 >
                                     {acao === 'salvar' && <Spinner />}
                                     {acao === 'salvar' ? 'Salvando…' : 'Salvar'}
@@ -248,11 +248,11 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
 
                             {/* Remover com confirmação inline (substitui o window.confirm). */}
                             {confirmarRemocao ? (
-                                <div className="flex gap-3">
+                                <div className="flex flex-wrap gap-3">
                                     <button
                                         onClick={() => setConfirmarRemocao(false)}
                                         disabled={ocupado}
-                                        className="min-h-12 flex-1 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 disabled:opacity-50 cursor-pointer"
+                                        className="min-h-12 grow basis-28 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 disabled:opacity-50 cursor-pointer"
                                     >
                                         Manter
                                     </button>
@@ -260,7 +260,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                                         onClick={() => enviar('remover')}
                                         disabled={ocupado}
                                         aria-busy={acao === 'remover'}
-                                        className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-base font-semibold text-white transition duration-100 hover:opacity-90 enabled:active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+                                        className="flex min-h-12 grow basis-28 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-base font-semibold text-white transition duration-100 hover:opacity-90 enabled:active:scale-[0.98] disabled:opacity-60 cursor-pointer"
                                     >
                                         {acao === 'remover' && <Spinner />}
                                         {acao === 'remover' ? 'Removendo…' : 'Confirmar remoção'}

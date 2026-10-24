@@ -4,6 +4,7 @@
 
 import { gerarSlug, normalizarNomeAla } from '@/lib/alas';
 import { normalizarTelefone } from '@/lib/phone';
+import { PAISES, UFS, fusoValido } from '@/lib/localizacao';
 
 // Erro de validação: as rotas pegam com try/catch e respondem 400 genérico
 // (sem ecoar detalhes que ajudem um atacante a sondar a API).
@@ -34,6 +35,16 @@ function enderecoSaneado(v: unknown): string | null {
     if (!s) return null;
     if (s.length > 200 || /[<>]/.test(s) || /\p{Cc}/u.test(s)) {
         throw new ValidationError('Endereço inválido');
+    }
+    return s;
+}
+
+// Texto curto obrigatório (estado/cidade): espaços normalizados, limites de
+// tamanho, sem < > nem caracteres de controle.
+function textoSaneado(v: unknown, min: number, max: number, erro: string): string {
+    const s = asString(v).replace(/\s+/g, ' ').trim();
+    if (s.length < min || s.length > max || /[<>]/.test(s) || /\p{Cc}/u.test(s)) {
+        throw new ValidationError(erro);
     }
     return s;
 }
@@ -155,12 +166,22 @@ export function parseSlug(slug: string): string {
     return s;
 }
 
-export type NovaAlaInput = { nome: string; slug: string; endereco: string | null };
+export type NovaAlaInput = {
+    nome: string;
+    slug: string;
+    endereco: string | null;
+    pais: string;
+    estado: string;
+    cidade: string;
+    fuso: string;
+};
 
 // Valida o payload de criação de ala (owner):
 //  - nome: saneado e normalizado ("Ala São Lourenço" — vira nome próprio com "Ala");
 //  - slug: SEMPRE gerado automaticamente a partir do nome (link público da ala);
-//  - endereco: texto livre opcional (rua/número) — só um campo do banco.
+//  - endereco: texto livre opcional (rua/número) — só um campo do banco;
+//  - pais/estado/cidade/fuso: no Brasil o estado é uma UF e o fuso sai dela; nos
+//    outros países o estado é texto livre e o fuso vem do formulário.
 export function parseNovaAla(raw: unknown): NovaAlaInput {
     const o = (raw ?? {}) as Record<string, unknown>;
     const nome = normalizarNomeAla(nomeSaneado(o.nome));
@@ -170,5 +191,23 @@ export function parseNovaAla(raw: unknown): NovaAlaInput {
         throw new ValidationError('Não foi possível gerar um link válido a partir desse nome');
     }
 
-    return { nome, slug, endereco: enderecoSaneado(o.endereco) };
+    const pais = asString(o.pais).trim().toUpperCase();
+    if (!PAISES.some(p => p.codigo === pais)) throw new ValidationError('Escolha o país.');
+
+    let estado: string;
+    let fuso: string;
+    if (pais === 'BR') {
+        const uf = UFS.find(u => u.sigla === asString(o.estado).trim().toUpperCase());
+        if (!uf) throw new ValidationError('Escolha o estado.');
+        estado = uf.sigla;
+        fuso = uf.fuso;
+    } else {
+        estado = textoSaneado(o.estado, 1, 60, 'Informe o estado ou província.');
+        fuso = asString(o.fuso).trim();
+        if (!fusoValido(fuso)) throw new ValidationError('Escolha o fuso horário.');
+    }
+
+    const cidade = textoSaneado(o.cidade, 2, 80, 'Informe a cidade.');
+
+    return { nome, slug, endereco: enderecoSaneado(o.endereco), pais, estado, cidade, fuso };
 }

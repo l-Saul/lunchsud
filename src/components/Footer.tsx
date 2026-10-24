@@ -1,7 +1,7 @@
 // Rodapé global (renderizado no layout em todas as páginas):
 //  1. aviso de que o site é independente/não oficial;
 //  2. crédito do desenvolvedor — o nome (sublinhado, com ícone de link externo)
-//     abre o portfólio em uma nova aba.
+//     abre o portfólio em uma nova aba, já na seção de contato.
 // O link externo usa rel="noopener noreferrer" por segurança (target="_blank").
 export function Footer() {
     return (
@@ -15,7 +15,7 @@ export function Footer() {
                 <p className="text-sm text-white/60">
                     Desenvolvido por{' '}
                     <a
-                        href="https://luishsaul.com.br"
+                        href="https://luishsaul.com.br/#contato"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 underline underline-offset-4 transition hover:text-white"

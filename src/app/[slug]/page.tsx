@@ -52,15 +52,15 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         notFound()
     }
 
-    const ocupados = await buscarOcupados(ala.id)
+    const ocupados = await buscarOcupados(ala)
     if (!ocupados) {
         throw new Error('Erro ao carregar agendamentos')
     }
 
-    // Hoje e o mês base vêm do servidor (fuso de São Paulo), os mesmos usados
-    // pelo /api/agendar. Calcular no aparelho podia mostrar outro dia/mês na
-    // virada (fuso/relógio do celular) e dar erro na hora de agendar.
-    const { hoje, mesAtual } = getDashboardRange()
+    // Hoje e o mês base vêm do servidor, no fuso da ala — os mesmos usados pelo
+    // /api/agendar. Calcular no aparelho podia mostrar outro dia/mês na virada
+    // (fuso/relógio do celular) e dar erro na hora de agendar.
+    const { hoje, mesAtual } = getDashboardRange(ala.fuso_horario)
 
     return (
         <ClientPage

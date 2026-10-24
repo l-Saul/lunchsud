@@ -248,10 +248,12 @@ export default function ClientPage({ slug, alaId, nomeAla, ocupados, hoje, mesAt
                 </div>
 
                 {/* CONTEÚDO */}
-                <div className="px-3 sm:px-6 py-6 space-y-6">
+                {/* Margens enxutas no celular: cada px vira largura dos 7 dias. Em 360px
+                    os dias chegam a 44px (alvo de toque recomendado, WCAG 2.5.5). */}
+                <div className="px-2 sm:px-6 py-6 space-y-6">
 
                     {/* CALENDÁRIO — sem animação de entrada: aparece junto com a página. */}
-                    <div className="relative overflow-hidden bg-background text-secondary rounded-2xl p-2 sm:p-4 shadow-xl ring-1 ring-white/40 border border-muted/10">
+                    <div className="relative overflow-hidden bg-background text-secondary rounded-2xl p-1.5 sm:p-4 shadow-xl ring-1 ring-white/40 border border-muted/10">
                         {/* Fitinha de acento no topo (verde → rosa → verde). */}
                         <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-secondary via-accent to-secondary" />
                         <Calendar
@@ -299,7 +301,9 @@ export default function ClientPage({ slug, alaId, nomeAla, ocupados, hoje, mesAt
                     {/* Mensagens embaixo do calendário: fade curto para chamar o olho.
                         A key refaz o fade quando a mensagem muda. */}
                     {ocupadoPor && (
-                        <p key={ocupadoPor} className="animate-aparecer text-center text-lg font-medium text-white">
+                        // wrap-anywhere: nome sem espaço (ou muito longo) quebra em vez de
+                        // empurrar a página para o lado.
+                        <p key={ocupadoPor} className="animate-aparecer wrap-anywhere text-center text-lg font-medium text-white">
                             Este dia já foi agendado por <strong>{ocupadoPor}</strong>.
                         </p>
                     )}
@@ -414,11 +418,18 @@ export default function ClientPage({ slug, alaId, nomeAla, ocupados, hoje, mesAt
                                     </p>
                                 )}
 
-                                <div className="mt-6 flex gap-3">
+                                {/* Lado a lado quando cabe; um embaixo do outro em tela
+                                    estreita ou letra grande (basis em rem cresce com a letra).
+                                    Antes, com letra 130%, o Confirmar saía da tela.
+                                    wrap-reverse: empilhado, o Confirmar fica em cima.
+                                    Não fixar a barra no rodapé (sticky): testado em 320px com
+                                    letra 130%, ela cobria o campo de telefone — melhor rolar na
+                                    ordem natural (nome → telefone → Confirmar). */}
+                                <div className="mt-6 flex flex-wrap-reverse gap-3">
                                     <button
                                         onClick={fecharModal}
                                         disabled={loading}
-                                        className="min-h-13 flex-1 rounded-xl border border-slate-300 px-4 text-lg font-medium text-text transition hover:bg-slate-100 disabled:opacity-50 cursor-pointer"
+                                        className="min-h-13 grow basis-28 rounded-xl border border-slate-300 px-4 text-lg font-medium text-text transition hover:bg-slate-100 disabled:opacity-50 cursor-pointer"
                                     >
                                         Cancelar
                                     </button>
@@ -428,7 +439,7 @@ export default function ClientPage({ slug, alaId, nomeAla, ocupados, hoje, mesAt
                                         onClick={agendar}
                                         disabled={loading}
                                         aria-busy={loading}
-                                        className="flex min-h-13 flex-1 items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-lg font-semibold text-white shadow-md transition duration-100 hover:opacity-95 hover:shadow-lg enabled:active:scale-[0.98] disabled:opacity-70 cursor-pointer"
+                                        className="flex min-h-13 grow basis-28 items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-lg font-semibold text-white shadow-md transition duration-100 hover:opacity-95 hover:shadow-lg enabled:active:scale-[0.98] disabled:opacity-70 cursor-pointer"
                                     >
                                         {loading && <Spinner />}
                                         {loading ? 'Confirmando…' : 'Confirmar'}
