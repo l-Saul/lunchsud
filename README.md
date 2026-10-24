@@ -24,52 +24,9 @@ npm install
 ## 2. Criar o banco no Supabase
 
 Crie um projeto em [app.supabase.com](https://app.supabase.com). Abra o **SQL Editor**,
-cole o bloco abaixo e clique em **Run** (cria as tabelas e o login dos líderes):
-
-```sql
-create table if not exists public.ala (
-  id integer generated always as identity primary key,
-  nome varchar not null, descricao varchar, endereco text,
-  slug text not null unique
-);
-
-create table if not exists public.agendamento (
-  id integer generated always as identity primary key,
-  ala_id integer not null references public.ala(id) on delete cascade,
-  data date not null, nome varchar not null, telefone varchar not null,
-  unique (ala_id, data)
-);
-
-create table if not exists public.perfil (
-  id uuid primary key references auth.users(id) on delete cascade,
-  nome text not null default '', email text,
-  is_owner boolean not null default false,
-  criado_em timestamptz not null default now()
-);
-
-create table if not exists public.ala_membro (
-  id bigint generated always as identity primary key,
-  ala_id integer not null references public.ala(id) on delete cascade,
-  user_id uuid not null references auth.users(id) on delete cascade,
-  status text not null default 'pendente' check (status in ('pendente','aprovado')),
-  aprovado_por uuid references auth.users(id),
-  criado_em timestamptz not null default now(),
-  unique (ala_id, user_id)
-);
-
-create or replace function public.handle_new_user()
-returns trigger language plpgsql security definer set search_path = public as $$
-begin insert into public.perfil (id, email) values (new.id, new.email); return new; end; $$;
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created after insert on auth.users
-  for each row execute function public.handle_new_user();
-
--- atualização ao vivo do calendário
-alter publication supabase_realtime add table agendamento;
-alter table agendamento enable row level security;
-create policy "leitura publica" on agendamento for select to anon using (true);
-alter table agendamento replica identity full;
-```
+cole **todo o conteúdo de [`supabase/schema.sql`](supabase/schema.sql)** e clique em
+**Run**. Ele cria as tabelas, o login dos líderes, a atualização ao vivo do
+calendário e as permissões (o telefone de quem agenda nunca fica visível no navegador).
 
 ## 3. Ligar o login
 

@@ -1,34 +1,40 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { supabaseClient } from '@/lib/supabase/client';
+import { realtimeClient } from '@/lib/supabase/client';
 
-// Realtime via WebSocket (Supabase Realtime, não é polling HTTP):
-// assina INSERT/UPDATE/DELETE da tabela "agendamento" de UMA ala e chama onChange
-// a cada mudança, para o calendário se atualizar ao vivo entre quem está com a tela aberta.
+// Realtime via WebSocket (Supabase Realtime): assina INSERT/UPDATE/DELETE da
+// tabela "agendamento" de UMA ala e entrega a mudança pronta — quem usa aplica
+// direto na tela, sem ir ao servidor buscar a lista de novo.
 //
-// Requer (no Supabase, uma vez):
-//   - tabela "agendamento" na publication realtime:
-//       alter publication supabase_realtime add table agendamento;
-//   - RLS + policy de leitura para o papel anon (service role já ignora RLS):
-//       alter table agendamento enable row level security;
-//       create policy "leitura publica" on agendamento for select to anon using (true);
-//   - REPLICA IDENTITY FULL para que DELETE/UPDATE tragam a linha antiga inteira;
-//     sem isso o Postgres só envia a PK e o filtro ala_id não casa em remoções
-//     (ou seja: apagar um agendamento NÃO atualizaria ao vivo). Uma vez:
-//       alter table agendamento replica identity full;
+// O payload só traz as colunas que o anon pode ler (id, ala_id, data, nome);
+// o telefone nunca vem. Em DELETE, com RLS ligada, o Realtime manda só a PK.
+// Configuração no banco: ver supabase/schema.sql (publication + replica identity full).
+
+export type AgendamentoAoVivo = { id: number; data: string; nome: string };
+
+// `null` = reconectou depois de uma queda: eventos podem ter se perdido no
+// intervalo, então quem usa deve recarregar a lista uma vez.
+export type MudancaAgendamento =
+    | { tipo: 'INSERT' | 'UPDATE'; agendamento: AgendamentoAoVivo }
+    | { tipo: 'DELETE'; id: number }
+    | null;
+
 export function useOcupadosRealtime(
-    alaId: number | string,
-    onChange: () => void
+    alaId: number,
+    onMudanca: (mudanca: MudancaAgendamento) => void
 ) {
     // Guarda o callback mais recente sem re-assinar o canal a cada render.
-    const onChangeRef = useRef(onChange);
+    const onMudancaRef = useRef(onMudanca);
     useEffect(() => {
-        onChangeRef.current = onChange;
-    }, [onChange]);
+        onMudancaRef.current = onMudanca;
+    }, [onMudanca]);
 
     useEffect(() => {
-        const canal = supabaseClient
+        // A 1ª inscrição não avisa: os dados do servidor acabaram de chegar.
+        let jaInscrito = false;
+
+        const canal = realtimeClient
             .channel(`agendamentos-ala-${alaId}`)
             .on(
                 'postgres_changes',
@@ -38,12 +44,26 @@ export function useOcupadosRealtime(
                     table: 'agendamento',
                     filter: `ala_id=eq.${alaId}`,
                 },
-                () => onChangeRef.current()
+                payload => {
+                    if (payload.eventType === 'DELETE') {
+                        onMudancaRef.current({ tipo: 'DELETE', id: Number(payload.old.id) });
+                        return;
+                    }
+                    const { id, data, nome } = payload.new;
+                    onMudancaRef.current({
+                        tipo: payload.eventType,
+                        agendamento: { id: Number(id), data: String(data), nome: String(nome) },
+                    });
+                }
             )
-            .subscribe();
+            .subscribe(status => {
+                if (status !== 'SUBSCRIBED') return;
+                if (jaInscrito) onMudancaRef.current(null);
+                jaInscrito = true;
+            });
 
         return () => {
-            supabaseClient.removeChannel(canal);
+            realtimeClient.removeChannel(canal);
         };
     }, [alaId]);
 }

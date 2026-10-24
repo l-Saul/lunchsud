@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>Seu código de confirmação</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;700&family=Source+Serif+4:wght@600&display=swap" rel="stylesheet">
+<style>
+    body { margin: 0; padding: 0; width: 100% !important; }
+    @media (max-width: 480px) {
+        .conteudo { padding: 32px 22px !important; }
+    }
+</style>
+</head>
+<body style="margin:0;padding:0;background-color:#0d1f3a;">
+    <!-- Prévia que aparece na caixa de entrada -->
+    <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">Digite o código no site para continuar.</div>
+
+    <!-- Fundo "céu" azul, igual ao site -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#143157" style="background-color:#143157;background-image:linear-gradient(180deg,#1c3e6e 0%,#143157 50%,#0d1f3a 100%);">
+        <tr>
+            <td align="center" style="padding:40px 16px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;">
+
+                    <!-- Cabeçalho: ícone + nome do site -->
+                    <tr>
+                        <td align="center" style="padding-bottom:28px;">
+                            <img src="https://lunchsud.vercel.app/lunchsud180x180.png" width="72" height="72" alt="" style="display:block;margin:0 auto 14px;border:0;border-radius:16px;">
+                            <p style="margin:0;font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-size:26px;font-weight:600;line-height:1.3;color:#ffffff;">Almoço dos Missionários</p>
+                        </td>
+                    </tr>
+
+                    <!-- Cartão branco -->
+                    <tr>
+                        <td>
+                            <div style="background-color:#ffffff;border-radius:24px;overflow:hidden;">
+                                <!-- Fitinha verde → rosa → verde -->
+                                <div style="height:6px;line-height:6px;font-size:0;background-color:#1fb9a0;background-image:linear-gradient(90deg,#1fb9a0 0%,#e0588f 50%,#1fb9a0 100%);">&nbsp;</div>
+
+                                <div class="conteudo" style="padding:40px 32px;text-align:center;font-family:'Source Sans 3',Arial,Helvetica,sans-serif;">
+                                    <!-- Divisória com florzinha -->
+                                    <table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 20px;">
+                                        <tr>
+                                            <td width="40" style="width:40px;"><div style="height:1px;line-height:1px;font-size:0;background-color:#79d5c6;">&nbsp;</div></td>
+                                            <td style="padding:0 12px;font-size:24px;line-height:24px;color:#e0588f;">&#10047;</td>
+                                            <td width="40" style="width:40px;"><div style="height:1px;line-height:1px;font-size:0;background-color:#79d5c6;">&nbsp;</div></td>
+                                        </tr>
+                                    </table>
+
+                                    <h1 style="margin:0 0 16px;font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-size:30px;font-weight:600;line-height:1.25;color:#0f172a;">Seu código de confirmação</h1>
+                                    <p style="margin:0 0 24px;font-size:20px;line-height:1.5;color:#0f172a;">Digite este código no site:</p>
+
+                                    <!-- Código -->
+                                    <div style="padding:20px 12px 20px 22px;border:2px solid #1fb9a0;border-radius:12px;background-color:#e9f8f5;font-family:'Source Sans 3',Arial,Helvetica,sans-serif;font-size:40px;font-weight:700;line-height:1.2;letter-spacing:10px;color:#143157;">{{ .Token }}</div>
+
+                                    <p style="margin:32px 0 0;font-size:18px;line-height:1.5;color:#64748b;">Caso não tenha pedido, ignore este <span style="white-space:nowrap;">e-mail</span>.</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Rodapé -->
+                    <tr>
+                        <td align="center" style="padding:28px 8px 0;font-family:'Source Sans 3',Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;color:#b9c3d1;">
+                            Site independente, sem vínculo oficial com a Igreja de Jesus Cristo dos Santos dos Últimos Dias.
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

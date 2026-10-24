@@ -8,7 +8,6 @@ import { TrocarAla } from './TrocarAla';
 import { UsuariosCard, type Usuario } from './UsuariosCard';
 import { supabaseServer } from '@/lib/supabase/server';
 import { getDashboardRange, getHistoricoRange, formatMonthLabel, diaTile, diasDisponiveisNoMes } from '@/lib/date';
-import { semAlaTesteEmProd } from '@/lib/alas';
 import EditModal from '@/components/EditModal';
 import CalendarExportImage from '@/components/CalendarExportImage';
 import { AnimatedCard } from './AnimatedCard';
@@ -88,11 +87,11 @@ export default async function DashboardPage() {
         : { data: [] };
     const perfilPorId = new Map((perfis ?? []).map(p => [p.id, p]));
 
-    // Lista de alas para o owner trocar a ala em foco (sem a ala de teste em prod).
+    // Lista de alas para o owner trocar a ala em foco.
     let alasParaTroca: { id: number; nome: string; slug: string }[] = [];
     if (ctx.isOwner) {
         const { data: todasAlas } = await supabaseServer.from('ala').select('id, nome, slug').order('nome');
-        alasParaTroca = semAlaTesteEmProd(todasAlas ?? []);
+        alasParaTroca = todasAlas ?? [];
     }
 
     const usuarios: Usuario[] = listaMembros.map(m => ({

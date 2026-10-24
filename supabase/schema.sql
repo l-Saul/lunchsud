@@ -1,7 +1,25 @@
--- Snapshot do schema `public` em produção (projeto kbbsiikqoehwnflxjnfi),
--- extraído do catálogo via MCP em 2026-10-24. O banco não tem migrations
--- versionadas: este arquivo é a referência do estado atual, não um script
--- para rodar em cima do banco existente.
+-- Schema do banco (Supabase) — fonte da verdade da estrutura.
+--
+-- Reflete a produção (projeto kbbsiikqoehwnflxjnfi) em 2026-10-24, depois da
+-- migration de segurança e integridade.
+--  - Projeto NOVO: rode este arquivo inteiro no SQL Editor (é o passo 2 do README).
+--  - Projeto EXISTENTE: não rode por cima (os `create table` falham); use como
+--    referência e escreva uma migration só com a mudança.
+--
+-- Modelo de acesso: o app lê e escreve tudo pelo service-role no servidor
+-- (ignora RLS e grants). O navegador só usa a chave anon para o Realtime de
+-- `agendamento`, e por isso só enxerga id, ala_id, data e nome.
+
+-- ─── Permissões padrão (antes de criar qualquer tabela) ─────────────────────
+-- O Supabase dá a anon/authenticated acesso total a toda tabela e sequence nova
+-- em `public`. Aqui elas nascem fechadas; o acesso do navegador é concedido
+-- explicitamente lá embaixo. Funções não entram: o EXECUTE para PUBLIC é global
+-- no Postgres — toda função nova em `public` precisa de REVOKE próprio.
+
+alter default privileges for role postgres in schema public
+    revoke all on tables from anon, authenticated;
+alter default privileges for role postgres in schema public
+    revoke all on sequences from anon, authenticated;
 
 -- ─── Tabelas ────────────────────────────────────────────────────────────────
 
@@ -9,19 +27,28 @@ create table public.ala (
     id        integer generated always as identity primary key,
     nome      varchar(100) not null,
     descricao varchar(150),
-    endereco  varchar(150),
-    slug      text not null unique -- link público, gerado do nome por gerarSlug()
+    endereco  varchar(200),
+    slug      text not null unique, -- link público, gerado do nome por gerarSlug()
+    constraint ala_slug_formato check (slug ~ '^[a-z0-9_-]{1,60}$')
 );
 
 create table public.agendamento (
-    id       integer generated always as identity primary key,
-    ala_id   integer not null,
-    data     date not null,
-    nome     varchar(150) not null,
-    telefone varchar(20) not null,
+    id        integer generated always as identity primary key,
+    ala_id    integer not null,
+    data      date not null,
+    nome      varchar(150) not null,
+    telefone  varchar(20) not null,
+    criado_em timestamptz default now(), -- NULL nas linhas anteriores a 2026-10-24
     constraint fk_ala foreign key (ala_id) references public.ala (id) on delete cascade,
-    -- Regra de negócio: um almoço por dia, por ala (a API trata o 23505).
-    constraint agendamento_ala_data_unique unique (ala_id, data)
+    -- Regra de negócio: um almoço por dia, por ala (a API trata o 23505). Este
+    -- índice também atende todas as consultas por ala (+ intervalo de datas).
+    constraint agendamento_ala_data_unique unique (ala_id, data),
+    -- Espelham src/lib/validation.ts. P-day (segunda) NÃO é barrado aqui: o
+    -- líder pode mover um almoço para segunda; só /api/agendar recusa.
+    constraint agendamento_telefone_11_digitos
+        check (length(regexp_replace(telefone, '\D', '', 'g')) = 11),
+    constraint agendamento_nome_valido
+        check (length(btrim(nome)) between 2 and 80 and nome !~ '[<>]' and nome !~ '[[:cntrl:]]')
 );
 
 -- 1:1 com auth.users, criado pelo trigger on_auth_user_created.
@@ -33,86 +60,67 @@ create table public.perfil (
     criado_em timestamptz not null default now()
 );
 
--- Vínculo usuário ↔ ala (member = uma ala aprovada).
+-- Vínculo usuário ↔ ala. Member = uma ala só (índice único em user_id).
 create table public.ala_membro (
     id           bigint generated always as identity primary key,
     ala_id       integer not null references public.ala (id) on delete cascade,
     user_id      uuid not null references auth.users (id) on delete cascade,
     status       text not null default 'pendente'
                  check (status = any (array['pendente', 'aprovado'])),
-    aprovado_por uuid references auth.users (id),
-    criado_em    timestamptz not null default now(),
-    unique (ala_id, user_id)
+    aprovado_por uuid references auth.users (id) on delete set null,
+    criado_em    timestamptz not null default now()
 );
 
+create unique index ala_membro_user_unico on public.ala_membro using btree (user_id);
 create index idx_ala_membro_ala_status on public.ala_membro using btree (ala_id, status);
-create index idx_ala_membro_user on public.ala_membro using btree (user_id);
+create index idx_ala_membro_aprovado_por on public.ala_membro using btree (aprovado_por);
 
--- ─── Trigger de signup ──────────────────────────────────────────────────────
+-- ─── Trigger de cadastro do líder ───────────────────────────────────────────
 
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer
-set search_path to 'public'
+set search_path to ''
 as $function$
 begin
     insert into public.perfil (id, nome, email)
-    values (new.id, coalesce(new.raw_user_meta_data->>'nome', ''), new.email);
+    values (new.id, coalesce(new.raw_user_meta_data ->> 'nome', ''), new.email)
+    on conflict (id) do nothing;
     return new;
-end; $function$;
+end;
+$function$;
+
+-- SECURITY DEFINER não pode ficar exposta em /rest/v1/rpc.
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
+grant execute on function public.handle_new_user() to supabase_auth_admin;
 
 create trigger on_auth_user_created
     after insert on auth.users
     for each row execute function public.handle_new_user();
 
--- ─── RLS ────────────────────────────────────────────────────────────────────
--- O app lê/escreve tudo pelo service-role no servidor (ignora RLS). As policies
--- abaixo só importam para quem fala direto com a REST/Realtime do Supabase.
+-- ─── RLS e permissões ───────────────────────────────────────────────────────
 
 alter table public.ala         enable row level security;
 alter table public.agendamento enable row level security;
 alter table public.perfil      enable row level security;
 alter table public.ala_membro  enable row level security;
 
-create policy "public read ala" on public.ala
-    for select to public using (true);
+-- Garantia explícita (além das permissões padrão do topo).
+revoke all on all tables in schema public from anon, authenticated;
+revoke all on all sequences in schema public from anon, authenticated;
 
+-- Única policy: leitura do calendário (página pública + Realtime), só nas 4
+-- colunas abaixo. `telefone` e `criado_em` ficam restritos ao service-role.
 create policy "leitura publica" on public.agendamento
-    for select to anon using (true);
+    for select to anon, authenticated using (true);
+grant select (id, ala_id, data, nome) on public.agendamento to anon, authenticated;
 
--- ⚠️ Duplicada e "to public": inclui `authenticated`, que tem SELECT em todas as
--- colunas → qualquer conta logada lê `telefone` pela REST.
-create policy "public read agendamento" on public.agendamento
-    for select to public using (true);
-
--- ⚠️ As três abaixo consultam a própria tabela → "infinite recursion detected
--- in policy" (42P17) para qualquer usuário logado. O app não as usa.
-create policy perfil_leitura on public.perfil
-    for select to authenticated
-    using (id = auth.uid() or exists (
-        select 1 from perfil p where p.id = auth.uid() and p.is_owner));
-
-create policy ala_membro_leitura on public.ala_membro
-    for select to authenticated
-    using (user_id = auth.uid()
-        or exists (select 1 from perfil p where p.id = auth.uid() and p.is_owner)
-        or exists (select 1 from ala_membro m
-                   where m.ala_id = ala_membro.ala_id
-                     and m.user_id = auth.uid()
-                     and m.status = 'aprovado'));
-
-create policy ala_membro_pedir_acesso on public.ala_membro
-    for insert to authenticated
-    with check (user_id = auth.uid() and status = 'pendente');
-
--- ─── Grants relevantes ──────────────────────────────────────────────────────
--- anon NÃO tem SELECT em `telefone` (grant por coluna):
-revoke select on public.agendamento from anon;
-grant select (id, ala_id, data, nome) on public.agendamento to anon;
--- `authenticated` mantém o SELECT padrão em todas as colunas (ver ⚠️ acima).
+-- ala, perfil e ala_membro: RLS ligada e sem policy = acesso só pelo servidor
+-- (o Advisor "RLS enabled no policy" é intencional).
 
 -- ─── Realtime ───────────────────────────────────────────────────────────────
 
 alter publication supabase_realtime add table public.agendamento;
-alter table public.agendamento replica identity full; -- DELETE/UPDATE ao vivo
+-- DELETE/UPDATE ao vivo: sem isto o Postgres só envia a PK e o filtro ala_id não casa.
+alter table public.agendamento replica identity full;

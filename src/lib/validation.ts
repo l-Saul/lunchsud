@@ -3,6 +3,7 @@
 // conjunto de caracteres ANTES de tocar no banco.
 
 import { gerarSlug, normalizarNomeAla } from '@/lib/alas';
+import { digitosTelefone, formatarTelefone } from '@/lib/phone';
 
 // Erro de validação: as rotas pegam com try/catch e respondem 400 genérico
 // (sem ecoar detalhes que ajudem um atacante a sondar a API).
@@ -37,11 +38,12 @@ function enderecoSaneado(v: unknown): string | null {
     return s;
 }
 
-// Telefone: exatamente 11 dígitos (DDD + 9). Mantém o formato enviado ("DD NNNNN NNNN").
+// Telefone: exatamente 11 dígitos (DDD + 9), depois de tirar +55 e zeros da
+// frente (mesma regra do formulário). Grava sempre no formato "DD NNNNN NNNN".
 function telefoneSaneado(v: unknown): string {
-    const digitos = asString(v).replace(/\D/g, '');
+    const digitos = digitosTelefone(asString(v));
     if (digitos.length !== 11) throw new ValidationError('Telefone inválido');
-    return asString(v).trim().slice(0, 20);
+    return formatarTelefone(digitos);
 }
 
 // Data 'YYYY-MM-DD' real (formato + data existente).

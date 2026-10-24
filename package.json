@@ -12,6 +12,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
+    "@supabase/realtime-js": "^2.108.2",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.89.0",
     "framer-motion": "^12.29.2",

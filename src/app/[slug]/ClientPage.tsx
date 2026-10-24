@@ -6,8 +6,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Calendar } from '@/components/Calendar'
 import { motion, AnimatePresence } from 'framer-motion'
-import { formatarTelefone } from '@/lib/phone'
-import { useOcupadosRealtime } from '@/hooks/use-ocupados-realtime'
+import { formatarTelefone, digitosTelefone } from '@/lib/phone'
+import { useOcupadosRealtime, type MudancaAgendamento } from '@/hooks/use-ocupados-realtime'
 import { Flor } from '@/components/Flor'
 
 // Estilo único dos campos do modal de agendar (label claro + placeholder).
@@ -16,18 +16,26 @@ const campoBase =
     'placeholder:text-muted/60 focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary'
 
 type DiaOcupado = {
+    id: number
     data: string
     nome: string
 }
+
+// Ressincroniza ao voltar para a página só se ela ficou escondida por mais que
+// isto (celular bloqueado, outro app). Troca rápida de app não gera requisição.
+const RESSINCRONIZAR_APOS_MS = 30_000
+
+const pad = (n: number) => String(n).padStart(2, '0')
 
 type Props = {
     slug: string
     alaId: number
     nomeAla: string   // nome real da ala (vem do banco)
     ocupados: DiaOcupado[]
+    mesAtual: string  // 'YYYY-MM' no fuso de São Paulo (vem do servidor)
 }
 
-export default function ClientPage({ slug, alaId, nomeAla, ocupados }: Props) {
+export default function ClientPage({ slug, alaId, nomeAla, ocupados, mesAtual }: Props) {
     const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null)
     const [nome, setNome] = useState('')
     const [telefone, setTelefone] = useState('')
@@ -41,27 +49,71 @@ export default function ClientPage({ slug, alaId, nomeAla, ocupados }: Props) {
     const [erroNome, setErroNome] = useState(false)
     const [erroTelefone, setErroTelefone] = useState(false)
 
-    const hoje = new Date()
-    const mesAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
-    const mesSeguinte = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1)
+    // Janela navegável = mês atual + seguinte, a mesma que o /api/agendar aceita.
+    // O mês atual vem do servidor: o relógio/fuso do celular pode estar em outro mês.
+    const [anoBase, mesBase] = mesAtual.split('-').map(Number)
+    const inicioMesAtual = new Date(anoBase, mesBase - 1, 1)
+    const inicioMesSeguinte = new Date(anoBase, mesBase, 1)
 
-    const [baseDate, setBaseDate] = useState(mesAtual)
+    const [baseDate, setBaseDate] = useState(inicioMesAtual)
 
-    const canPrev = baseDate.getTime() !== mesAtual.getTime()
-    const canNext = baseDate.getTime() !== mesSeguinte.getTime()
+    const canPrev = baseDate.getTime() !== inicioMesAtual.getTime()
+    const canNext = baseDate.getTime() !== inicioMesSeguinte.getTime()
 
     const mesNomeBase = baseDate.toLocaleDateString('pt-BR', { month: 'long' })
 
-    // Ao vivo: se outra pessoa agendar/editar/remover nesta ala, o WebSocket dispara
-    // e recarregamos os dias ocupados (uma busca por evento, nunca em loop).
-    useOcupadosRealtime(alaId, () => {
+    // Mesma janela em texto ('YYYY-MM-DD'), para filtrar o que chega ao vivo.
+    const inicioJanela = `${mesAtual}-01`
+    const aposJanela = new Date(anoBase, mesBase + 1, 1)
+    const fimJanela = `${aposJanela.getFullYear()}-${pad(aposJanela.getMonth() + 1)}-01`
+
+    // Busca a lista inteira no servidor. Só para ressincronizar (reconexão do
+    // WebSocket, volta para a página, dia que acabou de ser ocupado) — as
+    // mudanças normais chegam prontas pelo WebSocket.
+    const atualizarOcupados = useCallback(() => {
         fetch(`/api/agendamentos/${slug}`, { cache: 'no-store' })
             .then(res => (res.ok ? res.json() : null))
             .then((dados: DiaOcupado[] | null) => {
                 if (dados) setDiasOcupados(dados)
             })
             .catch(() => {})
-    })
+    }, [slug])
+
+    // Ao vivo: aplica a mudança que veio pelo WebSocket direto na tela, sem
+    // requisição. Com 50 pessoas olhando a mesma ala, um agendamento antes gerava
+    // 50 buscas no servidor; agora, nenhuma.
+    const aplicarMudanca = useCallback((mudanca: MudancaAgendamento) => {
+        if (!mudanca) {
+            atualizarOcupados()
+            return
+        }
+        setDiasOcupados(prev => {
+            if (mudanca.tipo === 'DELETE') return prev.filter(o => o.id !== mudanca.id)
+            const novo = mudanca.agendamento
+            // Um almoço por dia: sai o que tinha esse id ou ocupava essa data.
+            const resto = prev.filter(o => o.id !== novo.id && o.data !== novo.data)
+            // O líder pode mover um almoço para fora da janela visível.
+            return novo.data >= inicioJanela && novo.data < fimJanela ? [...resto, novo] : resto
+        })
+    }, [atualizarOcupados, inicioJanela, fimJanela])
+
+    useOcupadosRealtime(alaId, aplicarMudanca)
+
+    // Celular bloqueado ou outro app por um tempo: o WebSocket pode ter caído sem
+    // perceber e perdido eventos. Ao voltar, ressincroniza para não oferecer um
+    // dia já ocupado.
+    useEffect(() => {
+        let escondidaDesde = 0
+        const aoMudarVisibilidade = () => {
+            if (document.visibilityState === 'hidden') {
+                escondidaDesde = Date.now()
+            } else if (escondidaDesde && Date.now() - escondidaDesde > RESSINCRONIZAR_APOS_MS) {
+                atualizarOcupados()
+            }
+        }
+        document.addEventListener('visibilitychange', aoMudarVisibilidade)
+        return () => document.removeEventListener('visibilitychange', aoMudarVisibilidade)
+    }, [atualizarOcupados])
 
     async function agendar() {
         if (!slug || !diaSelecionado) return
@@ -72,9 +124,9 @@ export default function ClientPage({ slug, alaId, nomeAla, ocupados }: Props) {
         setMensagem('')
         setTipoMensagem(null)
 
-        // Validação do formulário (nome preenchido e telefone com 11 dígitos).
-        const nomeInvalido = !nome.trim()
-        const telefoneInvalido = telefone.replace(/\D/g, '').length !== 11
+        // Validação do formulário (nome com 2+ letras e telefone com 11 dígitos).
+        const nomeInvalido = nome.trim().length < 2
+        const telefoneInvalido = digitosTelefone(telefone).length !== 11
 
         if (nomeInvalido || telefoneInvalido) {
             setErroNome(nomeInvalido)
@@ -91,24 +143,46 @@ export default function ClientPage({ slug, alaId, nomeAla, ocupados }: Props) {
         const mes = baseDate.getMonth()
         const data = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(diaSelecionado).padStart(2, '0')}`
 
-        const res = await fetch('/api/agendar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ slug, data, nome, telefone })
-        })
-
-        setLoading(false)
-
-        // 409/erro: o dia foi ocupado entre abrir a tela e confirmar.
-        if (!res.ok) {
+        let res: Response
+        try {
+            res = await fetch('/api/agendar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ slug, data, nome, telefone })
+            })
+        } catch {
+            // Sem internet / conexão caiu: o modal continua aberto com o que foi
+            // digitado (antes o botão ficava preso em "Confirmando…").
+            setLoading(false)
             setTipoMensagem('erro')
-            setMensagem('Este dia acabou de ser ocupado. Escolha outro.')
-            setDiaSelecionado(null)
+            setMensagem('Sem conexão com a internet. Verifique e tente de novo.')
             return
         }
 
-        // Sucesso: marca o dia localmente e limpa o formulário.
-        setDiasOcupados(prev => [...prev, { data, nome }])
+        setLoading(false)
+
+        // 409: outra pessoa marcou esse dia entre abrir a tela e confirmar.
+        if (res.status === 409) {
+            setTipoMensagem('erro')
+            setMensagem('Este dia acabou de ser ocupado. Escolha outro.')
+            setDiaSelecionado(null)
+            atualizarOcupados()
+            return
+        }
+
+        // Demais erros: mostra a mensagem da API dentro do modal, que continua
+        // aberto (nome e telefone ficam) para tentar de novo.
+        if (!res.ok) {
+            const corpo = await res.json().catch(() => null)
+            setTipoMensagem('erro')
+            setMensagem(corpo?.error ?? 'Não foi possível agendar. Tente de novo.')
+            return
+        }
+
+        // Sucesso: marca o dia na hora (o evento do WebSocket chega depois com o
+        // mesmo id e só substitui) e limpa o formulário.
+        const { id } = await res.json().catch(() => ({ id: 0 }))
+        setDiasOcupados(prev => [...prev.filter(o => o.data !== data), { id, data, nome: nome.trim() }])
         setTipoMensagem('sucesso')
         setMensagem('Almoço agendado com sucesso. Muito obrigado!')
         setNome('')
@@ -209,13 +283,13 @@ export default function ClientPage({ slug, alaId, nomeAla, ocupados }: Props) {
                             canPrev={canPrev}
                             canNext={canNext}
                             onPrev={() => {
-                                setBaseDate(mesAtual)
+                                setBaseDate(inicioMesAtual)
                                 setDiaSelecionado(null)
                                 setOcupadoPor(null)
                                 setPday(false)
                             }}
                             onNext={() => {
-                                setBaseDate(mesSeguinte)
+                                setBaseDate(inicioMesSeguinte)
                                 setDiaSelecionado(null)
                                 setOcupadoPor(null)
                                 setPday(false)
@@ -312,6 +386,7 @@ export default function ClientPage({ slug, alaId, nomeAla, ocupados }: Props) {
                                                 id="nome"
                                                 type="text"
                                                 autoComplete="name"
+                                                maxLength={80}
                                                 placeholder="Digite seu nome aqui"
                                                 aria-invalid={erroNome}
                                                 className={`${campoBase} ${erroNome ? 'border-accent' : 'border-slate-300'}`}

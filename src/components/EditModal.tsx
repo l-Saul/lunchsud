@@ -8,7 +8,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatarTelefone } from '@/lib/phone';
+import { formatarTelefone, digitosTelefone } from '@/lib/phone';
 
 type Props = {
     id: number;
@@ -42,10 +42,9 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
 
     // Valida no client e envia o update; recarrega a página para refletir a mudança.
     async function handleSave() {
-        const nomeInvalido = !form.nome.trim();
-
-        const telefoneNumeros = form.telefone.replace(/\D/g, '');
-        const telefoneInvalido = telefoneNumeros.length < 10;
+        // Mesmas regras do servidor (parseEdicao), senão o líder via só "Erro ao atualizar".
+        const nomeInvalido = form.nome.trim().length < 2;
+        const telefoneInvalido = digitosTelefone(form.telefone).length !== 11;
 
         setErroNome(nomeInvalido);
         setErroTelefone(telefoneInvalido);

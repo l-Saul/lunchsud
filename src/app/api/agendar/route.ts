@@ -1,42 +1,41 @@
 import { supabaseServer } from '@/lib/supabase/server'
 import { isPday, getDashboardRange } from '@/lib/date'
 import { lerJson, parseAgendar, ValidationError } from '@/lib/validation'
-import { rateLimit, clientIp, tooManyRequests } from '@/lib/rate-limit'
 import { NextResponse } from 'next/server'
 
-// Cria um agendamento público. É a fonte da verdade: rate limit + validação
+// Cria um agendamento público (sem conta). É a fonte da verdade: validação
 // estrita + regras de negócio (P-day, janela do mês, 1 por dia).
+// As mensagens de erro aparecem direto na tela do membro — escreva para ele.
 export async function POST(req: Request) {
-    // 1) Rate limit por IP: trava flood/robô antes de qualquer trabalho.
-    const limite = rateLimit(`agendar:${clientIp(req)}`, 6, 60_000)
-    if (!limite.ok) return tooManyRequests(limite.retryAfter)
-
-    // 2) Validação estrita do corpo (tamanho, formato, charset).
+    // 1) Validação estrita do corpo (tamanho, formato, charset).
     let entrada
     try {
         entrada = parseAgendar(await lerJson(req))
     } catch (e) {
         if (e instanceof ValidationError) {
-            return NextResponse.json({ error: 'Dados inválidos' }, { status: 400 })
+            return NextResponse.json(
+                { error: 'Confira o nome e o telefone e tente de novo.' },
+                { status: 400 }
+            )
         }
-        return NextResponse.json({ error: 'Requisição inválida' }, { status: 400 })
+        return NextResponse.json({ error: 'Não foi possível agendar. Tente de novo.' }, { status: 400 })
     }
 
     const { slug, data, nome, telefone } = entrada
 
-    // 3) Regra de negócio: segunda é P-day, bloqueia mesmo que a UI seja burlada.
+    // 2) Regra de negócio: segunda é P-day, bloqueia mesmo que a UI seja burlada.
     if (isPday(data)) {
         return NextResponse.json(
-            { error: 'Segunda-feira é P-day e não pode ser agendada.' },
+            { error: 'Segunda-feira é P-day. Escolha outro dia.' },
             { status: 400 }
         )
     }
 
-    // 4) Janela permitida: só mês atual + seguinte (impede encher anos de calendário).
+    // 3) Janela permitida: só mês atual + seguinte (impede encher anos de calendário).
     const { inicio, fim } = getDashboardRange()
     if (data < inicio || data >= fim) {
         return NextResponse.json(
-            { error: 'Data fora do período de agendamento.' },
+            { error: 'Esse dia está fora do período de agendamento. Escolha outro dia.' },
             { status: 400 }
         )
     }
@@ -48,10 +47,12 @@ export async function POST(req: Request) {
         .single()
 
     if (alaError || !ala) {
-        return NextResponse.json({ error: 'Ala não encontrada' }, { status: 404 })
+        return NextResponse.json({ error: 'Ala não encontrada.' }, { status: 404 })
     }
 
-    const { error } = await supabaseServer
+    // Devolve o id (RETURNING, sem consulta extra) para a tela casar com o evento
+    // do WebSocket que chega em seguida.
+    const { data: criado, error } = await supabaseServer
         .from('agendamento')
         .insert({
             ala_id: ala.id,
@@ -59,15 +60,20 @@ export async function POST(req: Request) {
             nome,
             telefone
         })
+        .select('id')
+        .single()
 
-    if (error) {
+    if (error || !criado) {
         // 23505 = violação de unique (ala_id, data): o dia foi ocupado nesse meio-tempo.
-        if (error.code === '23505') {
+        if (error?.code === '23505') {
             return NextResponse.json({ error: 'Este dia acabou de ser ocupado. Escolha outro.' }, { status: 409 })
         }
 
-        return NextResponse.json({ error: 'Erro ao salvar agendamento' }, { status: 500 })
+        return NextResponse.json(
+            { error: 'Não foi possível agendar agora. Tente de novo em instantes.' },
+            { status: 500 }
+        )
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, id: criado.id })
 }

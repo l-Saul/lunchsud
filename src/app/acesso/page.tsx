@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getContexto } from '@/lib/session';
 import { supabaseServer } from '@/lib/supabase/server';
-import { semAlaTesteEmProd } from '@/lib/alas';
 import SolicitarAcesso from './SolicitarAcesso';
 
 export const dynamic = 'force-dynamic';
@@ -31,8 +30,7 @@ export default async function AcessoPage() {
         .select('id, nome, slug')
         .order('nome');
 
-    // Esconde a ala de teste em produção (visível só em desenvolvimento).
-    const lista = semAlaTesteEmProd(alas ?? []);
+    const lista = alas ?? [];
     const pendenteEm = vinculo
         ? (lista.find(a => a.id === vinculo.ala_id)?.nome ?? 'sua ala')
         : null;
