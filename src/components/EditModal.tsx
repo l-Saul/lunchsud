@@ -7,8 +7,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { formatarTelefone, digitosTelefone } from '@/lib/phone';
+import { mascaraTelefone, normalizarTelefone } from '@/lib/phone';
+import { Spinner } from '@/components/Spinner';
 
 type Props = {
     id: number;
@@ -31,7 +31,9 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
 
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState({ data, nome, telefone }); // cópia editável da linha
-    const [loading, setLoading] = useState(false);
+    // Ação em andamento — cada botão mostra o próprio verbo ("Salvando…"/"Removendo…").
+    const [acao, setAcao] = useState<'salvar' | 'remover' | null>(null);
+    const ocupado = acao !== null;
     const [confirmarRemocao, setConfirmarRemocao] = useState(false);
 
     // Fecha o modal e zera estados transitórios.
@@ -44,7 +46,7 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
     async function handleSave() {
         // Mesmas regras do servidor (parseEdicao), senão o líder via só "Erro ao atualizar".
         const nomeInvalido = form.nome.trim().length < 2;
-        const telefoneInvalido = digitosTelefone(form.telefone).length !== 11;
+        const telefoneInvalido = !normalizarTelefone(form.telefone);
 
         setErroNome(nomeInvalido);
         setErroTelefone(telefoneInvalido);
@@ -53,41 +55,33 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
             return;
         }
 
-        setLoading(true);
-
-        const res = await fetch('/api/agendamentos/update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, ...form })
-        });
-
-        setLoading(false);
-
-        if (res.ok) {
-            fechar();
-            router.refresh(); // atualiza a lista sem recarregar a página toda
-        } else {
-            alert('Erro ao atualizar');
-        }
+        await enviar('salvar');
     }
 
-    // Remove o agendamento (já confirmado pelo passo inline) e recarrega.
-    async function handleDelete() {
-        setLoading(true);
-
-        const res = await fetch('/api/agendamentos/delete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id })
-        });
-
-        setLoading(false);
-
-        if (res.ok) {
-            fechar();
-            router.refresh(); // atualiza a lista sem recarregar a página toda
-        } else {
-            alert('Erro ao remover');
+    // Envia a edição ou a remoção (já confirmada pelo passo inline) e recarrega.
+    async function enviar(tipo: 'salvar' | 'remover') {
+        if (ocupado) return;
+        setAcao(tipo);
+        try {
+            const res = await fetch(
+                tipo === 'salvar' ? '/api/agendamentos/update' : '/api/agendamentos/delete',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(tipo === 'salvar' ? { id, ...form } : { id }),
+                }
+            );
+            if (res.ok) {
+                fechar();
+                router.refresh(); // atualiza a lista sem recarregar a página toda
+            } else {
+                alert(tipo === 'salvar' ? 'Erro ao atualizar' : 'Erro ao remover');
+            }
+        } catch {
+            // Sem internet: avisa em vez de deixar o botão preso em "Salvando…".
+            alert('Sem conexão com a internet. Verifique e tente de novo.');
+        } finally {
+            setAcao(null);
         }
     }
 
@@ -135,159 +129,157 @@ export default function EditModal({ id, data, nome, telefone }: Props) {
                 </svg>
             </button>
 
-            <AnimatePresence>
-                {open && (
-                    <motion.div
-                        key="backdrop"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-primary/40 backdrop-blur-sm"
+            {/* Abre com um fade curto (avisa que uma camada apareceu); fecha na hora. */}
+            {open && (
+                <div className="fixed inset-0 z-50 animate-aparecer overflow-y-auto overscroll-contain bg-primary/40 backdrop-blur-sm">
+                    {/* Container rolável: com o teclado aberto no mobile o modal pode
+                        passar da tela e ainda assim dá pra rolar até os botões. */}
+                    <div
+                        onClick={fechar}
+                        className="flex min-h-full items-center justify-center p-4"
                     >
-                        {/* Container rolável: com o teclado aberto no mobile o modal pode
-                            passar da tela e ainda assim dá pra rolar até os botões. */}
-                        <div
-                            onClick={fechar}
-                            className="flex min-h-full items-center justify-center p-4"
-                        >
-                        <motion.div
-                            onClick={e => e.stopPropagation()}
-                            role="dialog"
-                            aria-modal="true"
-                            aria-label="Editar agendamento"
-                            initial={{ opacity: 0, scale: 0.96, y: 12 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.96, y: 12 }}
-                            transition={{ duration: 0.22, ease: 'easeOut' }}
-                            className="w-full max-w-md rounded-2xl bg-background p-6 shadow-2xl"
-                        >
-                            <div className="mb-5 flex items-center justify-between gap-3">
-                                <h3 className="text-xl font-semibold text-text">
-                                    Editar agendamento
-                                </h3>
-                                {/* Botão X: fecho explícito (mobile pode não pegar o clique no fundo). */}
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Editar agendamento"
+                        className="w-full max-w-md animate-surgir rounded-2xl bg-background p-6 shadow-2xl"
+                    >
+                        <div className="mb-5 flex items-center justify-between gap-3">
+                            <h3 className="text-xl font-semibold text-text">
+                                Editar agendamento
+                            </h3>
+                            {/* Botão X: fecho explícito (mobile pode não pegar o clique no fundo). */}
+                            <button
+                                onClick={fechar}
+                                aria-label="Fechar"
+                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-slate-100 cursor-pointer"
+                            >
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <path d="M18 6 6 18M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div className="flex flex-col gap-4">
+                            <div className="flex flex-col gap-1.5">
+                                <label htmlFor={`data-${id}`} className="text-sm font-medium text-muted">
+                                    Data
+                                </label>
+                                <input
+                                    id={`data-${id}`}
+                                    type="date"
+                                    value={form.data}
+                                    onChange={e =>
+                                        setForm({ ...form, data: e.target.value })
+                                    }
+                                    className={`${campoBase} border-slate-300`}
+                                />
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                                <label htmlFor={`nome-${id}`} className="text-sm font-medium text-muted">
+                                    Nome
+                                </label>
+                                <input
+                                    id={`nome-${id}`}
+                                    value={form.nome}
+                                    aria-invalid={erroNome}
+                                    onChange={e => {
+                                        setForm({ ...form, nome: e.target.value });
+                                        if (erroNome) setErroNome(false);
+                                    }}
+                                    className={`${campoBase} ${erroNome ? 'border-accent' : 'border-slate-300'}`}
+                                />
+                                {erroNome && (
+                                    <p className="mt-0.5 text-sm text-accent">
+                                        Informe o nome.
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="flex flex-col gap-1.5">
+                                <label htmlFor={`tel-${id}`} className="text-sm font-medium text-muted">
+                                    Telefone
+                                </label>
+                                <input
+                                    id={`tel-${id}`}
+                                    type="tel"
+                                    // "tel" (não "numeric"): o teclado de telefone tem a tecla "+".
+                                    inputMode="tel"
+                                    value={form.telefone}
+                                    aria-invalid={erroTelefone}
+                                    onChange={e =>
+                                        setForm({ ...form, telefone: mascaraTelefone(e.target.value) })
+                                    }
+                                    onBlur={() => {
+                                        const lido = normalizarTelefone(form.telefone);
+                                        if (lido) setForm({ ...form, telefone: lido.formatado });
+                                    }}
+                                    className={`${campoBase} ${erroTelefone ? 'border-accent' : 'border-slate-300'}`}
+                                />
+                                {erroTelefone && (
+                                    <p className="mt-0.5 text-sm text-accent">
+                                        Confira o telefone, com DDD (ou + e o código do país).
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Ações: empilhadas e largas (mobile-first). */}
+                        <div className="mt-6 flex flex-col gap-3">
+                            <div className="flex gap-3">
                                 <button
                                     onClick={fechar}
-                                    aria-label="Fechar"
-                                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-slate-100 cursor-pointer"
+                                    className="min-h-12 flex-1 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 cursor-pointer"
                                 >
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                        <path d="M18 6 6 18M6 6l12 12" />
-                                    </svg>
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    disabled={ocupado}
+                                    aria-busy={acao === 'salvar'}
+                                    className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-secondary px-5 text-base font-semibold text-white transition duration-100 hover:opacity-90 enabled:active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+                                >
+                                    {acao === 'salvar' && <Spinner />}
+                                    {acao === 'salvar' ? 'Salvando…' : 'Salvar'}
                                 </button>
                             </div>
 
-                            <div className="flex flex-col gap-4">
-                                <div className="flex flex-col gap-1.5">
-                                    <label htmlFor={`data-${id}`} className="text-sm font-medium text-muted">
-                                        Data
-                                    </label>
-                                    <input
-                                        id={`data-${id}`}
-                                        type="date"
-                                        value={form.data}
-                                        onChange={e =>
-                                            setForm({ ...form, data: e.target.value })
-                                        }
-                                        className={`${campoBase} border-slate-300`}
-                                    />
-                                </div>
-
-                                <div className="flex flex-col gap-1.5">
-                                    <label htmlFor={`nome-${id}`} className="text-sm font-medium text-muted">
-                                        Nome
-                                    </label>
-                                    <input
-                                        id={`nome-${id}`}
-                                        value={form.nome}
-                                        aria-invalid={erroNome}
-                                        onChange={e => {
-                                            setForm({ ...form, nome: e.target.value });
-                                            if (erroNome) setErroNome(false);
-                                        }}
-                                        className={`${campoBase} ${erroNome ? 'border-accent' : 'border-slate-300'}`}
-                                    />
-                                    {erroNome && (
-                                        <p className="mt-0.5 text-sm text-accent">
-                                            Informe o nome.
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="flex flex-col gap-1.5">
-                                    <label htmlFor={`tel-${id}`} className="text-sm font-medium text-muted">
-                                        Telefone
-                                    </label>
-                                    <input
-                                        id={`tel-${id}`}
-                                        inputMode="numeric"
-                                        value={form.telefone}
-                                        aria-invalid={erroTelefone}
-                                        onChange={e =>
-                                            setForm({ ...form, telefone: formatarTelefone(e.target.value) })
-                                        }
-                                        className={`${campoBase} ${erroTelefone ? 'border-accent' : 'border-slate-300'}`}
-                                    />
-                                    {erroTelefone && (
-                                        <p className="mt-0.5 text-sm text-accent">
-                                            Informe um telefone válido.
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Ações: empilhadas e largas (mobile-first). */}
-                            <div className="mt-6 flex flex-col gap-3">
+                            {/* Remover com confirmação inline (substitui o window.confirm). */}
+                            {confirmarRemocao ? (
                                 <div className="flex gap-3">
                                     <button
-                                        onClick={fechar}
-                                        className="min-h-12 flex-1 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 cursor-pointer"
+                                        onClick={() => setConfirmarRemocao(false)}
+                                        disabled={ocupado}
+                                        className="min-h-12 flex-1 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 disabled:opacity-50 cursor-pointer"
                                     >
-                                        Cancelar
+                                        Manter
                                     </button>
                                     <button
-                                        onClick={handleSave}
-                                        disabled={loading}
-                                        className="min-h-12 flex-1 rounded-xl bg-secondary px-5 text-base font-semibold text-white transition hover:opacity-90 disabled:opacity-50 cursor-pointer"
+                                        onClick={() => enviar('remover')}
+                                        disabled={ocupado}
+                                        aria-busy={acao === 'remover'}
+                                        className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-base font-semibold text-white transition duration-100 hover:opacity-90 enabled:active:scale-[0.98] disabled:opacity-60 cursor-pointer"
                                     >
-                                        {loading ? 'Salvando…' : 'Salvar'}
+                                        {acao === 'remover' && <Spinner />}
+                                        {acao === 'remover' ? 'Removendo…' : 'Confirmar remoção'}
                                     </button>
                                 </div>
-
-                                {/* Remover com confirmação inline (substitui o window.confirm). */}
-                                {confirmarRemocao ? (
-                                    <div className="flex gap-3">
-                                        <button
-                                            onClick={() => setConfirmarRemocao(false)}
-                                            disabled={loading}
-                                            className="min-h-12 flex-1 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 disabled:opacity-50 cursor-pointer"
-                                        >
-                                            Manter
-                                        </button>
-                                        <button
-                                            onClick={handleDelete}
-                                            disabled={loading}
-                                            className="min-h-12 flex-1 rounded-xl bg-accent px-4 text-base font-semibold text-white transition hover:opacity-90 disabled:opacity-50 cursor-pointer"
-                                        >
-                                            {loading ? 'Removendo…' : 'Confirmar remoção'}
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <button
-                                        onClick={() => setConfirmarRemocao(true)}
-                                        disabled={loading}
-                                        className="min-h-12 w-full rounded-xl px-4 text-base font-medium text-accent transition hover:bg-accent/10 disabled:opacity-50 cursor-pointer"
-                                    >
-                                        Remover agendamento
-                                    </button>
-                                )}
-                            </div>
-                        </motion.div>
+                            ) : (
+                                <button
+                                    onClick={() => setConfirmarRemocao(true)}
+                                    disabled={ocupado}
+                                    className="min-h-12 w-full rounded-xl px-4 text-base font-medium text-accent transition hover:bg-accent/10 disabled:opacity-50 cursor-pointer"
+                                >
+                                    Remover agendamento
+                                </button>
+                            )}
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                    </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

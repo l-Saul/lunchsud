@@ -10,6 +10,23 @@
 
     --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
     --font-serif: var(--font-source-serif), Georgia, 'Times New Roman', serif;
+
+    /* Movimento só com função (avisar que algo apareceu), curto e sem deslocar:
+       - animate-aparecer: mensagem, fundo de modal, lista que acabou de chegar;
+       - animate-surgir:   caixa de modal (vem "para a frente", 3% de escala).
+       Nunca em conteúdo que vem do servidor: esconderia a página até o CSS rodar. */
+    --animate-aparecer: aparecer 200ms ease-out;
+    --animate-surgir: surgir 200ms ease-out;
+
+    @keyframes aparecer {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes surgir {
+        from { opacity: 0; transform: scale(0.97); }
+        to { opacity: 1; transform: scale(1); }
+    }
 }
 
 @layer base {
@@ -67,6 +84,13 @@
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
+    }
+
+    /* Exceção: o spinner é o aviso de "carregando", não enfeite. Parado, a
+       pessoa acha que travou e toca de novo — então gira, só que devagar. */
+    .animate-spin {
+        animation-duration: 1.5s !important;
+        animation-iteration-count: infinite !important;
     }
 }
 

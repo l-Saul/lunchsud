@@ -5,9 +5,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { criarSupabaseBrowser } from '@/lib/supabase/browser';
 import { Flor } from '@/components/Flor';
+import { Spinner } from '@/components/Spinner';
 
 export default function RedefinirSenhaForm() {
     const router = useRouter();
@@ -56,12 +56,7 @@ export default function RedefinirSenhaForm() {
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="relative flex flex-col items-center gap-6 overflow-hidden rounded-3xl bg-background px-6 py-10 text-center shadow-2xl ring-1 ring-white/40 sm:px-10"
-        >
+        <div className="relative flex flex-col items-center gap-6 overflow-hidden rounded-3xl bg-background px-6 py-10 text-center shadow-2xl ring-1 ring-white/40 sm:px-10">
             <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-secondary via-accent to-secondary" />
 
             <div className="flex items-center gap-3" aria-hidden="true">
@@ -163,21 +158,18 @@ export default function RedefinirSenhaForm() {
                             <p role="alert" className="text-sm font-medium text-accent">{erro}</p>
                         )}
 
-                        <motion.button
+                        <button
                             type="submit"
                             disabled={loading}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="mt-1 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-secondary py-4 text-lg font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+                            aria-busy={loading}
+                            className="mt-1 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-secondary py-4 text-lg font-semibold text-white transition duration-100 hover:opacity-90 enabled:active:scale-[0.98] disabled:opacity-70"
                         >
-                            {loading && (
-                                <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                            )}
+                            {loading && <Spinner />}
                             {loading ? 'Salvando…' : 'Salvar nova senha'}
-                        </motion.button>
+                        </button>
                     </form>
                 </>
             )}
-        </motion.div>
+        </div>
     );
 }

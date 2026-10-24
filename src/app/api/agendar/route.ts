@@ -31,9 +31,16 @@ export async function POST(req: Request) {
         )
     }
 
-    // 3) Janela permitida: só mês atual + seguinte (impede encher anos de calendário).
-    const { inicio, fim } = getDashboardRange()
-    if (data < inicio || data >= fim) {
+    // 3) Janela permitida: de hoje (fuso de SP) até o fim do mês seguinte. Dia que
+    // já passou não recebe almoço; o limite do fim impede encher anos de calendário.
+    const { hoje, fim } = getDashboardRange()
+    if (data < hoje) {
+        return NextResponse.json(
+            { error: 'Esse dia já passou. Escolha outro dia.' },
+            { status: 400 }
+        )
+    }
+    if (data >= fim) {
         return NextResponse.json(
             { error: 'Esse dia está fora do período de agendamento. Escolha outro dia.' },
             { status: 400 }
@@ -67,6 +74,11 @@ export async function POST(req: Request) {
         // 23505 = violação de unique (ala_id, data): o dia foi ocupado nesse meio-tempo.
         if (error?.code === '23505') {
             return NextResponse.json({ error: 'Este dia acabou de ser ocupado. Escolha outro.' }, { status: 409 })
+        }
+        // 23514 = o banco recusou o dado (check de nome/telefone). Tentar de novo
+        // não adianta; a pessoa precisa conferir o que digitou.
+        if (error?.code === '23514') {
+            return NextResponse.json({ error: 'Confira o nome e o telefone e tente de novo.' }, { status: 400 })
         }
 
         return NextResponse.json(

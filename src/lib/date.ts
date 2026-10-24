@@ -13,6 +13,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
  *
  * - inicio: 'YYYY-MM-01' do mês atual (inclusivo)
  * - fim:    'YYYY-MM-01' do mês após o seguinte (exclusivo)
+ * - hoje:   'YYYY-MM-DD' de hoje — o membro agenda de hoje em diante
  */
 export function getDashboardRange(timeZone = TZ) {
     const hoje = new Intl.DateTimeFormat('en-CA', {
@@ -30,6 +31,7 @@ export function getDashboardRange(timeZone = TZ) {
     return {
         inicio: `${ano}-${pad(mes)}-01`,
         fim: `${aposSeguinte.getFullYear()}-${pad(aposSeguinte.getMonth() + 1)}-01`,
+        hoje,
         mesAtual: `${ano}-${pad(mes)}`,
         mesSeguinte: `${seguinte.getFullYear()}-${pad(seguinte.getMonth() + 1)}`,
     };

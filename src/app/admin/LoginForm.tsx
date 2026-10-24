@@ -7,8 +7,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { criarSupabaseBrowser } from '@/lib/supabase/browser';
+import { Spinner } from '@/components/Spinner';
 import { siteUrl } from '@/lib/site-url';
 
 export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
@@ -263,18 +263,17 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
                 </p>
             )}
 
-            <motion.button
+            <button
                 type="submit"
                 disabled={loading}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="mt-1 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-secondary py-4 text-lg font-semibold text-white shadow-md transition hover:opacity-95 hover:shadow-lg disabled:opacity-60"
+                aria-busy={loading}
+                className="mt-1 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-secondary py-4 text-lg font-semibold text-white shadow-md transition duration-100 hover:opacity-95 hover:shadow-lg enabled:active:scale-[0.98] disabled:opacity-70"
             >
-                {loading && (
-                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                )}
-                {loading ? 'Aguarde…' : modo === 'entrar' ? 'Entrar' : 'Criar conta'}
-            </motion.button>
+                {loading && <Spinner />}
+                {loading
+                    ? modo === 'entrar' ? 'Entrando…' : 'Criando conta…'
+                    : modo === 'entrar' ? 'Entrar' : 'Criar conta'}
+            </button>
 
             {/* Alterna entre entrar e criar conta. */}
             <button

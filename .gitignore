@@ -21,6 +21,7 @@ next-env.d.ts
 # Nunca versione segredos. Só o modelo (.env.example) entra no git.
 .env*
 !.env.example
+todo.txt
 
 # ─── Deploy ────────────────────────────────────────────────
 .vercel

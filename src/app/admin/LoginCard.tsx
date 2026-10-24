@@ -1,17 +1,9 @@
-'use client';
-
-import { motion } from 'framer-motion';
 import LoginForm from './LoginForm';
 import { Flor } from '@/components/Flor';
 
 export default function LoginCard({ erroInicial }: { erroInicial?: string }) {
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="relative flex flex-col items-center gap-7 overflow-hidden rounded-3xl bg-background px-6 py-10 shadow-2xl ring-1 ring-white/40 sm:px-10"
-        >
+        <div className="relative flex flex-col items-center gap-7 overflow-hidden rounded-3xl bg-background px-6 py-10 shadow-2xl ring-1 ring-white/40 sm:px-10">
             {/* Fitinha de acento no topo (verde → rosa → verde). */}
             <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-secondary via-accent to-secondary" />
 
@@ -31,6 +23,6 @@ export default function LoginCard({ erroInicial }: { erroInicial?: string }) {
             </div>
 
             <LoginForm erroInicial={erroInicial} />
-        </motion.div>
+        </div>
     );
 }

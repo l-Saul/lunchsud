@@ -45,8 +45,10 @@ create table public.agendamento (
     constraint agendamento_ala_data_unique unique (ala_id, data),
     -- Espelham src/lib/validation.ts. P-day (segunda) NÃO é barrado aqui: o
     -- líder pode mover um almoço para segunda; só /api/agendar recusa.
-    constraint agendamento_telefone_11_digitos
-        check (length(regexp_replace(telefone, '\D', '', 'g')) = 11),
+    -- Telefone: Brasil (celular/fixo) ou internacional "+país …"; o formato é
+    -- decidido por normalizarTelefone (src/lib/phone.ts). 7–15 dígitos = E.164.
+    constraint agendamento_telefone_valido
+        check (telefone ~ '^\+?[0-9 ]+$' and length(regexp_replace(telefone, '\D', '', 'g')) between 7 and 15),
     constraint agendamento_nome_valido
         check (length(btrim(nome)) between 2 and 80 and nome !~ '[<>]' and nome !~ '[[:cntrl:]]')
 );

@@ -1,10 +1,10 @@
 'use client'
 
 // Calendário público do agendamento. Mostra um mês por vez (atual ou seguinte),
-// marca dias ocupados (rosa) e segundas como P-day (bloqueado). Só apresentação:
-// quem busca os dados e controla o mês é a ClientPage.
+// marca dias ocupados (rosa) e bloqueia segundas (P-day) e dias que já passaram.
+// Só apresentação: quem busca os dados e controla o mês é a ClientPage.
 
-import { motion } from 'framer-motion'
+import { useState } from 'react'
 import { isPday, formatMonthLabel } from '@/lib/date'
 
 type DiaOcupado = {
@@ -15,10 +15,12 @@ type DiaOcupado = {
 type Props = {
     ocupados: DiaOcupado[]
     baseDate: Date
+    hoje: string // 'YYYY-MM-DD' (fuso de SP); antes disso o dia está bloqueado
     selectedDay: number | null
     onSelectDay: (day: number) => void
     onSelectOcupado: (nome: string) => void
     onSelectPday?: () => void
+    onSelectPassado?: () => void
     onNext?: () => void
     onPrev?: () => void
     canNext?: boolean
@@ -28,10 +30,12 @@ type Props = {
 export function Calendar({
     ocupados,
     baseDate,
+    hoje,
     selectedDay,
     onSelectDay,
     onSelectOcupado,
     onSelectPday,
+    onSelectPassado,
     onNext,
     onPrev,
     canNext,
@@ -39,6 +43,10 @@ export function Calendar({
 }: Props) {
     const anoNum = baseDate.getFullYear()
     const mesNum = baseDate.getMonth()
+
+    // A troca de mês ganha um fade curto (avisa que os dias mudaram). No primeiro
+    // carregamento não: o calendário tem que aparecer na hora.
+    const [trocouDeMes, setTrocouDeMes] = useState(false)
 
     const primeiroDiaSemana = new Date(anoNum, mesNum, 1).getDay()
     const diasNoMes = new Date(anoNum, mesNum + 1, 0).getDate()
@@ -63,7 +71,10 @@ export function Calendar({
         <div className="space-y-4">
             <div className="flex items-center justify-between gap-2">
                 <button
-                    onClick={onPrev}
+                    onClick={() => {
+                        setTrocouDeMes(true)
+                        onPrev?.()
+                    }}
                     disabled={!canPrev}
                     aria-label="Mês anterior"
                     className="flex flex-col items-center gap-0.5 rounded-xl bg-secondary px-2.5 py-2 text-white shadow-sm transition duration-200 hover:opacity-90 enabled:hover:scale-105 enabled:active:scale-95 disabled:opacity-30 disabled:cursor-default cursor-pointer"
@@ -79,7 +90,10 @@ export function Calendar({
                 </h2>
 
                 <button
-                    onClick={onNext}
+                    onClick={() => {
+                        setTrocouDeMes(true)
+                        onNext?.()
+                    }}
                     disabled={!canNext}
                     aria-label="Próximo mês"
                     className="flex flex-col items-center gap-0.5 rounded-xl bg-secondary px-2.5 py-2 text-white shadow-sm transition duration-200 hover:opacity-90 enabled:hover:scale-105 enabled:active:scale-95 disabled:opacity-30 disabled:cursor-default cursor-pointer"
@@ -97,25 +111,28 @@ export function Calendar({
                 ))}
             </div>
 
-            <motion.div
+            {/* key por mês: a grade é recriada e o fade roda de novo a cada troca. */}
+            <div
                 key={`${anoNum}-${mesNum}`}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.25, ease: 'easeOut' }}
-                className="grid grid-cols-7 gap-1 sm:gap-2"
+                className={`grid grid-cols-7 gap-1 sm:gap-2 ${trocouDeMes ? 'animate-aparecer' : ''}`}
             >
                 {dias.map((dia, index) => {
                     if (!dia) return <div key={`empty-${index}`} />
 
                     // Estado do dia define cor e o que acontece ao tocar.
+                    // 'YYYY-MM-DD' compara certo como texto.
+                    const passado = dataDoDia(dia) < hoje
                     const pday = isPday(dataDoDia(dia))
                     const ocupacao = getOcupacao(dia)
                     const ocupado = Boolean(ocupacao)
                     const selecionado = dia === selectedDay
-                    const disponivel = !pday && !ocupado && !selecionado
 
+                    // Dia passado e P-day não abrem o agendamento: só a mensagem
+                    // embaixo do calendário explica o porquê.
                     const ativar = () => {
-                        if (pday) {
+                        if (passado) {
+                            onSelectPassado?.()
+                        } else if (pday) {
                             onSelectPday?.()
                         } else if (ocupado && ocupacao) {
                             onSelectOcupado(ocupacao.nome)
@@ -124,23 +141,23 @@ export function Calendar({
                         }
                     }
 
-                    const ariaLabel = pday
-                        ? `Dia ${dia}, P-day, indisponível`
-                        : ocupado && ocupacao
-                            ? `Dia ${dia}, ocupado por ${ocupacao.nome}`
-                            : selecionado
-                                ? `Dia ${dia}, selecionado`
-                                : `Dia ${dia}, disponível`
+                    const ariaLabel = passado
+                        ? `Dia ${dia}, já passou, indisponível`
+                        : pday
+                            ? `Dia ${dia}, P-day, indisponível`
+                            : ocupado && ocupacao
+                                ? `Dia ${dia}, ocupado por ${ocupacao.nome}`
+                                : selecionado
+                                    ? `Dia ${dia}, selecionado`
+                                    : `Dia ${dia}, disponível`
 
                     return (
-                        <motion.div
+                        <div
                             key={`day-${index}`}
                             role="button"
                             tabIndex={0}
                             aria-label={ariaLabel}
                             aria-pressed={selecionado}
-                            whileHover={disponivel ? { y: -2 } : undefined}
-                            whileTap={{ scale: 0.92 }}
                             onClick={ativar}
                             onKeyDown={e => {
                                 if (e.key === 'Enter' || e.key === ' ') {
@@ -151,8 +168,10 @@ export function Calendar({
                             className={`
                                 aspect-square w-full rounded-lg text-base sm:text-lg font-medium
                                 flex items-center justify-center
-                                cursor-pointer transition
-                                ${pday
+                                cursor-pointer transition duration-100 active:scale-95
+                                ${passado
+                                    ? 'text-primary/30'
+                                    : pday
                                     ? 'bg-primary/5 text-primary/40 border border-primary/10'
                                     : ocupado
                                         ? 'bg-accent text-white'
@@ -161,7 +180,7 @@ export function Calendar({
                                             : 'bg-white text-primary border border-slate-200 hover:border-secondary hover:bg-secondary/10 hover:shadow-md'}
                             `}
                         >
-                            {pday ? (
+                            {pday && !passado ? (
                                 <div className="flex flex-col items-center leading-none">
                                     <span className="text-sm">{dia}</span>
                                     <span className="text-[9px] sm:text-[10px] font-semibold uppercase">
@@ -171,10 +190,10 @@ export function Calendar({
                             ) : (
                                 dia
                             )}
-                        </motion.div>
+                        </div>
                     )
                 })}
-            </motion.div>
+            </div>
 
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-1 text-sm text-text">
                 <span className="flex items-center gap-2">

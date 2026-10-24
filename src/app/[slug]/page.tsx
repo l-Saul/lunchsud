@@ -57,10 +57,10 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
         throw new Error('Erro ao carregar agendamentos')
     }
 
-    // O mês base vem do servidor (fuso de São Paulo), o mesmo usado pelo
-    // /api/agendar. Calcular no aparelho podia mostrar outro mês na virada
-    // (fuso/relógio do celular) e dar "fora do período" ou erro de hidratação.
-    const { mesAtual } = getDashboardRange()
+    // Hoje e o mês base vêm do servidor (fuso de São Paulo), os mesmos usados
+    // pelo /api/agendar. Calcular no aparelho podia mostrar outro dia/mês na
+    // virada (fuso/relógio do celular) e dar erro na hora de agendar.
+    const { hoje, mesAtual } = getDashboardRange()
 
     return (
         <ClientPage
@@ -68,6 +68,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
             alaId={ala.id}
             nomeAla={ala.nome}
             ocupados={ocupados}
+            hoje={hoje}
             mesAtual={mesAtual}
         />
     )

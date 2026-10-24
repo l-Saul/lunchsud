@@ -8,6 +8,7 @@ import { toPng } from 'html-to-image';
 import { useMemo, useState, useEffect } from 'react';
 import CalendarMonthView from '@/components/CalendarMonthView';
 import { MonthSelect } from '@/components/MonthSelect';
+import { Spinner } from '@/components/Spinner';
 import { createPortal } from 'react-dom';
 
 type Agendamento = {
@@ -135,15 +136,17 @@ export default function CalendarExportImage({ meses, agendamentos }: Props) {
                 <button
                     onClick={gerarImagem}
                     disabled={loading}
+                    aria-busy={loading}
                     className={`
-                        flex-1 sm:flex-none
+                        flex flex-1 items-center justify-center gap-2 sm:flex-none
                         rounded-lg px-4 py-2.5 text-sm font-semibold text-white cursor-pointer
-                        transition
+                        transition duration-100 enabled:active:scale-[0.98]
                         ${loading
                             ? 'bg-gray-400 cursor-not-allowed'
                             : 'bg-primary hover:bg-secondary'}
                     `}
                 >
+                    {loading && <Spinner className="h-4 w-4" />}
                     {loading ? 'Gerando…' : 'Gerar imagem'}
                 </button>
             </div>

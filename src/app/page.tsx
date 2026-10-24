@@ -6,8 +6,8 @@ import Image from 'next/image'
 import useSWR from 'swr'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, type Variants} from 'framer-motion'
 import { Flor } from '@/components/Flor'
+import { Spinner } from '@/components/Spinner'
 import { escrituraAleatoria } from '@/lib/escrituras'
 
 type Ala = {
@@ -27,27 +27,6 @@ const fetcher = async (url: string): Promise<Ala[]> => {
     }
 
     return data
-}
-
-const containerVariants: Variants = {
-    hidden: {},
-    visible: {
-        transition: {
-            staggerChildren: 0.06,
-        },
-    },
-}
-
-const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 8 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: {
-            duration: 0.25,
-            ease: 'easeOut',
-        },
-    },
 }
 
 export default function IndexPage() {
@@ -98,20 +77,14 @@ export default function IndexPage() {
 
                         {/* Escritura do Livro de Mórmon, sorteada a cada refresh (referência positiva). */}
                         {escritura && (
-                            <motion.p
-                                key={escritura}
-                                initial={{ opacity: 0, y: 6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.6, ease: 'easeOut' }}
-                                className="max-w-sm text-balance text-base italic leading-relaxed text-white/70"
-                            >
+                            <p className="max-w-sm animate-aparecer text-balance text-base italic leading-relaxed text-white/70">
                                 {verso}
                                 {referencia && (
                                     <span className="mt-1 block text-sm not-italic text-secondary">
                                         {referencia}
                                     </span>
                                 )}
-                            </motion.p>
+                            </p>
                         )}
                     </header>
                 </div>
@@ -129,46 +102,46 @@ export default function IndexPage() {
                         </p>
                     )}
 
+                    {/* A lista chega depois da página (busca no client): aparece de uma vez,
+                        com um fade curto. */}
                     {alas && (
-                        <motion.div
-                            className="grid gap-4"
-                            variants={containerVariants}
-                            initial="hidden"
-                            animate="visible"
-                        >
+                        <div className="grid animate-aparecer gap-4">
                         {alas.map((ala) => {
                             const isLoading = loadingSlug === ala.slug
 
                             return (
-                                <motion.div
+                                <button
                                     key={ala.slug}
-                                    variants={itemVariants}
-                                    whileHover={{ y: -3 }}
-                                    whileTap={{ scale: 0.97, rotateX: 10 }}
-                                    style={{ transformPerspective: 700 }}
+                                    type="button"
+                                    disabled={!!loadingSlug}
+                                    aria-busy={isLoading}
+                                    onClick={() => {
+                                        setLoadingSlug(ala.slug)
+                                        router.push(`/${ala.slug}`)
+                                    }}
+                                    className={`group flex w-full items-center justify-between gap-4 rounded-2xl border-l-4 border-secondary px-6 py-5 text-left text-xl font-medium shadow-lg transition duration-100 enabled:active:scale-[0.98] cursor-pointer disabled:cursor-default
+                                        ${isLoading
+                                            ? 'bg-secondary text-white'
+                                            : 'bg-white text-primary hover:bg-secondary hover:text-white hover:shadow-xl'}
+                                    `}
                                 >
-                                    <button
-                                        type="button"
-                                        disabled={!!loadingSlug}
-                                        onClick={() => {
-                                            setLoadingSlug(ala.slug)
-                                            router.push(`/${ala.slug}`)
-                                        }}
-                                        className={`group flex w-full items-center justify-between gap-4 rounded-2xl border-l-4 border-secondary px-6 py-5 text-left text-xl font-medium shadow-lg transition duration-200 cursor-pointer disabled:cursor-default
-                                            ${isLoading
-                                                ? 'bg-secondary text-white'
-                                                : 'bg-white text-primary hover:bg-secondary hover:text-white hover:shadow-xl'}
-                                        `}
-                                    >
-                                        <span>{isLoading ? 'Abrindo…' : ala.nome}</span>
+                                    {/* O nome fica: a pessoa vê qual ala tocou. O "Abrindo…"
+                                        aparece no lugar da seta até a página da ala abrir. */}
+                                    <span className="min-w-0">{ala.nome}</span>
+                                    {isLoading ? (
+                                        <span className="flex shrink-0 items-center gap-2 text-base">
+                                            Abrindo…
+                                            <Spinner />
+                                        </span>
+                                    ) : (
                                         <span aria-hidden className="text-2xl leading-none text-secondary transition group-hover:text-white">
                                             ›
                                         </span>
-                                    </button>
-                                </motion.div>
+                                    )}
+                                </button>
                             )
                         })}
-                        </motion.div>
+                        </div>
                     )}
                 </div>
             </div>

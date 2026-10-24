@@ -7,9 +7,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
 import { gerarSlug, normalizarNomeAla } from '@/lib/alas';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
+import { Spinner } from '@/components/Spinner';
 
 type Ala = { id: number; nome: string };
 
@@ -104,9 +104,7 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
     return (
         <>
             {/* Carregamento na tela toda durante a troca/criação de ala. */}
-            <AnimatePresence>
-                {transicao && <LoadingOverlay texto={transicao} />}
-            </AnimatePresence>
+            {transicao && <LoadingOverlay texto={transicao} />}
 
             <div className="relative rounded-2xl bg-linear-to-br from-white/15 to-white/5 p-px shadow-lg ring-1 ring-white/20">
             <div className="flex flex-col gap-3 rounded-2xl bg-primary/40 px-4 py-4 backdrop-blur-sm">
@@ -166,13 +164,7 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
                             Criar nova ala
                         </button>
                     ) : (
-                        <motion.form
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.2 }}
-                            onSubmit={criarAla}
-                            className="flex flex-col gap-3"
-                        >
+                        <form onSubmit={criarAla} className="flex animate-aparecer flex-col gap-3">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-sm font-semibold text-white">Nova ala</h3>
                                 <button
@@ -236,14 +228,13 @@ export function TrocarAla({ alas, atualId }: { alas: Ala[]; atualId: number | nu
                             <button
                                 type="submit"
                                 disabled={salvando || !nome.trim()}
-                                className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50 cursor-pointer"
+                                aria-busy={salvando}
+                                className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-sm font-semibold text-white transition duration-100 hover:opacity-90 enabled:active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                             >
-                                {salvando && (
-                                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                                )}
+                                {salvando && <Spinner className="h-4 w-4" />}
                                 {salvando ? 'Criando…' : 'Criar e entrar'}
                             </button>
-                        </motion.form>
+                        </form>
                     )}
                 </div>
             </div>

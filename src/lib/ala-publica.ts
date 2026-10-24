@@ -36,19 +36,19 @@ export const buscarAlaPorSlug = cache(async (slugCru: string) => {
     return data as { id: number; nome: string; slug: string } | null;
 });
 
-// Dias ocupados da ala só na janela agendável (mês atual + seguinte, fuso de São
-// Paulo) — é tudo o que o calendário mostra. Sem esse filtro a lista crescia com
-// todo o histórico e era reenviada a cada aparelho aberto a cada mudança.
-// null = erro no banco.
+// Dias ocupados da ala só na janela agendável (de hoje até o fim do mês
+// seguinte, fuso de São Paulo). Dias passados aparecem bloqueados no calendário,
+// então não precisam de dados. Sem esse filtro a lista crescia com todo o
+// histórico. null = erro no banco.
 export async function buscarOcupados(alaId: number): Promise<DiaOcupado[] | null> {
-    const { inicio, fim } = getDashboardRange();
+    const { hoje, fim } = getDashboardRange();
 
     // data::text mantém 'YYYY-MM-DD' (sem timezone).
     const { data, error } = await supabaseServer
         .from('agendamento')
         .select('id, data::text, nome')
         .eq('ala_id', alaId)
-        .gte('data', inicio)
+        .gte('data', hoje)
         .lt('data', fim)
         .order('data');
 

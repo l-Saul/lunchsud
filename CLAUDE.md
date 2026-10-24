@@ -18,6 +18,9 @@ passos, sem aglomerar informação.
 - **Região:** banco no Supabase em `sa-east-1` (São Paulo) e funções da Vercel em
   `gru1` (São Paulo), fixado no `vercel.json`. Mantenha os dois juntos: com a
   função nos EUA cada consulta cruzava o continente (~1 s por página).
+- **Supabase no plano Free:** 200 conexões Realtime simultâneas (cada página de
+  ala aberta = 1), sem backup automático, projeto pausa após 7 dias sem uso.
+  Projete pensando nesses limites.
 - `npm run dev` · `npm run build` · `npm run lint` (= `eslint src`; **não** use
   `next lint`, foi removido no Next 16).
 - Antes de concluir uma mudança, rode `npx tsc --noEmit` **e** `npm run build`.
@@ -55,9 +58,13 @@ passos, sem aglomerar informação.
    `mesAtual` — não calcule o mês com o relógio do celular.
 4. **Agendar não exige conta.** O membro (público idoso) abre o link da ala e
    marca o dia; só os líderes fazem login.
-5. Painel mostra "X de Y dias agendados", `Y = dias do mês − segundas`
+5. **Dia que já passou não é agendável pelo membro** (hoje em diante, fuso de
+   SP). Igual ao P-day: o `Calendar` esmaece o dia e, ao tocar, só mostra a
+   mensagem embaixo (não abre o agendamento); `/api/agendar` recusa. O `hoje`
+   chega à `ClientPage` pela prop vinda do servidor. O líder edita qualquer data.
+6. Painel mostra "X de Y dias agendados", `Y = dias do mês − segundas`
    (`diasDisponiveisNoMes`).
-6. **Histórico = só os 3 meses anteriores** ao atual (`getHistoricoRange(3)`);
+7. **Histórico = só os 3 meses anteriores** ao atual (`getHistoricoRange(3)`);
    não carregue mais que isso no painel.
 
 `src/lib/date.ts` é o módulo central de datas — reutilize-o, não duplique lógica
@@ -76,6 +83,19 @@ de data/fuso/P-day em componentes.
   `h1/h2/h3` já recebem serifa por regra base no CSS.
 - **Acessibilidade:** texto grande (base ~18px), foco visível, alvos ≥44px,
   `aria-label` em ícones, respeito a `prefers-reduced-motion`. Não reduza isso.
+- **Animação = feedback, não enfeite.** Só CSS (sem biblioteca; a `framer-motion`
+  saiu porque escondia a página até o JS carregar e pesava 35 KB). Use só para:
+  1. **"recebi seu toque"** — `active:scale-[0.98]` (dia do calendário: `active:scale-95`);
+  2. **"estou trabalhando"** — todo botão de ação, enquanto espera: `disabled` +
+     `aria-busy` + `<Spinner />` (`src/components/Spinner.tsx`) + verbo
+     ("Confirmando…", "Salvando…"). Assim tocar de novo não faz nada e a pessoa sabe
+     que está indo;
+  3. **"algo apareceu/mudou"** — `animate-aparecer` (fade 200 ms: mensagens, fundo
+     de modal, lista que chegou) e `animate-surgir` (caixa do modal), no `@theme`
+     do `globals.css`. Fechar é na hora.
+  **Nunca** anime a entrada de conteúdo que vem do servidor (deixa a página em
+  branco até o JS/CSS rodar), nem deslize, escalone listas, gire em 3D ou dê
+  "pulinho" no hover. Movimento curto (≤250 ms) e calmo.
 
 ## Mapa de arquivos
 
@@ -112,7 +132,9 @@ de data/fuso/P-day em componentes.
   (Supabase Realtime, não polling) que **entrega a mudança pronta** (id, data,
   nome; DELETE só o id). O calendário público aplica direto no estado, sem
   requisição por evento; só busca a lista (`/api/agendamentos/[slug]`) ao
-  reconectar ou ao voltar para a aba depois de 30 s escondida. O painel faz
+  reconectar. Página escondida por 30 s solta o canal e o WebSocket fecha (~50 s
+  depois), liberando a vaga do plano Free; ao voltar, reinscreve e ressincroniza
+  (é o que trata celular bloqueado / outro app). O painel faz
   `router.refresh()` porque precisa do telefone, que nunca vem no WebSocket.
 
 ## Autenticação e papéis (Supabase Auth)
@@ -144,8 +166,13 @@ qualquer limite ou validação, pense no padrão de uso: muitas pessoas no mesmo
 dentro do WhatsApp, autopreenchimento do celular, conexão que cai. Proteja no
 servidor e no banco (validação, constraints, permissões), não travando a pessoa.
 
-- **Telefone:** normalize, não rejeite. `digitosTelefone()` (`src/lib/phone.ts`)
-  tira `+55` e zeros da frente — no formulário e no servidor (mesma função).
+- **Telefone:** normalize, não rejeite. `normalizarTelefone()` (`src/lib/phone.ts`),
+  a mesma função no formulário e no servidor, aceita Brasil (celular e fixo, põe
+  o 9 de celular antigo, tira `+55` e zero de discagem) e qualquer país com `+`
+  ou `00`. Sem `+`, Brasil vem primeiro; se não fechar, tenta América Latina e
+  EUA/Canadá — outros países só com `+`, para erro de digitação não virar outro
+  país. Brasil grava "41 99999 9999"/"41 3333 4444"; outros "+1 415 555 2671".
+  Campo com `inputMode="tel"` (o teclado numérico não tem a tecla `+`).
 - **Toda rota valida a entrada** via `src/lib/validation.ts` (`lerJson` +
   `parseAgendar`/`parseSlug`/`parseEdicao`/`parseId`/`parseNovaAla`/`parseMembroId`/
   `parseAlaId`): teto de tamanho de corpo, formato e charset. Não volte a ler
@@ -170,14 +197,17 @@ servidor e no banco (validação, constraints, permissões), não travando a pes
 ## Banco (Supabase)
 
 **`supabase/schema.sql` é a fonte da verdade** da estrutura (e instala um projeto
-novo). Mudou o banco? Atualize-o. Não há migrations versionadas.
+novo). Mudou o banco? Atualize-o e escreva o SQL da mudança em
+`supabase/migrations/AAAAMMDDHHMMSS_nome.sql` — quem roda no SQL Editor é o
+usuário; depois de aplicada, ele pede para apagar o arquivo.
 
 - `ala`: `id`, `nome`, `slug` (link público, gerado do nome; check de formato),
   `endereco` (texto livre, até 200), `descricao` (opcional).
 - `agendamento`: `id`, `ala_id`, `data` (`YYYY-MM-DD`), `nome`, `telefone`,
   `criado_em` (NULL nas linhas anteriores a 2026-10-24). Único em (ala_id, data)
   → 1 por dia; esse índice atende todas as consultas. Checks espelham a
-  validação: telefone com 11 dígitos, nome 2–80 sem `< >`.
+  validação: telefone só dígitos/espaços/`+` com 7–15 dígitos (E.164), nome 2–80
+  sem `< >`. O banco não barra segunda nem dia passado (o líder pode).
 - `perfil`: 1:1 com `auth.users` (criado por trigger no signup) — `id`, `nome`,
   `email`, `is_owner`.
 - `ala_membro`: vínculo usuário↔ala — `id`, `ala_id`, `user_id`, `status`
@@ -201,9 +231,9 @@ novo). Mudou o banco? Atualize-o. Não há migrations versionadas.
 - **EditModal:** a remoção usa confirmação **inline** (não `window.confirm`, que
   falha em vários celulares) e fecha por clique fora / Esc / X. Mantenha os alvos
   de toque ≥48px e a cor de remoção em **rosa** (`accent`), não vermelho.
-- Animações em framer-motion respeitam `prefers-reduced-motion` via
-  `MotionConfig reducedMotion="user"` no `template.tsx`; decorações em CSS são
-  neutralizadas pelo bloco `@media (prefers-reduced-motion)` no `globals.css`.
+- `prefers-reduced-motion`: o bloco no fim do `globals.css` zera animações e
+  transições, **menos o spinner**, que gira devagar — parado, a pessoa acha que
+  travou e toca de novo.
 - Variáveis de ambiente: ver README (4 chaves do Supabase). **Não há mais
   `AUTH_SECRET`** — a sessão é do Supabase Auth. O login depende, no painel do
   Supabase, do provider **Email** ligado e das **Site URL / Redirect URLs** corretas.

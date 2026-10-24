@@ -3,11 +3,11 @@
 // Card do /acesso: usuário logado sem ala aprovada. Pede acesso a uma ala ou
 // vê o aviso de "aguardando aprovação". Sempre tem um Sair (caso conta errada).
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { criarSupabaseBrowser } from '@/lib/supabase/browser';
 import { Flor } from '@/components/Flor';
+import { Spinner } from '@/components/Spinner';
 
 type Ala = { id: number; nome: string };
 
@@ -25,39 +25,44 @@ export default function SolicitarAcesso({
     const [alaId, setAlaId] = useState<number | ''>('');
     const [loading, setLoading] = useState(false);
     const [erro, setErro] = useState('');
+    // "Atualizar" e "Sair" também mostram que estão trabalhando: sem isso a
+    // pessoa toca de novo achando que não funcionou.
+    const [atualizando, iniciarAtualizar] = useTransition();
+    const [saindo, setSaindo] = useState(false);
 
     async function pedirAcesso() {
         if (!alaId || loading) return;
 
         setLoading(true);
         setErro('');
-        const res = await fetch('/api/acesso/solicitar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ alaId }),
-        });
-        setLoading(false);
-
-        if (!res.ok) {
-            setErro('Não foi possível solicitar. Tente novamente.');
-            return;
+        try {
+            const res = await fetch('/api/acesso/solicitar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ alaId }),
+            });
+            if (!res.ok) {
+                setErro('Não foi possível solicitar. Tente novamente.');
+                return;
+            }
+            router.refresh();
+        } catch {
+            setErro('Sem conexão com a internet. Verifique e tente de novo.');
+        } finally {
+            setLoading(false);
         }
-        router.refresh();
     }
 
     async function sair() {
+        if (saindo) return;
+        setSaindo(true);
         await supabase.auth.signOut();
         router.push('/admin');
         router.refresh();
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: 'easeOut' }}
-            className="relative flex flex-col items-center gap-6 overflow-hidden rounded-3xl bg-background px-6 py-10 text-center shadow-2xl ring-1 ring-white/40 sm:px-10"
-        >
+        <div className="relative flex flex-col items-center gap-6 overflow-hidden rounded-3xl bg-background px-6 py-10 text-center shadow-2xl ring-1 ring-white/40 sm:px-10">
             <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-secondary via-accent to-secondary" />
 
             <div className="flex items-center gap-3" aria-hidden="true">
@@ -74,10 +79,13 @@ export default function SolicitarAcesso({
                         aguardando a aprovação de um responsável da ala.
                     </p>
                     <button
-                        onClick={() => router.refresh()}
-                        className="min-h-13 w-full rounded-xl bg-secondary px-4 text-lg font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:opacity-95 hover:shadow-lg cursor-pointer"
+                        onClick={() => iniciarAtualizar(() => router.refresh())}
+                        disabled={atualizando}
+                        aria-busy={atualizando}
+                        className="flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-lg font-semibold text-white transition duration-100 hover:opacity-95 hover:shadow-lg enabled:active:scale-[0.98] disabled:opacity-70 cursor-pointer"
                     >
-                        Já fui aprovado? Atualizar
+                        {atualizando && <Spinner />}
+                        {atualizando ? 'Atualizando…' : 'Já fui aprovado? Atualizar'}
                     </button>
                 </>
             ) : (
@@ -118,8 +126,10 @@ export default function SolicitarAcesso({
                     <button
                         onClick={pedirAcesso}
                         disabled={!alaId || loading}
-                        className="min-h-13 w-full rounded-xl bg-secondary px-4 text-lg font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:opacity-95 hover:shadow-lg disabled:opacity-60 cursor-pointer"
+                        aria-busy={loading}
+                        className="flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-lg font-semibold text-white transition duration-100 hover:opacity-95 hover:shadow-lg enabled:active:scale-[0.98] disabled:opacity-60 cursor-pointer"
                     >
+                        {loading && <Spinner />}
                         {loading ? 'Enviando…' : 'Pedir acesso'}
                     </button>
                 </>
@@ -127,10 +137,12 @@ export default function SolicitarAcesso({
 
             <button
                 onClick={sair}
-                className="text-sm text-muted underline underline-offset-4 transition hover:text-secondary cursor-pointer"
+                disabled={saindo}
+                className="flex min-h-11 items-center gap-2 text-sm text-muted underline underline-offset-4 transition hover:text-secondary disabled:no-underline cursor-pointer"
             >
-                Sair
+                {saindo && <Spinner className="h-4 w-4" />}
+                {saindo ? 'Saindo…' : 'Sair'}
             </button>
-        </motion.div>
+        </div>
     );
 }

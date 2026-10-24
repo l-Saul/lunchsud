@@ -4,9 +4,9 @@
 // sua; owner: a ala selecionada). Permite aprovar pendentes e remover acesso —
 // a remoção pede confirmação num modal que cobre a tela com fundo desfocado.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
+import { Spinner } from '@/components/Spinner';
 
 export type Usuario = {
     id: number;          // id do vínculo ala_membro
@@ -15,29 +15,46 @@ export type Usuario = {
     status: 'pendente' | 'aprovado';
 };
 
+type Acao = 'aprovar' | 'remover';
+
 export function UsuariosCard({ usuarios }: { usuarios: Usuario[] }) {
     const router = useRouter();
-    const [carregando, setCarregando] = useState<number | null>(null);
+    // Ação em andamento (qual usuário e o quê) — mostra o verbo certo no botão.
+    const [emAndamento, setEmAndamento] = useState<{ id: number; acao: Acao } | null>(null);
+    const [, iniciarAtualizacao] = useTransition();
     const [confirmar, setConfirmar] = useState<Usuario | null>(null);
 
-    async function acao(url: string, membroId: number) {
-        if (carregando) return;
-        setCarregando(membroId);
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ membroId }),
-        });
-        setCarregando(null);
-        if (res.ok) router.refresh();
-        else alert('Não foi possível concluir a ação.');
+    async function executar(acao: Acao, membroId: number) {
+        if (emAndamento) return;
+        setEmAndamento({ id: membroId, acao });
+        try {
+            const res = await fetch(`/api/acesso/${acao}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ membroId }),
+            });
+            if (!res.ok) {
+                setEmAndamento(null);
+                alert('Não foi possível concluir a ação.');
+                return;
+            }
+            // O "Aprovando…" fica até a lista nova chegar: limpar o estado dentro
+            // da mesma transição do refresh faz os dois aparecerem juntos.
+            iniciarAtualizacao(() => {
+                router.refresh();
+                setEmAndamento(null);
+            });
+        } catch {
+            setEmAndamento(null);
+            alert('Sem conexão com a internet. Verifique e tente de novo.');
+        }
     }
 
     async function confirmarRemocao() {
         if (!confirmar) return;
         const alvo = confirmar;
         setConfirmar(null);
-        await acao('/api/acesso/remover', alvo.id);
+        await executar('remover', alvo.id);
     }
 
     // Fecha a confirmação com a tecla Esc.
@@ -54,6 +71,9 @@ export function UsuariosCard({ usuarios }: { usuarios: Usuario[] }) {
     const aprovados = usuarios.filter(u => u.status === 'aprovado');
 
     function Linha({ u }: { u: Usuario }) {
+        const aprovando = emAndamento?.id === u.id && emAndamento.acao === 'aprovar';
+        const removendo = emAndamento?.id === u.id && emAndamento.acao === 'remover';
+
         return (
             <li className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3">
                 <div className="min-w-0 flex-1">
@@ -61,23 +81,27 @@ export function UsuariosCard({ usuarios }: { usuarios: Usuario[] }) {
                     <p className="truncate text-sm text-muted">{u.email}</p>
                 </div>
 
+                {/* Uma ação por vez: enquanto uma roda, todos os botões ficam travados. */}
                 {u.status === 'pendente' && (
                     <button
-                        onClick={() => acao('/api/acesso/aprovar', u.id)}
-                        disabled={carregando === u.id}
-                        className="min-h-11 rounded-xl bg-secondary px-3 text-sm font-semibold text-white shadow-sm transition duration-200 hover:opacity-95 enabled:hover:-translate-y-0.5 enabled:hover:shadow-md disabled:opacity-50 cursor-pointer"
+                        onClick={() => executar('aprovar', u.id)}
+                        disabled={emAndamento !== null}
+                        aria-busy={aprovando}
+                        className="flex min-h-11 items-center gap-2 rounded-xl bg-secondary px-3 text-sm font-semibold text-white shadow-sm transition duration-100 hover:opacity-95 enabled:hover:shadow-md enabled:active:scale-[0.97] disabled:opacity-60 cursor-pointer"
                     >
-                        Aprovar
+                        {aprovando && <Spinner className="h-4 w-4" />}
+                        {aprovando ? 'Aprovando…' : 'Aprovar'}
                     </button>
                 )}
 
                 <button
                     onClick={() => setConfirmar(u)}
-                    disabled={carregando === u.id}
-                    aria-label="Remover usuário"
-                    className="min-h-11 rounded-xl px-3 text-sm font-medium text-accent transition duration-200 hover:bg-accent/10 enabled:active:scale-95 disabled:opacity-50 cursor-pointer"
+                    disabled={emAndamento !== null}
+                    aria-busy={removendo}
+                    className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-medium text-accent transition duration-100 hover:bg-accent/10 enabled:active:scale-[0.97] disabled:opacity-60 cursor-pointer"
                 >
-                    Remover
+                    {removendo && <Spinner className="h-4 w-4" />}
+                    {removendo ? 'Removendo…' : 'Remover'}
                 </button>
             </li>
         );
@@ -119,52 +143,43 @@ export function UsuariosCard({ usuarios }: { usuarios: Usuario[] }) {
             )}
 
             {/* Confirmação de remoção — cobre a tela, fundo desfocado. */}
-            <AnimatePresence>
-                {confirmar && (
-                    <motion.div
-                        onClick={() => setConfirmar(null)}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="fixed inset-0 z-60 flex items-center justify-center bg-primary/50 p-4 backdrop-blur-sm"
+            {/* Abre com um fade curto (avisa que uma camada apareceu); fecha na hora. */}
+            {confirmar && (
+                <div
+                    onClick={() => setConfirmar(null)}
+                    className="fixed inset-0 z-60 flex animate-aparecer items-center justify-center bg-primary/50 p-4 backdrop-blur-sm"
+                >
+                    <div
+                        onClick={e => e.stopPropagation()}
+                        role="alertdialog"
+                        aria-modal="true"
+                        aria-label="Confirmar remoção de acesso"
+                        className="w-full max-w-sm animate-surgir rounded-2xl bg-background p-6 text-center shadow-2xl"
                     >
-                        <motion.div
-                            onClick={e => e.stopPropagation()}
-                            role="alertdialog"
-                            aria-modal="true"
-                            aria-label="Confirmar remoção de acesso"
-                            initial={{ opacity: 0, scale: 0.96, y: 12 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.96, y: 12 }}
-                            transition={{ duration: 0.2, ease: 'easeOut' }}
-                            className="w-full max-w-sm rounded-2xl bg-background p-6 text-center shadow-2xl"
-                        >
-                            <h3 className="text-xl font-semibold text-text">Remover acesso?</h3>
-                            <p className="mt-3 text-base text-muted">
-                                Tem certeza que deseja remover o acesso de{' '}
-                                <strong className="text-text">{confirmar.nome || confirmar.email}</strong>?
-                                Para voltar, a pessoa precisará pedir acesso de novo.
-                            </p>
+                        <h3 className="text-xl font-semibold text-text">Remover acesso?</h3>
+                        <p className="mt-3 text-base text-muted">
+                            Tem certeza que deseja remover o acesso de{' '}
+                            <strong className="text-text">{confirmar.nome || confirmar.email}</strong>?
+                            Para voltar, a pessoa precisará pedir acesso de novo.
+                        </p>
 
-                            <div className="mt-6 flex gap-3">
-                                <button
-                                    onClick={() => setConfirmar(null)}
-                                    className="min-h-12 flex-1 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 cursor-pointer"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    onClick={confirmarRemocao}
-                                    className="min-h-12 flex-1 rounded-xl bg-accent px-4 text-base font-semibold text-white shadow-md transition hover:opacity-95 cursor-pointer"
-                                >
-                                    Remover
-                                </button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        <div className="mt-6 flex gap-3">
+                            <button
+                                onClick={() => setConfirmar(null)}
+                                className="min-h-12 flex-1 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 cursor-pointer"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={confirmarRemocao}
+                                className="min-h-12 flex-1 rounded-xl bg-accent px-4 text-base font-semibold text-white shadow-md transition duration-100 hover:opacity-95 active:scale-[0.98] cursor-pointer"
+                            >
+                                Remover
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

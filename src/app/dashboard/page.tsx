@@ -10,7 +10,6 @@ import { supabaseServer } from '@/lib/supabase/server';
 import { getDashboardRange, getHistoricoRange, formatMonthLabel, diaTile, diasDisponiveisNoMes } from '@/lib/date';
 import EditModal from '@/components/EditModal';
 import CalendarExportImage from '@/components/CalendarExportImage';
-import { AnimatedCard } from './AnimatedCard';
 import { MesColapsavel } from './MesColapsavel';
 
 export const dynamic = 'force-dynamic';
@@ -130,10 +129,7 @@ export default async function DashboardPage() {
                     {ala?.slug && <AbrirCalendarioButton slug={ala.slug} />}
 
                     {/* Card 1 — Agendamentos do mês */}
-                    <AnimatedCard
-                        delay={0.05}
-                        className="flex flex-col gap-6 rounded-3xl bg-background p-4 shadow-xl ring-1 ring-white/40 sm:p-8"
-                    >
+                    <section className="flex flex-col gap-6 rounded-3xl bg-background p-4 shadow-xl ring-1 ring-white/40 sm:p-8">
                         <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
                             <div className="flex items-center gap-2">
                                 <span className="h-5 w-1.5 rounded-full bg-accent" />
@@ -185,13 +181,10 @@ export default async function DashboardPage() {
                                 );
                             })}
                         </div>
-                    </AnimatedCard>
+                    </section>
 
                     {/* Card 2 — Histórico de almoços */}
-                    <AnimatedCard
-                        delay={0.12}
-                        className="flex flex-col gap-5 rounded-3xl bg-background p-4 shadow-xl ring-1 ring-white/40 sm:p-8"
-                    >
+                    <section className="flex flex-col gap-5 rounded-3xl bg-background p-4 shadow-xl ring-1 ring-white/40 sm:p-8">
                         <div className="flex items-center gap-2">
                             <span className="h-5 w-1.5 rounded-full bg-accent" />
                             <h2 className="text-lg font-semibold text-text">Histórico de almoços</h2>
@@ -223,15 +216,12 @@ export default async function DashboardPage() {
                                 })}
                             </ul>
                         )}
-                    </AnimatedCard>
+                    </section>
 
                     {/* Card 3 — Usuários (aprovar/remover) */}
-                    <AnimatedCard
-                        delay={0.18}
-                        className="flex flex-col gap-5 rounded-3xl bg-background p-4 shadow-xl ring-1 ring-white/40 sm:p-8"
-                    >
+                    <section className="flex flex-col gap-5 rounded-3xl bg-background p-4 shadow-xl ring-1 ring-white/40 sm:p-8">
                         <UsuariosCard usuarios={usuarios} />
-                    </AnimatedCard>
+                    </section>
                 </section>
             </main>
         </DashboardClientGuard>

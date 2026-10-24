@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { criarSupabaseBrowser } from '@/lib/supabase/browser';
+import { Spinner } from '@/components/Spinner';
 
 export function LogoutButton() {
     const [supabase] = useState(() => criarSupabaseBrowser());
@@ -39,9 +40,7 @@ export function LogoutButton() {
                     : 'bg-secondary shadow-sm hover:opacity-95 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0'}
             `}
         >
-            {loading && (
-                <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-            )}
+            {loading && <Spinner className="h-4 w-4" />}
             {loading ? 'Tchau' : 'Sair'}
         </button>
     );

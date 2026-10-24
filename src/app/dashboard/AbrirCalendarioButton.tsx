@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Spinner } from '@/components/Spinner';
 
 export function AbrirCalendarioButton({ slug }: { slug: string }) {
     const router = useRouter();
@@ -27,7 +28,7 @@ export function AbrirCalendarioButton({ slug }: { slug: string }) {
         >
             {loading ? (
                 <>
-                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                    <Spinner />
                     Abrindo…
                 </>
             ) : (
