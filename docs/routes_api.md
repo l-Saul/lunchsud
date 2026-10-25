@@ -235,7 +235,7 @@ pedir acesso depois).
 ## `POST /api/alas/pedir`
 
 A presidência de uma ala que ainda não está no site pede para usar o calendário
-(grupo "Sua ala ou ramo ainda não está aqui?" da home). **Público, sem conta**:
+(grupo "Sua ala ou ramo ainda não usa o calendário?" da home). **Público, sem conta**:
 cria a ala **pendente** e a **conta nova** do líder responsável, com vínculo
 pendente. Nada aparece no site até o owner aprovar (dois passos: a ala, depois o
 líder, no cartão Usuários da ala).

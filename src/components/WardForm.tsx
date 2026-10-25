@@ -5,7 +5,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
-import { gerarSlug, nomeSemTipo, normalizarCidade, normalizarNomeAla, type TipoUnidade } from '@/lib/wards';
+import { artigo, gerarSlug, nomeSemTipo, normalizarCidade, normalizarNomeAla, type TipoUnidade } from '@/lib/wards';
 import { UFS } from '@/lib/location';
 import { ChoiceGroup } from '@/components/ChoiceGroup';
 import { SelectField } from '@/components/SelectField';
@@ -32,6 +32,50 @@ type Props =
 type CampoAla = 'nome' | 'estado' | 'cidade';
 const ETAPAS = ['A ala', 'O líder'];
 const ORDEM_ALA: CampoAla[] = ['nome', 'estado', 'cidade'];
+
+function IndicadorDePassos({ passo, lista }: { passo: 1 | 2; lista: React.Ref<HTMLOListElement> }) {
+    return (
+        <ol ref={lista} tabIndex={-1} aria-label="Etapas do pedido" className="flex flex-col gap-2 focus:outline-none">
+            <li className="sr-only">Passo {passo} de 2: {ETAPAS[passo - 1]}</li>
+            <li aria-hidden="true" className="flex items-center gap-2 px-1">
+                {ETAPAS.map((_, i) => {
+                    const n = i + 1;
+                    const feito = n < passo;
+                    const atual = n === passo;
+                    return (
+                        <span key={n} className="contents">
+                            {i > 0 && (
+                                <span className={`h-1 flex-1 rounded-full transition-colors ${passo > 1 ? 'bg-secondary' : 'bg-slate-200'}`} />
+                            )}
+                            <span
+                                className={`flex size-10 shrink-0 items-center justify-center rounded-full text-lg font-bold transition-colors ${
+                                    atual
+                                        ? 'bg-secondary text-white shadow-md'
+                                        : feito
+                                            ? 'bg-secondary/15 text-secondary'
+                                            : 'bg-white text-muted ring-2 ring-inset ring-slate-300'
+                                }`}
+                            >
+                                {feito ? (
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M20 6 9 17l-5-5" />
+                                    </svg>
+                                ) : n}
+                            </span>
+                        </span>
+                    );
+                })}
+            </li>
+            <li aria-hidden="true" className="flex justify-between gap-3 text-base">
+                {ETAPAS.map((rotulo, i) => (
+                    <span key={rotulo} className={i + 1 === passo ? 'font-semibold text-text' : 'text-muted'}>
+                        {rotulo}
+                    </span>
+                ))}
+            </li>
+        </ol>
+    );
+}
 
 export function WardForm(props: Props) {
     const pedido = props.modo === 'pedido';
@@ -171,7 +215,7 @@ export function WardForm(props: Props) {
                 />
             </div>
 
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
                 <label htmlFor={campoId('nome')} className={rotulo}>Nome {unidade}</label>
                 <input
                     id={campoId('nome')}
@@ -197,8 +241,8 @@ export function WardForm(props: Props) {
                 )}
             </div>
 
-            <div className="grid gap-5 @md:grid-cols-2 @md:gap-4">
-                <div className="flex min-w-0 flex-col gap-1.5">
+            <div className="grid gap-7 @md:grid-cols-2 @md:gap-4">
+                <div className="flex min-w-0 flex-col gap-2">
                     <label htmlFor={campoId('estado')} className={rotulo}>Estado</label>
                     <SelectField
                         id={campoId('estado')}
@@ -218,7 +262,7 @@ export function WardForm(props: Props) {
                     {erroDe('estado')}
                 </div>
 
-                <div className="flex min-w-0 flex-col gap-1.5">
+                <div className="flex min-w-0 flex-col gap-2">
                     <label htmlFor={campoId('cidade')} className={rotulo}>Cidade</label>
                     <input
                         id={campoId('cidade')}
@@ -241,7 +285,7 @@ export function WardForm(props: Props) {
 
     if (!pedido) {
         return (
-            <form onSubmit={enviar} noValidate className="@container flex flex-col gap-5">
+            <form onSubmit={enviar} noValidate className="@container flex flex-col gap-6">
                 {camposDaAla}
                 {erro && <ErrorMessage key={erro}>{erro}</ErrorMessage>}
                 <div className="flex flex-wrap gap-3">
@@ -268,51 +312,13 @@ export function WardForm(props: Props) {
     }
 
     return (
-        <form onSubmit={enviar} noValidate className="@container relative flex flex-col gap-5">
-            <ol ref={tituloPasso} tabIndex={-1} aria-label="Etapas do pedido" className="flex flex-col gap-2 focus:outline-none">
-                <li className="sr-only">Passo {passo} de 2: {ETAPAS[passo - 1]}</li>
-                <li aria-hidden="true" className="flex items-center gap-2 px-1">
-                    {ETAPAS.map((_, i) => {
-                        const n = i + 1;
-                        const feito = n < passo;
-                        const atual = n === passo;
-                        return (
-                            <span key={n} className="contents">
-                                {i > 0 && (
-                                    <span className={`h-1 flex-1 rounded-full transition-colors ${passo > 1 ? 'bg-secondary' : 'bg-slate-200'}`} />
-                                )}
-                                <span
-                                    className={`flex size-10 shrink-0 items-center justify-center rounded-full text-lg font-bold transition-colors ${
-                                        atual
-                                            ? 'bg-secondary text-white shadow-md'
-                                            : feito
-                                                ? 'bg-secondary/15 text-secondary'
-                                                : 'bg-white text-muted ring-2 ring-inset ring-slate-300'
-                                    }`}
-                                >
-                                    {feito ? (
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M20 6 9 17l-5-5" />
-                                        </svg>
-                                    ) : n}
-                                </span>
-                            </span>
-                        );
-                    })}
-                </li>
-                <li aria-hidden="true" className="flex justify-between gap-3 text-base">
-                    {ETAPAS.map((rotulo, i) => (
-                        <span key={rotulo} className={i + 1 === passo ? 'font-semibold text-text' : 'text-muted'}>
-                            {rotulo}
-                        </span>
-                    ))}
-                </li>
-            </ol>
+        <form onSubmit={enviar} noValidate className="@container relative flex flex-col gap-7">
+            <IndicadorDePassos passo={passo} lista={tituloPasso} />
 
             {passo === 1 ? (
                 <>
                     {camposDaAla}
-                    <button type="submit" className={`${botao('primario', 'grande')} w-full`}>
+                    <button type="submit" className={`${botao('primario', 'grande')} mt-1 w-full`}>
                         Continuar
                     </button>
                 </>
@@ -333,7 +339,7 @@ export function WardForm(props: Props) {
                         </button>
                     </div>
 
-                    <div className="flex flex-col gap-1">
+                    <div className="mt-2 flex flex-col gap-1.5">
                         <h3 id={`${id}-lider`} className="text-lg font-semibold text-text">Líder responsável</h3>
                         <p className="text-base text-muted">
                             {contaLogada
@@ -359,7 +365,7 @@ export function WardForm(props: Props) {
                             </p>
                             {contaLogada.ala && (
                                 <p className="rounded-xl bg-accent-soft px-3 py-2.5 text-base font-semibold text-accent">
-                                    Atenção: ao enviar, você perde o acesso à <strong>{contaLogada.ala}</strong>. Para
+                                    Atenção: ao enviar, você perde o acesso {artigo(contaLogada.ala, 'a')} <strong>{contaLogada.ala}</strong>. Para
                                     manter, escolha &quot;Conta nova&quot;.
                                 </p>
                             )}
@@ -394,7 +400,7 @@ export function WardForm(props: Props) {
                         type="submit"
                         disabled={salvando}
                         aria-busy={salvando}
-                        className={`${botao('primario', 'grande')} w-full`}
+                        className={`${botao('primario', 'grande')} mt-1 w-full`}
                     >
                         {salvando && <Spinner />}
                         {salvando ? 'Enviando…' : 'Enviar pedido'}

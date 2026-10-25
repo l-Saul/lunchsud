@@ -468,7 +468,7 @@ mandar o link da ala no grupo do WhatsApp. Props: `slug`, `nomeAla`. O link é
 | Botão | O que faz |
 |---|---|
 | **Copiar** (ícone de duas folhas) | copia o link (`navigator.clipboard`; se não houver, cópia por um campo escondido). O ícone vira ✓ e aparece o aviso **"Link copiado!"** (`NoticeBar`, no topo, tipo `sucesso`), que some em 3 s. Se nada funcionar: "Não foi possível copiar. O link é: \<link\>" (tipo `erro`), que **fica** com X para a pessoa ter tempo de copiar à mão |
-| **Compartilhar** (ícone de três pontos ligados) | no celular abre o menu de compartilhar do sistema (`navigator.share`), com título "Calendário de almoços da \<ala\>", texto "Agende seu almoço para nossos missionários ❤️" e o link (o mesmo da prévia da página da ala). Sem esse menu (computador) abre o WhatsApp (`wa.me`) numa aba nova com a mesma mensagem. Cancelar o menu não faz nada |
+| **Compartilhar** (ícone de três pontos ligados) | no celular abre o menu de compartilhar do sistema (`navigator.share`), com título `tituloDaAla` ("Calendário de almoços da Ala X" / "do Ramo X") e texto `DESCRICAO_DA_ALA` ("Escolha um dia livre e agende o almoço dos missionários. Não precisa criar conta."), de `src/lib/share-texts.ts`, os mesmos da prévia do link e o link (o mesmo da prévia da página da ala). Sem esse menu (computador) abre o WhatsApp (`wa.me`) numa aba nova com a mesma mensagem. Cancelar o menu não faz nada |
 
 - **Mesma cor do botão principal** (azul `bg-secondary`, ícone branco), cantos
   `rounded-xl` como os do padrão (`button-classes.ts`) e mesma altura; largura 3rem no celular e 3.5rem a partir de `sm`

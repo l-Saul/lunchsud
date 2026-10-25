@@ -25,6 +25,10 @@ import { FUSO_PADRAO } from '@/lib/location';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+const LINHA_DA_ALA =
+    'flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-3xl bg-linear-to-r from-secondary ' +
+    'to-primary px-4 py-4 text-white shadow-md [--focus-color:var(--color-gold)] sm:px-6';
+
 export const metadata: Metadata = {
     title: 'Painel da ala',
     robots: { index: false, follow: false },
@@ -144,7 +148,7 @@ export default async function DashboardPage() {
 
             <main className="px-4 py-8 sm:px-6 sm:py-10">
                 <section className="mx-auto flex w-full max-w-3xl flex-col gap-[1.575rem]">
-                    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-3xl bg-linear-to-r from-secondary to-primary px-4 py-4 text-white shadow-md [--focus-color:var(--color-gold)] sm:px-6">
+                    <div className={LINHA_DA_ALA}>
                         <p className="min-w-0 wrap-anywhere text-xl font-semibold">
                             {ala?.nome ?? 'Selecione uma ala'}
                         </p>

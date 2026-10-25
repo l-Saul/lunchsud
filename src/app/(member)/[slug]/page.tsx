@@ -7,6 +7,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { buscarAlaPorSlug, buscarOcupados } from '@/lib/server/public-ward'
 import { getDashboardRange } from '@/lib/date'
+import { DESCRICAO_DA_ALA, tituloDaAla } from '@/lib/share-texts'
 import WardBooking from './_components/WardBooking'
 
 export async function generateMetadata(
@@ -19,22 +20,24 @@ export async function generateMetadata(
         return { title: 'Página não encontrada', robots: { index: false, follow: false } }
     }
 
-    const tituloCompartilhar = `Calendário de almoços da ${ala.nome}`
-    const descricao = 'Agende seu almoço para nossos missionários ❤️'
+    const titulo = tituloDaAla(ala.nome)
 
     return {
         title: ala.nome,
-        description: descricao,
+        description: DESCRICAO_DA_ALA,
+        robots: { index: false, follow: false },
         openGraph: {
             type: 'website',
             locale: 'pt_BR',
-            title: tituloCompartilhar,
-            description: descricao,
+            siteName: 'Almoço dos Missionários',
+            title: titulo,
+            description: DESCRICAO_DA_ALA,
+            url: `/${ala.slug}`,
         },
         twitter: {
             card: 'summary_large_image',
-            title: tituloCompartilhar,
-            description: descricao,
+            title: titulo,
+            description: DESCRICAO_DA_ALA,
         },
     }
 }

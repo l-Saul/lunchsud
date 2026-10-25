@@ -24,6 +24,13 @@ type Props = {
 
 const emOrdem = (a: string, b: string) => a.localeCompare(b, 'pt-BR');
 
+const BOTAO_ALA =
+    'group relative flex min-h-16 w-full items-center justify-between gap-4 overflow-hidden rounded-2xl ' +
+    'px-6 py-4 text-left text-xl font-semibold shadow-md ring-1 ring-primary/10 ' +
+    'transition duration-100 enabled:active:scale-[0.98] cursor-pointer disabled:cursor-default';
+const ALA_AZUL = 'bg-secondary text-white';
+const ALA_BRANCA = 'bg-white text-primary enabled:hover:bg-secondary enabled:hover:text-white enabled:hover:shadow-xl';
+
 export function WardFilter({ alas, instrucao, onEscolher, marcada, ocupada, textoOcupado = 'Abrindo…', desativado = false }: Props) {
     const id = useId();
     const [estado, setEstado] = useState('');
@@ -87,9 +94,7 @@ export function WardFilter({ alas, instrucao, onEscolher, marcada, ocupada, text
                                         aria-pressed={comMarca ? escolhida : undefined}
                                         aria-busy={carregando || undefined}
                                         onClick={() => onEscolher(ala)}
-                                        className={`group relative flex min-h-16 w-full items-center justify-between gap-4 overflow-hidden rounded-2xl px-6 py-4 text-left text-xl font-semibold shadow-md ring-1 ring-primary/10 transition duration-100 enabled:active:scale-[0.98] cursor-pointer disabled:cursor-default ${
-                                            azul ? 'bg-secondary text-white' : 'bg-white text-primary enabled:hover:bg-secondary enabled:hover:text-white enabled:hover:shadow-xl'
-                                        }`}
+                                        className={`${BOTAO_ALA} ${azul ? ALA_AZUL : ALA_BRANCA}`}
                                     >
                                         <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1.5 bg-linear-to-b from-accent via-gold to-accent" />
                                         <span className="min-w-0 hyphens-auto wrap-break-word">{ala.nome}</span>

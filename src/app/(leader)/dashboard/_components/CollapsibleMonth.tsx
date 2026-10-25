@@ -6,6 +6,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+const BOTAO_MES =
+    'group -mx-2 flex w-full cursor-pointer flex-wrap items-center justify-between gap-2 rounded-xl px-2 py-1.5 ' +
+    'text-left transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary';
+
 type Props = {
     label: string;
     total: number;
@@ -44,7 +48,7 @@ export function CollapsibleMonth({ label, total, disponiveis, defaultOpen = true
                     type="button"
                     onClick={alternar}
                     aria-expanded={open}
-                    className="group -mx-2 flex w-full cursor-pointer flex-wrap items-center justify-between gap-2 rounded-xl px-2 py-1.5 text-left transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+                    className={BOTAO_MES}
                 >
                     <span className="flex items-center gap-2">
                         <svg

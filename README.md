@@ -67,6 +67,8 @@ Sem framer-motion, sem biblioteca de UI: animações só em CSS.
 | `/` | estática + client | público | SWR em `/api/alas` | [home](docs/routes_home.md) |
 | `/[slug]` | dinâmica (SSR) | público | ala + dias ocupados da janela; Realtime | [slug](docs/routes_slug.md) |
 | `/[slug]/opengraph-image` | imagem (`next/og`) | público | nome da ala → PNG 1200×630 da prévia do link no WhatsApp | [slug](docs/routes_slug.md) |
+| `/opengraph-image` | imagem (`next/og`) | público | PNG 1200×630 da prévia do site (home e demais páginas) | [src_app](docs/src_app.md) |
+| `/robots.txt`, `/sitemap.xml` | gerados (`robots.ts`, `sitemap.ts`) | público | home indexada; ala `noindex`; liderança e `/api` bloqueadas | [src_app](docs/src_app.md) |
 | `/admin` | dinâmica | público (redireciona logado) | Supabase Auth no client | [admin](docs/routes_admin.md) |
 | `/acesso` | dinâmica | logado sem ala | vínculo + alas | [acesso](docs/routes_acesso.md) |
 | `/redefinir-senha` | dinâmica | sessão do link | e-mail da sessão | [redefinir-senha](docs/routes_redefinir-senha.md) |
@@ -146,18 +148,19 @@ src/
     (leader)/            /admin /acesso /redefinir-senha /dashboard
     api/                 route handlers (URLs em português = contrato)
     auth/confirmar/      link dos e-mails do Supabase Auth
-    layout.tsx  globals.css  not-found.tsx  manifest.ts  robots.ts
+    layout.tsx  globals.css  not-found.tsx  manifest.ts  robots.ts  sitemap.ts
+    opengraph-image.tsx  (imagem de prévia do site)
   components/            usados por 2+ páginas (Spinner, Flower, Footer, LoadingOverlay,
                          WardFilter, WardForm, AccountFields, campos e botões padrão)
   hooks/                 use-bookings-realtime (WebSocket)
   lib/                   date, phone, location, wards, site-url, email-preferences, calendar-event,
-                         last-ward (última ala aberta no aparelho)
+                         last-ward (última ala aberta no aparelho), share-texts (textos do link)
   lib/server/            public-ward, session, validation, ward-request, (só servidor)
-                         mailer, email-templates, notifications,
-                         email/aviso.html (modelo dos avisos por e-mail)
+                         mailer, email-templates, notifications, og-image,
+                         email/aviso.html (modelo dos avisos por e-mail),
+                         og/ (fontes das imagens de prévia, com a licença OFL)
   lib/supabase/          realtime, service-role, browser-session, server-session
   proxy.ts               renova a sessão nas rotas do líder
-messages/                planos ainda não implementados (nada do site depende daqui)
 supabase/
   schema.sql             estrutura completa do banco
   migrations/            só quando há mudança pendente (o usuário roda e apaga)
@@ -177,7 +180,8 @@ de código diz no cabeçalho qual é o seu doc; o mapa por pasta está no
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | navegador + servidor | chave `anon` / publishable |
 | `SUPABASE_URL` | servidor (service-role) | a mesma Project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | **só servidor** | chave `service_role`. **Nunca exponha** |
-| `NEXT_PUBLIC_BASE_URL` | `siteUrl()` (links dos e-mails) | `https://lunchsud.vercel.app` em produção |
+| `NEXT_PUBLIC_BASE_URL` | `siteUrl()` / `urlPublica()`: links dos e-mails, `metadataBase`, `robots.txt`, `sitemap.xml` | `https://lunchsud.vercel.app` em produção (sem ela, vale esse mesmo endereço) |
+| `GOOGLE_SITE_VERIFICATION` | opcional; `metadata.verification.google` | o código da verificação por meta tag do Google Search Console |
 | `GMAIL_USER` | **só servidor** (avisos por e-mail) | conta do Gmail que envia |
 | `GMAIL_APP_PASSWORD` | **só servidor** | senha de app do Google (não a senha da conta) |
 | `EMAIL_FROM` | opcional | remetente, ex. `"Almoço dos Missionários" <conta@gmail.com>`; padrão: esse nome + `GMAIL_USER` |

@@ -14,7 +14,7 @@ nova e a **busca de ala** (estado → cidade → ala). Tocar numa ala leva a
 src/app/(member)/
   page.tsx                  a home (client)
   _components/
-    RequestWard.tsx         grupo "Sua ala ou ramo ainda não está aqui?" + modal do pedido
+    RequestWard.tsx         grupo "Sua ala ou ramo ainda não usa o calendário?" + modal do pedido
 ```
 
 `page.tsx` é um componente client (`'use client'`). Dependências: `swr`,

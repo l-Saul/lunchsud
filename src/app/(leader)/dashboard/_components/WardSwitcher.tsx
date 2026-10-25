@@ -14,6 +14,17 @@ import { ErrorMessage } from '@/components/ErrorMessage';
 import { Spinner } from '@/components/Spinner';
 import { botao } from '@/components/button-classes';
 
+const BOTAO_FLUTUANTE =
+    'relative flex size-15 items-center justify-center rounded-full bg-gold text-primary shadow-md transition ' +
+    'hover:opacity-100 focus-visible:opacity-100 active:scale-[0.98] cursor-pointer sm:size-18';
+const SELO_PEDIDOS =
+    'absolute -right-1 -top-1 flex h-7 min-w-7 items-center justify-center rounded-full bg-accent px-1.5 ' +
+    'text-base font-bold leading-none text-white ring-2 ring-white';
+const BOTAO_CRIAR_ALA =
+    'flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 ' +
+    'text-base font-semibold text-secondary transition hover:border-solid hover:border-secondary hover:bg-secondary/10 ' +
+    'cursor-pointer';
+
 type Ala = { id: number; nome: string; estado: string; cidade: string };
 
 export type PedidoAla = {
@@ -122,14 +133,14 @@ export function WardSwitcher({ alas, atualId, pedidos }: { alas: Ala[]; atualId:
                     aria-haspopup="dialog"
                     aria-label={rotuloBotao}
                     title={rotuloBotao}
-                    className={`relative flex size-15 items-center justify-center rounded-full bg-gold text-primary shadow-md transition hover:opacity-100 focus-visible:opacity-100 active:scale-[0.98] cursor-pointer sm:size-18 ${esperando ? 'opacity-100' : 'opacity-60'}`}
+                    className={`${BOTAO_FLUTUANTE} ${esperando ? 'opacity-100' : 'opacity-60'}`}
                 >
                     <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="sm:size-9">
                         <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                         <circle cx="12" cy="12" r="3" />
                     </svg>
                     {esperando > 0 && (
-                        <span aria-hidden="true" className="absolute -right-1 -top-1 flex h-7 min-w-7 items-center justify-center rounded-full bg-accent px-1.5 text-base font-bold leading-none text-white ring-2 ring-white">
+                        <span aria-hidden="true" className={SELO_PEDIDOS}>
                             {esperando}
                         </span>
                     )}
@@ -257,7 +268,7 @@ export function WardSwitcher({ alas, atualId, pedidos }: { alas: Ala[]; atualId:
                             <button
                                 type="button"
                                 onClick={() => setCriando(true)}
-                                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-slate-300 px-4 text-base font-semibold text-secondary transition hover:border-solid hover:border-secondary hover:bg-secondary/10 cursor-pointer"
+                                className={BOTAO_CRIAR_ALA}
                             >
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                     <path d="M12 5v14M5 12h14" />

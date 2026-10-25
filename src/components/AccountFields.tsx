@@ -52,7 +52,7 @@ export function AccountFields({ modo, dados, onChange, erros = {}, disabled = fa
     return (
         <>
             {criar && (
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-2">
                     <label htmlFor={id('nome')} className={rotulo}>Seu nome</label>
                     <input
                         id={id('nome')}
@@ -71,7 +71,7 @@ export function AccountFields({ modo, dados, onChange, erros = {}, disabled = fa
                 </div>
             )}
 
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
                 <label htmlFor={id('email')} className={rotulo}>E-mail</label>
                 <input
                     id={id('email')}
@@ -93,7 +93,7 @@ export function AccountFields({ modo, dados, onChange, erros = {}, disabled = fa
                 {erro('email')}
             </div>
 
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
                 <label htmlFor={id('senha')} className={rotulo}>Senha</label>
                 <PasswordField
                     id={id('senha')}
@@ -111,7 +111,7 @@ export function AccountFields({ modo, dados, onChange, erros = {}, disabled = fa
             </div>
 
             {criar && (
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-2">
                     <label htmlFor={id('confirmar')} className={rotulo}>Confirmar senha</label>
                     <PasswordField
                         id={id('confirmar')}

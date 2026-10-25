@@ -6,7 +6,8 @@ import 'server-only';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { dataPorExtenso, diaDaSemanaEDia, isPday, nomeDoMes } from '@/lib/date';
-import { siteUrl } from '@/lib/site-url';
+import { urlPublica } from '@/lib/site-url';
+import { comArtigo } from '@/lib/wards';
 import type { Email } from '@/lib/server/mailer';
 
 export type AlaEmail = { nome: string; slug: string };
@@ -27,7 +28,6 @@ type Conteudo = {
     pararDeReceber: boolean;
 };
 
-const SITE_NO_AR = 'https://lunchsud.vercel.app';
 const MODELO = path.join(process.cwd(), 'src', 'lib', 'server', 'email', 'aviso.html');
 const PARAR = 'Para parar de receber este aviso, desligue-o no painel, em Notificações.';
 
@@ -39,7 +39,7 @@ function lerModelo() {
 }
 
 export function urlDoSite(caminho: string) {
-    return `${siteUrl() || SITE_NO_AR}${caminho}`;
+    return `${urlPublica()}${caminho}`;
 }
 
 function escapar(texto: string) {
@@ -145,7 +145,7 @@ export function emailDiaSemAlmoco(p: { para: string; ala: AlaEmail; data: string
         previa: `${quando}, ainda não tem ninguém para dar o almoço aos missionários.`,
         titulo: 'Depois de amanhã ainda não tem almoço',
         paragrafos: [
-            `${quando}, ainda não tem ninguém para dar o almoço aos missionários na ${p.ala.nome}.`,
+            `${quando}, ainda não tem ninguém para dar o almoço aos missionários ${comArtigo(p.ala.nome, 'em')}.`,
             'Ainda dá tempo de alguém agendar pelo calendário da ala.',
         ],
         pararDeReceber: true,
@@ -158,7 +158,7 @@ export function emailSemana(p: { para: string; ala: AlaEmail; dias: { data: stri
         assunto: `Almoços desta semana — ${p.ala.nome}`,
         previa: 'Os almoços dos missionários de terça a domingo.',
         titulo: 'Almoços desta semana',
-        paragrafos: [`Estes são os almoços dos missionários da ${p.ala.nome}, de terça a domingo:`],
+        paragrafos: [`Estes são os almoços dos missionários ${comArtigo(p.ala.nome, 'de')}, de terça a domingo:`],
         lista: { titulo: '', itens: p.dias.map(d => linhaDoDia(d.data, d.almoco)) },
         pararDeReceber: true,
     });
@@ -180,7 +180,7 @@ export function emailProximoMes(p: { para: string; ala: AlaEmail; mes: string; a
         previa: resumo,
         titulo: `Almoços de ${mes}`,
         paragrafos: [
-            `Os membros da ${p.ala.nome} já podem agendar os almoços de ${mes}.`,
+            `Os membros ${comArtigo(p.ala.nome, 'de')} já podem agendar os almoços de ${mes}.`,
             resumo,
         ],
         lista: { titulo: `Dias de ${mes}:`, itens },
@@ -194,10 +194,10 @@ export function emailPedidoAcesso(p: { para: string; ala: AlaEmail; solicitante:
     return montar({
         para: p.para,
         assunto: `${quem} pediu para entrar no painel — ${p.ala.nome}`,
-        previa: `${quem} pediu para usar o painel da ${p.ala.nome}.`,
+        previa: `${quem} pediu para usar o painel ${comArtigo(p.ala.nome, 'de')}.`,
         titulo: 'Pedido para entrar no painel',
         paragrafos: [
-            `${comEmail} criou uma conta de líder e pediu para usar o painel da ${p.ala.nome}.`,
+            `${comEmail} criou uma conta de líder e pediu para usar o painel ${comArtigo(p.ala.nome, 'de')}.`,
             'Para aceitar, abra o painel e toque em "Aprovar", na parte Usuários.',
         ],
         botao: { texto: 'Abrir o painel', url: urlDoSite('/dashboard') },
@@ -215,10 +215,10 @@ export function emailPedidoDeAla(p: {
     return montar({
         para: p.para,
         assunto: `Pedido de nova ala — ${p.ala.nome}`,
-        previa: `${quem} pediu para usar o calendário com a ${p.ala.nome}.`,
+        previa: `${quem} pediu para usar o calendário com ${comArtigo(p.ala.nome, 'o')}.`,
         titulo: 'Pedido de nova ala',
         paragrafos: [
-            `${comEmail} pediu para usar o calendário com a ${p.ala.nome}, de ${p.ala.cidade} (${p.ala.estado}).`,
+            `${comEmail} pediu para usar o calendário com ${comArtigo(p.ala.nome, 'o')}, de ${p.ala.cidade} (${p.ala.estado}).`,
             'A ala só aparece no site depois que for aprovada. Para ver o pedido, abra o painel e toque no botão dourado, no canto da tela.',
         ],
         botao: { texto: 'Abrir o painel', url: urlDoSite('/dashboard') },
@@ -230,10 +230,10 @@ export function emailAcessoAprovado(p: { para: string; ala: AlaEmail }) {
     return montar({
         para: p.para,
         assunto: `Pedido aprovado — ${p.ala.nome}`,
-        previa: `O pedido para usar o painel da ${p.ala.nome} foi aprovado.`,
+        previa: `O pedido para usar o painel ${comArtigo(p.ala.nome, 'de')} foi aprovado.`,
         titulo: 'Pedido aprovado',
         paragrafos: [
-            `O seu pedido para usar o painel da ${p.ala.nome} foi aprovado.`,
+            `O seu pedido para usar o painel ${comArtigo(p.ala.nome, 'de')} foi aprovado.`,
             'Toque no botão abaixo para entrar.',
         ],
         botao: { texto: 'Entrar no painel', url: urlDoSite('/dashboard') },

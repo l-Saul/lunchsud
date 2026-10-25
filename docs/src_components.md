@@ -248,7 +248,7 @@ o `/acesso` (escolhe a ala e depois "Pedir acesso").
     `AccountFields modo="criar"` (conta nova);
   - com `contaLogada` (`{ nome, email, ala }`, alguém logado): "Quem vai cuidar
     do calendário. Pode ser a sua conta ou uma conta nova." e um `ChoiceGroup`
-    **"Minha conta"** (padrão) / **"Conta nova"** (rótulos curtos: "Usar a minha conta" quebrava a palavra no meio no cartão estreito do `/acesso`). Com a própria
+    **"Minha conta"** (padrão) / **"Conta nova"** (rótulos curtos: o rótulo mais longo de antes quebrava a palavra no meio no cartão estreito do `/acesso`). Com a própria
     conta: "Você entrou como **Rita** (rita@…). O pedido vai com esta conta." e,
     **só se ela tiver ala**, o aviso rosa-claro "Atenção: ao enviar, você perde
     o acesso à **Ala X**. Para manter, escolha "Conta nova"." Sem ala, sem

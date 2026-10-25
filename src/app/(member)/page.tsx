@@ -36,6 +36,11 @@ const fetcher = async (url: string): Promise<Ala[]> => {
 
 const semInscricao = () => () => {}
 
+const BOTAO_CONTINUAR =
+    'relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-2xl bg-secondary px-6 py-5 ' +
+    'text-left text-white shadow-md transition duration-100 hover:opacity-90 hover:shadow-xl ' +
+    'enabled:active:scale-[0.98] cursor-pointer disabled:cursor-default'
+
 export default function IndexPage() {
     const { data: alas, error, isLoading } = useSWR<Ala[]>('/api/alas', fetcher)
     const [loadingSlug, setLoadingSlug] = useState<string | null>(null)
@@ -79,7 +84,7 @@ export default function IndexPage() {
                                     disabled={!!loadingSlug}
                                     aria-busy={loadingSlug === lembrada.slug}
                                     onClick={() => abrir(lembrada.slug)}
-                                    className="relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-2xl bg-secondary px-6 py-5 text-left text-white shadow-md transition duration-100 hover:opacity-90 hover:shadow-xl enabled:active:scale-[0.98] cursor-pointer disabled:cursor-default"
+                                    className={BOTAO_CONTINUAR}
                                 >
                                     <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1.5 bg-linear-to-b from-accent via-gold to-accent" />
                                     <span className="flex min-w-0 flex-col">

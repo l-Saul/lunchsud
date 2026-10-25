@@ -8,6 +8,10 @@ import { useEffect, useRef } from 'react'
 
 export type Aviso = { tipo: 'info' | 'sucesso' | 'erro'; conteudo: React.ReactNode }
 
+const CAIXA =
+    'pointer-events-auto mx-auto flex max-w-xl animate-aparecer items-start gap-3 rounded-2xl border-l-4 ' +
+    'bg-background p-4 shadow-2xl ring-1 ring-primary/10'
+
 const ICONE = {
     info: <path d="M12 16v-5M12 8h.01" />,
     sucesso: <path d="m8 12.5 3 3 5-6.5" />,
@@ -37,9 +41,7 @@ export function NoticeBar({ aviso, onClose }: { aviso: Aviso | null; onClose?: (
         <div className="pointer-events-none fixed inset-x-0 top-0 z-70 px-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
             <div
                 ref={caixa}
-                className={aviso
-                    ? `pointer-events-auto mx-auto flex max-w-xl animate-aparecer items-start gap-3 rounded-2xl border-l-4 bg-background p-4 shadow-2xl ring-1 ring-primary/10 ${erro ? 'border-accent' : 'border-secondary'}`
-                    : ''}
+                className={aviso ? `${CAIXA} ${erro ? 'border-accent' : 'border-secondary'}` : ''}
             >
                 <div role="status" aria-live="polite" className="flex min-w-0 flex-1 items-start gap-3">
                     {aviso && (

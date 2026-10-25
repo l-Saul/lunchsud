@@ -6,6 +6,7 @@
 import type { Metadata, Viewport } from "next"
 import { Source_Sans_3, Source_Serif_4 } from "next/font/google"
 import { Footer } from "@/components/Footer"
+import { urlPublica } from "@/lib/site-url"
 import "./globals.css"
 
 const fontSans = Source_Sans_3({
@@ -20,21 +21,25 @@ const fontSerif = Source_Serif_4({
     display: "swap",
 })
 
+const DESCRICAO =
+    "Calendário simples para alas e ramos organizarem o almoço dos missionários. " +
+    "A presidência pede o calendário da ala, e as irmãs agendam pelo link, sem precisar criar conta."
+
 export const metadata: Metadata = {
-    metadataBase: new URL("https://lunchsud.vercel.app"),
+    metadataBase: new URL(urlPublica()),
     applicationName: "Almoço dos Missionários",
     title: "Almoço dos Missionários",
-    description:
-        "Agende um almoço para os missionários da sua ala. Escolha um dia disponível no calendário, de forma simples e rápida.",
+    description: DESCRICAO,
     keywords: [
-        "almoço",
-        "missionários",
-        "agendamento",
+        "almoço dos missionários",
+        "calendário de almoços",
+        "agendar almoço",
         "ala",
-        "Igreja de Jesus Cristo dos Santos dos Últimos Dias",
+        "ramo",
+        "Sociedade de Socorro",
     ],
-    authors: [{ name: "LunchSud" }],
-    creator: "LunchSud",
+    authors: [{ name: "Luis Henrique Engel Saul", url: "https://luishsaul.com.br" }],
+    creator: "Luis Henrique Engel Saul",
     manifest: "/manifest.webmanifest",
     appleWebApp: {
         capable: true,
@@ -44,23 +49,23 @@ export const metadata: Metadata = {
     formatDetection: {
         telephone: false,
     },
+    robots: { index: true, follow: true },
     openGraph: {
         type: "website",
         locale: "pt_BR",
         siteName: "Almoço dos Missionários",
         title: "Almoço dos Missionários",
-        description:
-            "Agende um almoço para os missionários da sua ala em poucos toques.",
+        description: DESCRICAO,
         url: "/",
-        images: [
-            {
-                url: "/lunchsud512x512.png",
-                width: 512,
-                height: 512,
-                alt: "Almoço dos Missionários",
-            },
-        ],
     },
+    twitter: {
+        card: "summary_large_image",
+        title: "Almoço dos Missionários",
+        description: DESCRICAO,
+    },
+    ...(process.env.GOOGLE_SITE_VERIFICATION
+        ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
+        : {}),
     icons: {
         icon: [
             { url: "/lunchsud32x32.png", sizes: "32x32", type: "image/png" },

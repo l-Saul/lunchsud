@@ -10,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
         name: "Almoço dos Missionários",
         short_name: "Almoço",
         description:
-            "Agende um almoço para os missionários da sua ala, de forma simples e rápida.",
+            "Calendário de almoços dos missionários para alas e ramos. As irmãs agendam pelo link da ala.",
         lang: "pt-BR",
         start_url: "/",
         display: "standalone",

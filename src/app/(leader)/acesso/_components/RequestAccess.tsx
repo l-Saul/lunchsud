@@ -12,6 +12,12 @@ import { ErrorMessage } from '@/components/ErrorMessage';
 import { botao } from '@/components/button-classes';
 import { WardFilter } from '@/components/WardFilter';
 import { WardForm } from '@/components/WardForm';
+import { artigo } from '@/lib/wards';
+
+const BOTAO_VOLTAR =
+    'inline-flex min-h-12 items-center gap-2 self-start rounded-xl bg-accent-soft px-4 py-2 text-left text-base ' +
+    'font-semibold text-accent ring-1 ring-accent/25 transition duration-100 hover:bg-accent/15 active:scale-[0.98] ' +
+    'cursor-pointer';
 
 type Ala = { id: number; nome: string; estado: string; cidade: string };
 
@@ -78,13 +84,13 @@ export default function RequestAccess({
                     <h2 className="text-xl font-semibold text-text">Quase lá, {nome}!</h2>
                     {alaEsperando ? (
                         <p className="text-base text-muted">
-                            O pedido da <strong className="text-text">{pendenteEm}</strong> ainda está
+                            O pedido {artigo(pendenteEm, 'de')} <strong className="text-text">{pendenteEm}</strong> ainda está
                             esperando aprovação. Depois que a ala for aprovada, o seu acesso ao painel
                             também é aprovado. Você recebe um e-mail quando tudo estiver pronto.
                         </p>
                     ) : (
                         <p className="text-base text-muted">
-                            Seu acesso à <strong className="text-text">{pendenteEm}</strong> está
+                            Seu acesso {artigo(pendenteEm, 'a')} <strong className="text-text">{pendenteEm}</strong> está
                             aguardando a aprovação de um responsável da ala. Você recebe um e-mail
                             quando for aprovado.
                         </p>
@@ -104,11 +110,11 @@ export default function RequestAccess({
                     <h2 className="text-xl font-semibold text-text">Olá, {nome}!</h2>
 
                     {pedindoAla ? (
-                        <div className="flex w-full animate-aparecer flex-col gap-5 text-left">
+                        <div className="flex w-full animate-aparecer flex-col gap-7 text-left">
                             <button
                                 type="button"
                                 onClick={() => { setPedindoAla(false); setEnviadoPara(null); }}
-                                className="inline-flex min-h-12 items-center gap-2 self-start rounded-xl bg-accent-soft px-4 py-2 text-left text-base font-semibold text-accent ring-1 ring-accent/25 transition duration-100 hover:bg-accent/15 active:scale-[0.98] cursor-pointer"
+                                className={BOTAO_VOLTAR}
                             >
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
                                     <path d="m15 18-6-6 6-6" />
@@ -117,7 +123,7 @@ export default function RequestAccess({
                             </button>
                             <div>
                                 <h3 className="text-lg font-semibold text-text">Pedir uma ala nova</h3>
-                                <p className="mt-1 text-base text-muted">
+                                <p className="mt-1.5 text-base text-muted">
                                     Quando o pedido for aprovado, a ala aparece no site e chega um e-mail.
                                 </p>
                             </div>

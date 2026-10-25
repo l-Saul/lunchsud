@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { NoticeBar, type Aviso } from '@/components/NoticeBar';
 import { siteUrl } from '@/lib/site-url';
+import { DESCRICAO_DA_ALA, tituloDaAla } from '@/lib/share-texts';
 
 type Props = { slug: string; nomeAla: string };
 
@@ -63,8 +64,8 @@ export function ShareLinkButtons({ slug, nomeAla }: Props) {
 
     async function compartilhar() {
         const url = `${siteUrl()}/${slug}`;
-        const titulo = `Calendário de almoços da ${nomeAla}`;
-        const texto = 'Agende seu almoço para nossos missionários ❤️';
+        const titulo = tituloDaAla(nomeAla);
+        const texto = DESCRICAO_DA_ALA;
         if (typeof navigator.share === 'function') {
             try {
                 await navigator.share({ title: titulo, text: texto, url });

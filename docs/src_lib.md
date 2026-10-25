@@ -52,8 +52,9 @@ confirmação do `BookingModal`). Sem dependência de servidor: os links do Goog
 do Outlook são usados no navegador e o `.ics` na rota.
 
 - Evento de **dia inteiro** ("Almoço dos missionários"), com a descrição
-  "Almoço dos missionários da \<ala\>. Precisa desmarcar? Fale com a liderança
-  da ala." (decisão do dono: dia inteiro, porque o horário muda de casa para casa).
+  "Almoço dos missionários da \<ala\>. Precisa desmarcar? Fale com a
+  liderança." (com `comArtigo`: "do Ramo X"; decisão do dono: dia inteiro,
+  porque o horário muda de casa para casa).
 - `linkGoogleAgenda(dateISO, nomeAla)`: URL do Google Agenda
   (`action=TEMPLATE`, `dates=AAAAMMDD/AAAAMMDD` com o fim **exclusivo**, o dia
   seguinte). O link não aceita lembrete: vale o padrão da pessoa.
@@ -164,6 +165,23 @@ Nome de exibição, antes de gravar. `tipo` é `'ala'` ou `'ramo'` (`TipoUnidade
   ("vila nova", `'ramo'`) → "Ramo Vila Nova", ("Ala Centro", `'ramo'`) →
   "Ramo Centro". Os acentos só existem se a pessoa digitar.
 
+### `ehRamo(nome)`, `artigo(nome, forma)` e `comArtigo(nome, forma)`
+
+Português certo para ala (feminino) e ramo (masculino), pelo começo do nome:
+
+| `forma` | Ala | Ramo | Uso |
+|---|---|---|---|
+| `de` | da | do | "Calendário de almoços **da** Ala X" / "**do** Ramo X" |
+| `a` | à | ao | "Seu acesso **à** Ala X" / "**ao** Ramo X" |
+| `em` | na | no | "…aos missionários **na** Ala X" / "**no** Ramo X" |
+| `o` | a | o | "pediu para usar o calendário com **a** Ala X" / "com **o** Ramo X" |
+
+`comArtigo` devolve "da Ala X"; `artigo` só o artigo (para quando o nome vai em
+negrito separado). **Todo texto que junta preposição e nome de ala usa isso**
+(telas, e-mails, agenda, compartilhar, erros): escrever "da ${nome}" à mão
+deixa "da Ramo X". Nas mensagens de ala repetida, `ehRamo` também acerta a
+concordância ("já foi pedida/pedido", "por ela/por ele").
+
 ### `normalizarCidade(cidade)`
 
 O mesmo nome próprio: "  são josé   dos pinhais " → "São José dos Pinhais".
@@ -225,6 +243,11 @@ de senha, que precisa apontar para o site no ar e não para o localhost.
 2. Sem ela, no navegador: `window.location.origin` (bom o bastante em desenvolvimento).
 3. No servidor sem a variável: `''`.
 
+`urlPublica()` = `siteUrl()` ou, sem nada, `SITE_NO_AR`
+(`https://lunchsud.vercel.app`). É o endereço usado onde **sempre** precisa de
+um site completo: `metadataBase`, `robots.txt`, `sitemap.xml` e os links dos
+e-mails (`urlDoSite`).
+
 ---
 
 ## `server/public-ward.ts`: dados da página pública
@@ -255,6 +278,41 @@ service-role, no servidor.
   sem esse filtro a lista crescia com todo o histórico.
 - Seleciona `data::text` para manter `YYYY-MM-DD` sem fuso. Ordenado por data.
 - **Nunca o telefone.** `null` = erro no banco.
+
+---
+
+## `share-texts.ts`: textos do link da ala
+
+Os textos de quando o link de uma ala é compartilhado, num lugar só: a prévia
+do link (metadata da página da ala) e o botão "Compartilhar" do painel usam os
+mesmos.
+
+- `tituloDaAla(nome)`: "Calendário de almoços da Ala X" (com `comArtigo`: "do
+  Ramo X").
+- `DESCRICAO_DA_ALA`: "Escolha um dia livre e agende o almoço dos
+  missionários. Não precisa criar conta." (escrito para as irmãs; sem emoji).
+
+---
+
+## `server/og-image.tsx`: imagens de prévia do link
+
+`imagemDePrevia({ titulo, acima?, abaixo? })` → `ImageResponse` (`next/og`) de
+1200 × 630, ~60–75 KB (o WhatsApp recusa imagem grande). Usada pela prévia do
+site (`src/app/opengraph-image.tsx`) e pela da ala
+(`src/app/(member)/[slug]/opengraph-image.tsx`).
+
+- Desenho: o mesmo fundo da `HeaderBand` (degradê marinho com brilho dourado e
+  rosa, copiado do `bg-band` do `globals.css`: mudou um, mude o outro); `acima`
+  pequeno em Source Sans branco 85%; o **título** grande em serifa branca (100px;
+  72px com mais de 26 caracteres; nome longo quebra a linha com `wordBreak:
+  'break-word'`, conferido com 80 caracteres sem espaço); a flor (`Flower`)
+  entre as linhas douradas; `abaixo` em Source Sans.
+- **Fontes** em `src/lib/server/og/` (Source Serif 4 e Source Sans 3 Semibold,
+  TTF, e a licença `OFL.md`): o `ImageResponse` não lê woff2 nem as fontes do
+  `next/font`. Lidas com `readFile(path.join(process.cwd(), …))`; o Next inclui
+  os arquivos no pacote das duas rotas sozinho (conferido no `.nft.json` do
+  build). **Não recorte nem altere os TTF:** a licença (SIL OFL) reserva o nome
+  "Source" para a fonte original.
 
 ---
 
@@ -366,8 +424,8 @@ verdade (nada de `"true"`). A ala vem à parte, por `parseAlaId`.
 **fuso sai dela**; cidade 2–80 em nome próprio; **slug sempre gerado**
 (`gerarSlug(uf, cidade, nome)`), nunca vem do cliente. Sem país e sem endereço.
 As mensagens ("Digite o nome da ala." / "Digite o nome do ramo.", "Escolha o
-estado.", "Digite a cidade.", "Não foi possível gerar um link válido a partir
-desse nome") são devolvidas pela rota e aparecem na tela.
+estado.", "Digite a cidade.", "Escreva o nome e a cidade com letras ou
+números.") são devolvidas pela rota e aparecem na tela.
 
 `parsePedidoAla`: a ala pelo `parseNovaAla` e o líder responsável (nome 2–80 →
 "Digite o nome do líder responsável."; e-mail → "Digite um e-mail válido.";
@@ -493,8 +551,8 @@ O arquivo é lido do disco na primeira vez
 - inclui o arquivo em todas as rotas `/api/**` (`outputFileTracingIncludes`),
   para ele ir junto no pacote das funções na Vercel.
 
-Ele já morou em `messages/email/`, mas essa pasta é de planos e é limpa à mão:
-o modelo foi apagado duas vezes.
+Ele já morou numa pasta de planos, que é limpa à mão: o modelo foi apagado duas
+vezes. Por isso fica junto do código.
 
 ### `server/email-templates.ts`
 

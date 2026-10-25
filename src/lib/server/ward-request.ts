@@ -5,7 +5,7 @@
 
 import 'server-only';
 import { supabaseServer } from '@/lib/supabase/service-role';
-import { gerarSlug } from '@/lib/wards';
+import { comArtigo, ehRamo, gerarSlug } from '@/lib/wards';
 import type { NovaAlaInput, PedidoAlaInput } from '@/lib/server/validation';
 
 export const LIMITE_PEDIDOS_PENDENTES = 10;
@@ -15,6 +15,17 @@ export type ResultadoPedido =
     | { ok: false; status: number; erro: string };
 
 const falha = (status: number, erro: string): ResultadoPedido => ({ ok: false, status, erro });
+
+function aAla(ala: NovaAlaInput) {
+    const texto = `${comArtigo(ala.nome, 'o')}, de ${ala.cidade}`;
+    return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+export const jaUsa = (ala: NovaAlaInput) =>
+    `${aAla(ala)}, já usa o calendário. Procure ${ehRamo(ala.nome) ? 'por ele' : 'por ela'} na página inicial.`;
+
+export const jaPedida = (ala: NovaAlaInput) =>
+    `${aAla(ala)}, já foi ${ehRamo(ala.nome) ? 'pedido' : 'pedida'} e está esperando aprovação.`;
 
 export async function buscarAlaIgual(ala: NovaAlaInput): Promise<{ status: string } | null> {
     const [{ data: mesmoLink }, { data: doEstado }] = await Promise.all([
@@ -64,9 +75,7 @@ export async function pedirAla({ ala, lider }: PedidoAlaInput, userIdLogado?: st
 
     const existente = await buscarAlaIgual(ala);
     if (existente) {
-        return existente.status === 'ativa'
-            ? falha(409, `A ${ala.nome}, de ${ala.cidade}, já usa o calendário. Procure por ela na página inicial.`)
-            : falha(409, `A ${ala.nome}, de ${ala.cidade}, já foi pedida e está esperando aprovação.`);
+        return existente.status === 'ativa' ? falha(409, jaUsa(ala)) : falha(409, jaPedida(ala));
     }
 
     let conta: { userId: string; nova: boolean };
@@ -100,7 +109,7 @@ export async function pedirAla({ ala, lider }: PedidoAlaInput, userIdLogado?: st
     if (error || !nova) {
         await desfazerConta();
         return error?.code === '23505'
-            ? falha(409, `A ${ala.nome}, de ${ala.cidade}, já foi pedida e está esperando aprovação.`)
+            ? falha(409, jaPedida(ala))
             : falha(500, 'Não foi possível enviar o pedido. Tente de novo.');
     }
 

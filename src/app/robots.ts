@@ -4,14 +4,17 @@
  */
 
 import type { MetadataRoute } from "next";
+import { urlPublica } from "@/lib/site-url";
 
 export default function robots(): MetadataRoute.Robots {
+    const site = urlPublica();
     return {
         rules: {
             userAgent: "*",
             allow: "/",
-            disallow: ["/admin", "/dashboard", "/api/"],
+            disallow: ["/admin", "/acesso", "/dashboard", "/redefinir-senha", "/auth/", "/api/"],
         },
-        host: "https://lunchsud.vercel.app",
+        sitemap: `${site}/sitemap.xml`,
+        host: site,
     };
 }

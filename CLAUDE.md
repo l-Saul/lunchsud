@@ -32,7 +32,7 @@ contraste, poucos passos, sem aglomerar informação.
 | `src/app/(leader)/<rota>/**` (`admin`, `acesso`, `redefinir-senha`, `dashboard`) | `docs/routes_<rota>.md` |
 | `src/app/auth/confirmar/**` | `docs/routes_auth-confirmar.md` |
 | `src/app/api/**` | `docs/routes_api.md` |
-| `src/app/` raiz (`layout`, `globals.css`, `not-found`, `manifest`, `robots`), `src/proxy.ts`, `next.config.ts`, `eslint.config.mjs`, `postcss.config.mjs` | `docs/src_app.md` |
+| `src/app/` raiz (`layout`, `globals.css`, `not-found`, `manifest`, `robots`, `sitemap`, `opengraph-image`), `src/proxy.ts`, `next.config.ts`, `eslint.config.mjs`, `postcss.config.mjs` | `docs/src_app.md` |
 | `src/components/**` | `docs/src_components.md` |
 | `src/hooks/**` | `docs/src_hooks.md` |
 | `src/lib/**` | `docs/src_lib.md` |
@@ -41,11 +41,11 @@ contraste, poucos passos, sem aglomerar informação.
 Sem cabeçalho, de propósito: JSON (`vercel.json`, `tsconfig.json`,
 `package.json`), `next-env.d.ts` (gerado pelo Next), os templates de e-mail em
 `supabase/email/` e `src/lib/server/email/aviso.html` (o HTML vai dentro de cada
-e-mail), as fontes da imagem de prévia do link em `src/app/(member)/[slug]/_fonts/`
-(TTF e a licença, sem alteração) e as migrations temporárias. `messages/` guarda só planos ainda não
-implementados (ex.: `design.md`), que não são `docs/` e podem ser apagados à
-vontade: nada do site depende dessa pasta. Implementou, documente em `docs/` e
-atualize ou remova o plano.
+e-mail), as fontes das imagens de prévia do link em `src/lib/server/og/` (TTF e
+a licença, sem alteração) e as migrations temporárias. Plano ainda não
+implementado, se houver, vai em `messages/` (hoje não há): não é `docs/` e pode
+ser apagado à vontade, nada do site depende dele. Implementou, documente em
+`docs/` e remova o plano.
 
 Regras:
 
@@ -76,7 +76,7 @@ Regras:
 6. Antes de concluir, confira:
    ```bash
    # arquivos de código sem o cabeçalho
-   grep -rL --exclude="*.html" --exclude-dir=_fonts "leia CLAUDE.md" src next.config.ts eslint.config.mjs postcss.config.mjs supabase/schema.sql
+   grep -rL --exclude="*.html" --exclude-dir=og "leia CLAUDE.md" src next.config.ts eslint.config.mjs postcss.config.mjs supabase/schema.sql
    # cabeçalhos que apontam para doc inexistente
    grep -rhoE "docs/[a-z_-]+\.md" src *.ts *.mjs supabase/schema.sql | sort -u | while read d; do [ -f "$d" ] || echo "falta $d"; done
    # arquivos sem seção no doc do seu cabeçalho
@@ -167,6 +167,9 @@ de data/fuso/P-day em componentes. Detalhes: [`docs/src_lib.md`](docs/src_lib.md
   o que 2+ páginas usam. Código só de servidor vai em `src/lib/server/` (tem
   `import 'server-only'`: se o navegador importar, o build falha). `(member)` e
   `(leader)` são grupos de rota: não aparecem na URL.
+- **Ala e ramo no texto:** todo texto que junta preposição e nome de ala usa
+  `comArtigo`/`artigo` de `src/lib/wards.ts` ("da Ala X", "do Ramo X", "à Ala
+  X", "ao Ramo X"). Escrever "da ${nome}" à mão deixa "da Ramo X".
 - **Texto para o público (tela e e-mails):** linguagem simples e curta, uma ideia
   por frase, sem termos técnicos ("acesso", "card", "notificação push",
   "usuário", "owner"). Diga **quem** fez **o quê**, **quando** e o que fazer.
@@ -226,6 +229,23 @@ de data/fuso/P-day em componentes. Detalhes: [`docs/src_lib.md`](docs/src_lib.md
   **Nunca** anime a entrada de conteúdo que vem do servidor (deixa a página em
   branco até o JS/CSS rodar), nem deslize, escalone listas, gire em 3D ou dê
   "pulinho" no hover. Movimento curto (≤250 ms) e calmo.
+
+## Robôs, Google e prévia do link
+
+Cada parte do site tem um público, e os robôs seguem isso (detalhes em
+[`docs/src_app.md`](docs/src_app.md)):
+
+- **Home (`/`)**: para quem quer achar ou pedir uma ala. **Indexada**; é a única
+  página do `sitemap.xml`.
+- **Página da ala (`/<slug>`)**: para as irmãs que agendam, pelo link do
+  WhatsApp. **Nunca no Google** (`noindex, nofollow`): mostra quem recebe os
+  missionários e em que dia. Os robôs **podem ler**, senão a prévia do link no
+  WhatsApp não aparece; não a ponha no `Disallow`.
+- **Área da liderança** (`/admin`, `/acesso`, `/dashboard`, `/redefinir-senha`,
+  `/auth/`) e `/api/`: **proibidas** no `robots.txt` e com `noindex`.
+- Prévia do link: imagem pelo `imagemDePrevia` (`src/lib/server/og-image.tsx`),
+  textos da ala por `src/lib/share-texts.ts` (os mesmos no botão "Compartilhar"
+  do painel). Endereço do site sempre por `urlPublica()`.
 
 ## Segurança (não enfraquecer)
 

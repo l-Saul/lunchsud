@@ -4,12 +4,13 @@
  */
 
 import { somarDias } from '@/lib/date';
+import { comArtigo } from '@/lib/wards';
 
 const TITULO = 'Almoço dos missionários';
 const LEMBRETE = 'Amanhã é o almoço dos missionários';
 
 function descricao(nomeAla: string) {
-    return `Almoço dos missionários da ${nomeAla}. Precisa desmarcar? Fale com a liderança da ala.`;
+    return `Almoço dos missionários ${comArtigo(nomeAla, 'de')}. Precisa desmarcar? Fale com a liderança.`;
 }
 
 function semTracos(dateISO: string) {

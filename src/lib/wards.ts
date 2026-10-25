@@ -27,6 +27,26 @@ function nomeProprio(texto: string): string {
         .join(' ');
 }
 
+const ARTIGOS = {
+    de: ['da', 'do'],
+    a: ['à', 'ao'],
+    em: ['na', 'no'],
+    o: ['a', 'o'],
+} as const;
+
+export function ehRamo(nome: string): boolean {
+    return /^ramo(\s|$)/i.test(nome.trim());
+}
+
+export function artigo(nome: string, forma: keyof typeof ARTIGOS): string {
+    const [feminino, masculino] = ARTIGOS[forma];
+    return ehRamo(nome) ? masculino : feminino;
+}
+
+export function comArtigo(nome: string, forma: keyof typeof ARTIGOS): string {
+    return `${artigo(nome, forma)} ${nome}`;
+}
+
 export function nomeSemTipo(nome: string): string {
     return nomeProprio(nome).replace(/^(ala|ramo)(\s+|$)/i, '');
 }

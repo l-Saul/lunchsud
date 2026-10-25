@@ -15,7 +15,6 @@ página parte disso.
 src/app/(member)/[slug]/
   page.tsx                    Server Component: busca a ala e os dias ocupados; metadata
   opengraph-image.tsx         imagem da prévia do link (WhatsApp): nome da ala + flor
-  _fonts/                     Source Serif 4 e Source Sans 3 (TTF, sem alteração) + OFL.md
   error.tsx                   tela de erro ("Tentar de novo")
   _components/
     WardBooking.tsx           estado da página, ao vivo, avisos; abre o modal
@@ -51,11 +50,15 @@ Busca a ala pelo slug (`buscarAlaPorSlug`) e monta:
 
 - **Título da aba** = só o nome da ala (`title: ala.nome`): aba curta, que não
   estoura (ver "Títulos da aba" em [src_app.md](src_app.md)).
-- **Prévia de compartilhamento** (WhatsApp etc.): título
-  `Calendário de almoços da <ala>` e descrição
-  `Agende seu almoço para nossos missionários ❤️`. Quem recebe já sabe de qual
-  ala é e o que fazer. A **imagem** vem do `opengraph-image.tsx` (o Next põe
-  `og:image` e `twitter:image` sozinho); Twitter com
+- **Fora do Google:** `robots: noindex, nofollow` (a página mostra o nome de
+  quem recebe os missionários e o dia; ver `robots.ts` em
+  [src_app.md](src_app.md)). Os robôs podem ler, para a prévia do link funcionar.
+- **Prévia de compartilhamento** (WhatsApp etc.), com os textos de
+  `src/lib/share-texts.ts` (os mesmos do botão "Compartilhar" do painel):
+  título `tituloDaAla` ("Calendário de almoços da Ala X" / "…do Ramo X") e
+  descrição `DESCRICAO_DA_ALA` ("Escolha um dia livre e agende o almoço dos
+  missionários. Não precisa criar conta."). `og:url` = `/<slug>`, `siteName`,
+  `pt_BR`. A **imagem** vem do `opengraph-image.tsx`; Twitter com
   `card: 'summary_large_image'`.
 - Slug que não existe: título `Página não encontrada` (qualquer endereço de um
   nível cai aqui, não só ala digitada errado) e `robots: noindex, nofollow`.
@@ -76,12 +79,9 @@ reconhece que é da ala dela, não um link estranho).
   (`wordBreak: 'break-word'`: nome de 80 caracteres sem espaço não estoura;
   conferido).
 - Slug que não existe: a mesma imagem só com "Almoço dos Missionários" grande.
-- **Fontes:** o `ImageResponse` (`next/og`) não lê woff2 nem as fontes do
-  `next/font`; lê TTF. Os arquivos ficam em `_fonts/` (o `_` impede rota) e são
-  lidos com `readFile(path.join(process.cwd(), …))`; o Next inclui os arquivos
-  no pacote da função sozinho (conferido no `.nft.json` do build). **Não
-  recorte nem altere os TTF:** a licença (SIL OFL, `_fonts/OFL.md`, que vai
-  junto) reserva o nome "Source" para a fonte original.
+- O desenho e as fontes são do `imagemDePrevia` (`src/lib/server/og-image.tsx`,
+  o mesmo da prévia do site; ver [src_lib.md](src_lib.md)). Esta rota só busca
+  a ala e escolhe os textos.
 - Rota gerada: `/<slug>/opengraph-image-<hash>`; é pública (não passa pelo
   `proxy.ts`) e só lê o nome da ala (`buscarAlaPorSlug`, com `cache()`).
 

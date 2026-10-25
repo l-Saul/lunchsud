@@ -1,7 +1,8 @@
 # Estrutura global do app
 
 O que vale para todas as páginas: organização das rotas, layout raiz, tema e CSS
-global, 404, manifest, robots, `proxy.ts` e os arquivos de configuração.
+global, 404, manifest, robots, sitemap, imagem de prévia do site, `proxy.ts` e
+os arquivos de configuração.
 
 ## Organização das rotas
 
@@ -11,7 +12,8 @@ src/app/
   (leader)/          área do líder: admin, acesso, redefinir-senha, dashboard
   api/               rotas de API (URLs em português = contrato)
   auth/confirmar/    link dos e-mails do Supabase Auth
-  layout.tsx · globals.css · not-found.tsx · manifest.ts · robots.ts
+  layout.tsx · globals.css · not-found.tsx · manifest.ts · robots.ts · sitemap.ts
+  opengraph-image.tsx
 src/proxy.ts         renova a sessão nas rotas do líder
 ```
 
@@ -30,11 +32,23 @@ src/proxy.ts         renova a sessão nas rotas do líder
   `--font-source-sans` e `--font-source-serif` no `<html>`, usadas pelo tema.
   `display: swap`.
 - **Metadata padrão** do site:
-  - `metadataBase: https://lunchsud.vercel.app`; nome "Almoço dos Missionários";
+  - `metadataBase: urlPublica()` (`NEXT_PUBLIC_BASE_URL` ou
+    `https://lunchsud.vercel.app`); nome "Almoço dos Missionários";
   - título padrão "Almoço dos Missionários" (é o da home), **sem template**:
     cada página dá o seu título curto, sem o sufixo do site (ver "Títulos da
     aba" abaixo);
-  - descrição, palavras-chave, Open Graph (`pt_BR`, imagem `lunchsud512x512.png`);
+  - descrição (escrita para quem chega na home, em geral a liderança):
+    "Calendário simples para alas e ramos organizarem o almoço dos missionários.
+    A presidência pede o calendário da ala, e as irmãs agendam pelo link, sem
+    precisar criar conta.";
+  - palavras-chave sem o nome da Igreja (o site não é oficial) e autor/criador
+    "Luis Henrique Engel Saul";
+  - `robots: index, follow` (a home é a única página para o Google; ver
+    `robots.ts` e `sitemap.ts`);
+  - Open Graph (`pt_BR`, `siteName`, título, descrição) e Twitter
+    `summary_large_image`. A imagem vem do `opengraph-image.tsx` (abaixo);
+  - `verification.google` **só se** houver a variável `GOOGLE_SITE_VERIFICATION`
+    (código do Google Search Console);
   - ícones `lunchsud32x32.png`, `lunchsud512x512.png` e Apple `lunchsud180x180.png`;
   - `appleWebApp` (título "Almoço"), `manifest: /manifest.webmanifest`;
   - `formatDetection.telephone: false`: o iPhone não transforma números em link
@@ -201,15 +215,35 @@ Também é usado pelo `notFound()` da página da ala (slug inexistente).
 ## `manifest.ts`
 
 Web App Manifest (`/manifest.webmanifest`): nome "Almoço dos Missionários",
-nome curto "Almoço", `pt-BR`, `start_url: /`, `display: standalone`, fundo e
-tema `#003057`, ícones 512 e 1024.
+nome curto "Almoço", descrição "Calendário de almoços dos missionários para alas
+e ramos. As irmãs agendam pelo link da ala.", `pt-BR`, `start_url: /`,
+`display: standalone`, fundo e tema `#003057`, ícones 512 e 1024.
 
 ## `robots.ts`
 
-`/robots.txt`: permite tudo, menos `/admin`, `/dashboard` e `/api/` (áreas
-administrativas não devem ser indexadas). `host: https://lunchsud.vercel.app`.
-As demais páginas do líder (`/acesso`, `/redefinir-senha`) e a ala inexistente
-usam `robots: noindex` na própria metadata.
+`/robots.txt`. Cada parte do site tem um público, e os robôs seguem isso:
+
+| Parte | Para quem | Robôs |
+|---|---|---|
+| `/` (home) | quem quer achar ou pedir uma ala (em geral, a liderança) | **indexada** (está no `sitemap.xml`) |
+| `/<slug>` (página da ala) | as irmãs que agendam, pelo link do WhatsApp | **podem ler, mas não indexar** (`noindex, nofollow` na metadata): a página mostra quem recebe os missionários e em que dia; não deve aparecer no Google. Ler precisa ser permitido para a prévia do link (WhatsApp) funcionar |
+| `/admin`, `/acesso`, `/dashboard`, `/redefinir-senha`, `/auth/` | a liderança | **proibidas** no `robots.txt` (e `noindex` na metadata) |
+| `/api/` | o próprio site | **proibida** |
+
+`sitemap: <site>/sitemap.xml` e `host: <site>`, com `urlPublica()`.
+
+## `sitemap.ts`
+
+`/sitemap.xml` com **só a home** (`changefreq` mensal, prioridade 1). As
+páginas de ala ficam de fora de propósito (ver `robots.ts`).
+
+## `opengraph-image.tsx`
+
+A imagem de prévia do site (1200 × 630), usada pela home e por toda página que
+não tem a sua: "Almoço dos Missionários", a flor entre linhas douradas e
+"Calendário de almoços para alas e ramos", no fundo da faixa azul. Feita pelo
+`imagemDePrevia` de `src/lib/server/og-image.tsx` (o mesmo da imagem da ala;
+ver [src_lib.md](src_lib.md)). A página da ala tem a dela.
 
 ## `src/proxy.ts`
 

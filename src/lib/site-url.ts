@@ -9,3 +9,9 @@ export function siteUrl(): string {
     if (typeof window !== 'undefined') return window.location.origin;
     return '';
 }
+
+export const SITE_NO_AR = 'https://lunchsud.vercel.app';
+
+export function urlPublica(): string {
+    return siteUrl() || SITE_NO_AR;
+}

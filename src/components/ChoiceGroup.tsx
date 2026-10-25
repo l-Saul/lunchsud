@@ -4,6 +4,12 @@
  */
 'use client';
 
+const OPCAO =
+    'flex min-h-13 min-w-0 items-center justify-center gap-2 rounded-xl border-2 border-secondary px-3 py-2 ' +
+    'text-center text-lg font-semibold transition duration-100 active:scale-[0.98]';
+const OPCAO_ESCOLHIDA = 'bg-secondary text-white shadow-md cursor-default';
+const OPCAO_LIVRE = 'bg-white text-secondary hover:bg-secondary/10 cursor-pointer';
+
 type Props = {
     opcoes: { valor: string; rotulo: string }[];
     ativo: string | null;
@@ -26,11 +32,7 @@ export function ChoiceGroup({ opcoes, ativo, onChange, label, labelledBy }: Prop
                             onClick={() => {
                                 if (!escolhido) onChange(valor);
                             }}
-                            className={`flex min-h-13 min-w-0 items-center justify-center gap-2 rounded-xl border-2 border-secondary px-3 py-2 text-center text-lg font-semibold transition duration-100 active:scale-[0.98] ${
-                                escolhido
-                                    ? 'bg-secondary text-white shadow-md cursor-default'
-                                    : 'bg-white text-secondary hover:bg-secondary/10 cursor-pointer'
-                            }`}
+                            className={`${OPCAO} ${escolhido ? OPCAO_ESCOLHIDA : OPCAO_LIVRE}`}
                         >
                             {escolhido && (
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
