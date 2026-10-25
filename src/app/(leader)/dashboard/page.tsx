@@ -13,6 +13,7 @@ import { OpenCalendarButton } from './_components/OpenCalendarButton';
 import { ShareLinkButtons } from './_components/ShareLinkButtons';
 import { WardSwitcher } from './_components/WardSwitcher';
 import { BookingsCard } from './_components/BookingsCard';
+import MonthImageExport from './_components/month-image/MonthImageExport';
 import { HistoryCard, type MesHistorico } from './_components/HistoryCard';
 import { UsersCard, type Usuario } from './_components/UsersCard';
 import { NotificationsCard } from './_components/NotificationsCard';
@@ -111,33 +112,29 @@ export default async function DashboardPage() {
     return (
         <DashboardClientGuard>
             {alaId !== null && <DashboardRealtime alaId={alaId} />}
-            <HeaderBand className="sm:px-6">
-                <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 py-6 text-left sm:py-8">
-                    <div className="min-w-0">
-                        <h1 className="text-2xl font-semibold">
-                            Painel da ala
-                        </h1>
-                        <p className="wrap-anywhere text-base text-white/80">
-                            {ala?.nome ?? 'Selecione uma ala'}
-                            {ctx.isOwner && ' · owner'}
-                        </p>
-                    </div>
-                    <LogoutButton />
-                </div>
-            </HeaderBand>
+            <HeaderBand title="Painel da ala" />
 
             <main className="px-4 py-8 sm:px-6 sm:py-10">
                 <section className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+                    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-3xl bg-linear-to-r from-secondary to-primary px-4 py-4 text-white shadow-md [--focus-color:var(--color-gold)] sm:px-6">
+                        <p className="min-w-0 wrap-anywhere text-xl font-semibold">
+                            {ala?.nome ?? 'Selecione uma ala'}
+                        </p>
+                        <LogoutButton />
+                    </div>
+
                     {ctx.isOwner && alasParaTroca.length > 0 && (
                         <WardSwitcher alas={alasParaTroca} atualId={alaId} />
                     )}
 
                     {ala?.slug && (
-                        <div className="flex items-stretch gap-2 sm:gap-3">
+                        <div className="flex flex-wrap items-stretch gap-2 sm:gap-3">
                             <OpenCalendarButton slug={ala.slug} />
                             <ShareLinkButtons slug={ala.slug} nomeAla={ala.nome} />
                         </div>
                     )}
+
+                    <MonthImageExport meses={[mesAtual, mesSeguinte]} agendamentos={agendamentos} />
 
                     <BookingsCard mesAtual={mesAtual} mesSeguinte={mesSeguinte} agendamentos={agendamentos} />
 

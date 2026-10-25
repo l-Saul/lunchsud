@@ -5,12 +5,13 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import Link from 'next/link'
 import { MonthCalendar } from './MonthCalendar'
 import { BookingModal, type Agendado } from './BookingModal'
 import { useBookingsRealtime, type MudancaAgendamento } from '@/hooks/use-bookings-realtime'
-import { Flower } from '@/components/Flower'
 import { HeaderBand } from '@/components/HeaderBand'
 import { NoticeBar, type Aviso } from '@/components/NoticeBar'
+import { botao } from '@/components/button-classes'
 
 type DiaOcupado = {
     id: number
@@ -94,26 +95,7 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
 
     return (
         <>
-            <HeaderBand>
-                <span aria-hidden="true" className="pointer-events-none absolute left-4 top-5 opacity-25 sm:left-10">
-                    <Flower size={32} />
-                </span>
-                <span aria-hidden="true" className="pointer-events-none absolute right-5 top-12 opacity-20 sm:right-12">
-                    <Flower size={22} />
-                </span>
-
-                <div className="relative mx-auto flex max-w-2xl flex-col items-center gap-4 pt-9 pb-7">
-                    <h1 className="wrap-anywhere text-3xl font-bold drop-shadow-sm">
-                        {nomeAla}
-                    </h1>
-
-                    <div className="flex items-center gap-3" aria-hidden="true">
-                        <span className="h-px w-10 bg-linear-to-r from-transparent to-gold/70 sm:w-16" />
-                        <Flower size={26} />
-                        <span className="h-px w-10 bg-linear-to-l from-transparent to-gold/70 sm:w-16" />
-                    </div>
-                </div>
-            </HeaderBand>
+            <HeaderBand title={nomeAla} />
 
             <main className="flex justify-center text-text">
                 <div className="w-full max-w-2xl">
@@ -152,6 +134,23 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
                                     setDiaSelecionado(null)
                                 }}
                             />
+                        </div>
+
+                        <div className="mt-12 border-t border-primary/10 pt-12 sm:mt-16 sm:pt-14">
+                            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-2xl bg-background px-4 py-4 ring-1 ring-primary/10 sm:px-5">
+                                <div className="min-w-0 grow basis-56">
+                                    <p className="text-lg font-semibold text-text">Faz parte da presidência?</p>
+                                    <p className="mt-1 text-base text-muted">
+                                        Entre no painel da ala para ver quem agendou e organizar os almoços.
+                                    </p>
+                                </div>
+                                <Link
+                                    href="/admin"
+                                    className={`${botao('primario', 'normal')} shrink-0`}
+                                >
+                                    Entrar
+                                </Link>
+                            </div>
                         </div>
 
                         {diaSelecionado && (

@@ -4,11 +4,13 @@
  */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { normalizarTelefone } from '@/lib/phone';
 import { Spinner } from '@/components/Spinner';
-import { useScrollLock } from '@/hooks/use-scroll-lock';
+import { Modal } from '@/components/Modal';
+import { ErrorMessage } from '@/components/ErrorMessage';
+import { botao } from '@/components/button-classes';
 
 type Props = {
     id: number;
@@ -25,6 +27,9 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
     const router = useRouter();
     const [erroNome, setErroNome] = useState(false);
     const [erroTelefone, setErroTelefone] = useState(false);
+    const [erro, setErro] = useState('');
+    const nomeRef = useRef<HTMLInputElement>(null);
+    const telefoneRef = useRef<HTMLInputElement>(null);
 
     const [open, setOpen] = useState(false);
     const [form, setForm] = useState({ data, nome, telefone });
@@ -35,6 +40,7 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
     function fechar() {
         setOpen(false);
         setConfirmarRemocao(false);
+        setErro('');
     }
 
     async function handleSave() {
@@ -43,8 +49,10 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
 
         setErroNome(nomeInvalido);
         setErroTelefone(telefoneInvalido);
+        setErro('');
 
         if (nomeInvalido || telefoneInvalido) {
+            (nomeInvalido ? nomeRef : telefoneRef).current?.focus();
             return;
         }
 
@@ -54,6 +62,7 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
     async function enviar(tipo: 'salvar' | 'remover') {
         if (ocupado) return;
         setAcao(tipo);
+        setErro('');
         try {
             const res = await fetch(
                 tipo === 'salvar' ? '/api/agendamentos/update' : '/api/agendamentos/delete',
@@ -67,32 +76,25 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                 fechar();
                 router.refresh();
             } else {
-                alert(tipo === 'salvar' ? 'Erro ao atualizar' : 'Erro ao remover');
+                setErro(tipo === 'salvar'
+                    ? 'Não foi possível salvar. Confira se já não há almoço nesse dia e tente de novo.'
+                    : 'Não foi possível remover. Atualize a página e tente de novo.');
             }
         } catch {
-            alert('Sem conexão com a internet. Verifique e tente de novo.');
+            setErro('Sem conexão com a internet. Verifique a internet e tente de novo.');
         } finally {
             setAcao(null);
         }
     }
 
-    useScrollLock(open);
-
-    useEffect(() => {
-        if (!open) return;
-        const onKey = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') fechar();
-        };
-        window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
-    }, [open]);
+    const tituloId = `editar-${id}-titulo`;
 
     return (
         <>
             <button
                 onClick={() => setOpen(true)}
                 aria-label="Editar agendamento"
-                className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-secondary transition hover:bg-secondary/10 hover:scale-110 active:scale-95 cursor-pointer"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-xl text-secondary transition hover:bg-secondary/10 active:scale-95 cursor-pointer"
             >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M12 20h9" />
@@ -101,33 +103,30 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
             </button>
 
             {open && (
-                <div className="fixed inset-0 z-50 animate-aparecer overflow-y-auto overscroll-contain bg-primary/40 backdrop-blur-sm">
-                    <div
-                        onClick={fechar}
-                        className="flex min-h-full items-center justify-center p-4"
-                    >
-                    <div
-                        onClick={e => e.stopPropagation()}
-                        role="dialog"
-                        aria-modal="true"
-                        aria-label="Editar agendamento"
-                        className="w-full max-w-lg animate-surgir rounded-2xl bg-background p-6 shadow-2xl"
-                    >
-                        <div className="mb-5 flex items-center justify-between gap-3">
-                            <h3 className="text-xl font-semibold text-text">
-                                Editar agendamento
-                            </h3>
-                            <button
-                                onClick={fechar}
-                                aria-label="Fechar"
-                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-slate-100 cursor-pointer"
-                            >
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                    <path d="M18 6 6 18M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
+                <Modal onClose={fechar} labelledBy={tituloId} className="max-w-lg">
+                    <div className="mb-5 flex items-center justify-between gap-3">
+                        <h3 id={tituloId} className="text-xl font-semibold text-text">
+                            Editar agendamento
+                        </h3>
+                        <button
+                            type="button"
+                            onClick={fechar}
+                            aria-label="Fechar"
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-slate-100 cursor-pointer"
+                        >
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="M18 6 6 18M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
 
+                    <form
+                        noValidate
+                        onSubmit={e => {
+                            e.preventDefault();
+                            handleSave();
+                        }}
+                    >
                         <div className="flex flex-col gap-4">
                             <div className="flex flex-col gap-1.5">
                                 <label htmlFor={`data-${id}`} className="text-base font-medium text-text">
@@ -149,18 +148,27 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                                     Nome
                                 </label>
                                 <input
+                                    ref={nomeRef}
                                     id={`nome-${id}`}
                                     autoComplete="off"
+                                    enterKeyHint="next"
                                     value={form.nome}
                                     aria-invalid={erroNome}
+                                    aria-describedby={erroNome ? `nome-${id}-erro` : undefined}
                                     onChange={e => {
                                         setForm({ ...form, nome: e.target.value });
                                         if (erroNome) setErroNome(false);
                                     }}
+                                    onKeyDown={e => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            telefoneRef.current?.focus();
+                                        }
+                                    }}
                                     className={`${campoBase} ${erroNome ? 'border-accent' : 'border-slate-300'}`}
                                 />
                                 {erroNome && (
-                                    <p className="mt-0.5 text-base text-accent">
+                                    <p id={`nome-${id}-erro`} className="mt-0.5 text-base text-accent">
                                         Informe o nome.
                                     </p>
                                 )}
@@ -171,16 +179,20 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                                     Telefone
                                 </label>
                                 <input
+                                    ref={telefoneRef}
                                     id={`tel-${id}`}
                                     autoComplete="off"
                                     type="tel"
                                     inputMode="tel"
+                                    enterKeyHint="done"
                                     maxLength={25}
                                     value={form.telefone}
                                     aria-invalid={erroTelefone}
-                                    onChange={e =>
-                                        setForm({ ...form, telefone: e.target.value })
-                                    }
+                                    aria-describedby={erroTelefone ? `tel-${id}-erro` : undefined}
+                                    onChange={e => {
+                                        setForm({ ...form, telefone: e.target.value });
+                                        if (erroTelefone) setErroTelefone(false);
+                                    }}
                                     onBlur={() => {
                                         const lido = normalizarTelefone(form.telefone);
                                         if (lido) setForm({ ...form, telefone: lido.formatado });
@@ -188,26 +200,29 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                                     className={`${campoBase} ${erroTelefone ? 'border-accent' : 'border-slate-300'}`}
                                 />
                                 {erroTelefone && (
-                                    <p className="mt-0.5 text-base text-accent">
+                                    <p id={`tel-${id}-erro`} className="mt-0.5 text-base text-accent">
                                         Confira o telefone, com DDD (ou + e o código do país).
                                     </p>
                                 )}
                             </div>
                         </div>
 
+                        {erro && <ErrorMessage key={erro} className="mt-4">{erro}</ErrorMessage>}
+
                         <div className="mt-6 flex flex-col gap-3">
                             <div className="flex flex-wrap gap-3">
                                 <button
+                                    type="button"
                                     onClick={fechar}
-                                    className="min-h-12 grow basis-28 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 cursor-pointer"
+                                    className={`${botao('secundario', 'normal')} grow basis-28`}
                                 >
                                     Cancelar
                                 </button>
                                 <button
-                                    onClick={handleSave}
+                                    type="submit"
                                     disabled={ocupado}
                                     aria-busy={acao === 'salvar'}
-                                    className="flex min-h-12 grow basis-28 items-center justify-center gap-2 rounded-xl bg-secondary px-5 text-base font-semibold text-white transition duration-100 hover:opacity-90 enabled:active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+                                    className={`${botao('primario', 'normal')} grow basis-28`}
                                 >
                                     {acao === 'salvar' && <Spinner />}
                                     {acao === 'salvar' ? 'Salvando…' : 'Salvar'}
@@ -217,17 +232,19 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                             {confirmarRemocao ? (
                                 <div className="flex flex-wrap gap-3">
                                     <button
+                                        type="button"
                                         onClick={() => setConfirmarRemocao(false)}
                                         disabled={ocupado}
-                                        className="min-h-12 grow basis-28 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 disabled:opacity-50 cursor-pointer"
+                                        className={`${botao('secundario', 'normal')} grow basis-28`}
                                     >
                                         Manter
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => enviar('remover')}
                                         disabled={ocupado}
                                         aria-busy={acao === 'remover'}
-                                        className="flex min-h-12 grow basis-28 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-base font-semibold text-white transition duration-100 hover:opacity-90 enabled:active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+                                        className={`${botao('perigo', 'normal')} grow basis-28`}
                                     >
                                         {acao === 'remover' && <Spinner />}
                                         {acao === 'remover' ? 'Removendo…' : 'Confirmar remoção'}
@@ -235,6 +252,7 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                                 </div>
                             ) : (
                                 <button
+                                    type="button"
                                     onClick={() => setConfirmarRemocao(true)}
                                     disabled={ocupado}
                                     className="min-h-12 w-full rounded-xl px-4 text-base font-medium text-accent transition hover:bg-accent/10 disabled:opacity-50 cursor-pointer"
@@ -243,9 +261,8 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                                 </button>
                             )}
                         </div>
-                    </div>
-                    </div>
-                </div>
+                    </form>
+                </Modal>
             )}
         </>
     );

@@ -373,7 +373,7 @@ O **padrão visual de todo aviso** fica em `src/lib/server/email/aviso.html`
 mesmo visual do site e dos e-mails do Supabase (`supabase/email/`): faixa azul
 no topo com o ícone e o nome do site, fundo creme, cartão branco (borda
 `#e0e2e2`) com fitinha framboesa→dourado, florzinha, título com serifa e o
-rodapé "Site independente…" em cinza. Estilos **inline**, sem Tailwind.
+rodapé "Feito por um membro voluntário… Não é mantido nem aprovado pela Igreja…" em cinza. Estilos **inline**, sem Tailwind.
 Para mudar o visual de todos os avisos, edite esse arquivo.
 
 Marcadores que o código preenche:

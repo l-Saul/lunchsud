@@ -79,13 +79,14 @@ A rota é dinâmica (`ƒ` no build): os dias ocupados são lidos a cada acesso.
 Aparece quando o carregamento falha (banco fora do ar, internet caindo no meio).
 Substitui a tela padrão do Next (em inglês) por um cartão calmo:
 
-- Título: **"Não foi possível abrir o calendário"**
+- Título (na faixa): **"Não foi possível abrir o calendário"**
 - Texto: "Verifique a internet e toque no botão abaixo para tentar de novo."
 - Botão **"Tentar de novo"** → `retry()` (busca os dados de novo no servidor e
   limpa o erro). Alvo grande (`min-h-13`), azul.
 
-Visual igual ao do 404: `<HeaderBand />` no topo e, no creme, cartão branco com
-fitinha framboesa→dourado→framboesa e florzinha.
+Visual igual ao do 404: faixa padrão no topo e, no creme, cartão branco com
+fitinha framboesa→dourado→framboesa, o texto e o botão (sem título nem flor no
+cartão).
 
 ## `WardBooking.tsx` (client)
 
@@ -164,12 +165,20 @@ conflito aparecia de novo no modal seguinte).
 
 ### Layout
 
-- `HeaderBand` (faixa azul): nome da ala (`h1`, `text-3xl`, branco, `wrap-anywhere`) e
-  divisória com florzinha. Duas florzinhas decorativas estáticas nos cantos
-  (opacidade baixa, `aria-hidden`). Altura contida: em 390×844 o calendário
-  começa a ~290px e os dias livres ficam na primeira tela.
+- `HeaderBand title={nomeAla}`: a faixa padrão (nome da ala e flor). Sem as florzinhas decorativas nos cantos de antes. Altura
+  contida: o calendário começa na primeira tela do celular.
 - Abaixo, no `<main>` sobre o creme: "Toque em um dia livre para agendar o
-  almoço." (`text-lg`, texto escuro) e o calendário. Os avisos são do
+  almoço." (`text-lg`, texto escuro) e o calendário.
+- **Acesso do líder**, depois do calendário: um espaço grande (~70px no celular,
+  ~90px no computador, para não parecer parte do calendário), uma linha fina
+  (`border-t border-primary/10`), outro espaço e uma linha branca **da largura do
+  calendário** com **"Faz parte da presidência?"** (texto do dono) e, embaixo, "Entre no painel da ala
+  para ver quem agendou e organizar os almoços." à esquerda, e o botão azul
+  padrão **"Entrar"** à direita (`flex-wrap`: com letra grande o botão desce).
+  Leva a `/admin` (logado, o `/admin` manda direto para o painel). A linha em
+  si é discreta (sem sombra); o texto diz que é para o líder, e a irmã que
+  agenda não confunde com um passo do agendamento. "Painel de controle" foi descartado:
+  técnico demais. Os avisos são do
   `NoticeBar`, no topo da tela.
 - Margens enxutas no celular (`px-2`): cada pixel vira largura dos 7 dias. Em
   360px os dias chegam a 44px, o alvo de toque recomendado (WCAG 2.5.5).
@@ -203,16 +212,20 @@ Os erros (`erroNome`, `erroTelefone`, `erro`) e o `loading` são do modal.
 2. Limpa os erros da tentativa anterior.
 3. Valida no aparelho: nome com 2+ caracteres (após `trim`) e telefone que
    `normalizarTelefone` entende. Falhou → borda rosa no campo, mensagem embaixo
-   dele e o geral **"Preencha corretamente os campos destacados."**
+   dele (ligada por `aria-describedby`, **sem** `role="alert"`), o resumo
+   **"Corrija os campos marcados em rosa e toque em Confirmar almoço."** (o
+   único alerta, no `ErrorMessage`) e o **foco vai para o primeiro campo com
+   erro**. Antes três alertas eram lidos juntos, embaralhados.
 4. `POST /api/agendar` com `{ slug, data, nome, telefone }`.
 5. Resultado:
    - **Sem internet** (fetch lança): o modal continua aberto com o que foi
-     digitado e mostra **"Sem conexão com a internet. Verifique e tente de
-     novo."** Antes o botão ficava preso em "Confirmando…".
+     digitado e mostra **"Sem conexão com a internet. Verifique a internet e
+     toque em Confirmar almoço de novo."** Antes o botão ficava preso em
+     "Confirmando…".
    - **409** → `onConflict()`.
    - **Outro erro** → mostra o `error` da API (escrito para o membro) ou "Não
-     foi possível agendar. Tente de novo." O modal fica aberto, com nome e
-     telefone, para tentar de novo.
+     foi possível agendar. Toque em Confirmar almoço de novo." O modal fica
+     aberto, com nome e telefone, para tentar de novo.
    - **Sucesso** → `onBooked({ id, data, nome: nome.trim() })` e o modal vira a
      confirmação. O `id` devolvido pela API casa com o evento do WebSocket que
      chega em seguida.
@@ -249,17 +262,14 @@ telefone salvos, e a tecla "Ir" do teclado enviar (`type="submit"`). O
 
 ### Abrir, fechar e rolar
 
-- Abre com fade (`animate-aparecer` no fundo, `animate-surgir` na caixa) e fecha na hora.
+- Usa o **`Modal`** ([src_components.md](src_components.md)): fundo desfocado,
+  página atrás travada, fundo inerte, Esc e toque fora. O foco entra na caixa
+  (o leitor lê o título, o teclado do celular não abre sozinho) e, ao fechar,
+  **volta ao dia** do calendário que abriu o modal.
 - Fecha por **Cancelar**, **X** (`aria-label="Fechar"`, 44px), **Esc** e **toque
   fora** da caixa.
-- **Trava a página atrás** com `useScrollLock()` ([src_hooks.md](src_hooks.md)
-  explica como funciona no iPhone). Sem isso, rolar dentro do modal mexia a
-  página atrás. O Esc é escutado num efeito que roda **uma vez** ao montar; o
-  `onClose` mais recente fica num `ref`, para o Esc sempre chamar a versão atual.
-- O fundo é um container rolável (`overflow-y-auto overscroll-contain`): com o
-  teclado aberto o modal pode passar da tela e ainda dá para rolar até os botões.
-- `role="dialog"`, `aria-modal`, `aria-labelledby` no título do momento
-  (`#agendar-titulo` ou `#agendado-titulo`).
+- `aria-labelledby` no título do momento (`#agendar-titulo` ou
+  `#agendado-titulo`).
 
 ### Botões
 
@@ -273,7 +283,8 @@ telefone salvos, e a tecla "Ir" do teclado enviar (`type="submit"`). O
   (nome → telefone → Confirmar).
 - Confirmar enquanto envia: `disabled`, `aria-busy`, `<Spinner />` e
   **"Confirmando…"**. Tocar de novo não faz nada. Cancelar também fica desativado.
-- Erro geral: `role="alert"`, com `key={erro}` para o fade rodar a cada erro novo.
+- Erro geral: `ErrorMessage` (caixa rosa com ícone), com `key={erro}` para o
+  fade rodar a cada erro novo.
 
 ### Confirmação (depois de agendar)
 
@@ -309,7 +320,9 @@ antes disso o dia está bloqueado), `selectedDay`, `onSelectDay`,
 
 ### Abas de mês
 
-No lugar de "Voltar"/"Avançar", duas **abas com o nome do mês**: o atual à
+Componente compartilhado `MonthTabs` ([src_components.md](src_components.md)),
+o mesmo do cartão de imagem do painel. No lugar de "Voltar"/"Avançar", duas
+**abas com o nome do mês**: o atual à
 esquerda, o seguinte à direita (`nomeDoMes`). Como só existem dois meses, a
 pessoa vê os dois de uma vez e toca no que quer, sem adivinhar para onde
 "Voltar" leva.

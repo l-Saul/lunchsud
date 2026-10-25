@@ -25,9 +25,8 @@ src/app/(leader)/dashboard/
     DashboardClientGuard.tsx        volta ao login se a sessão cair
     DashboardRealtime.tsx           painel ao vivo (WebSocket → router.refresh)
     month-image/
-      MonthImageExport.tsx          seletor de mês + "Gerar imagem" (download/compartilhar)
+      MonthImageExport.tsx          cartão "Gerar imagem do calendário" (baixar / enviar no WhatsApp)
       MonthImage.tsx                o calendário desenhado na imagem
-      MonthSelect.tsx               dropdown de mês
 ```
 
 **Divisão de responsabilidade:** `page.tsx` faz todas as consultas; os cards só
@@ -83,13 +82,21 @@ cada um.
 ### Layout (de cima para baixo)
 
 1. `DashboardClientGuard` envolvendo tudo; `DashboardRealtime` se houver ala em foco.
-2. `HeaderBand` (faixa azul): "Painel da ala", nome da ala (ou "Selecione uma
-   ala") + " · owner", e o `LogoutButton`, em `max-w-3xl`.
-3. `WardSwitcher`: só owner, e só se houver alas.
-4. Se a ala tem slug, uma linha com `OpenCalendarButton` (ocupa o espaço que sobra) e
+2. `HeaderBand title="Painel da ala"` (só o título e a flor).
+3. **Linha da ala:** logo abaixo da faixa, **antes** do cartão do owner, em
+   **destaque com cor** (pedido do dono: "mais cor e vida"): degradê do azul de
+   ação ao marinho (`bg-linear-to-r from-secondary to-primary`), sombra, foco
+   dourado. O **nome da ala em foco** em branco (`text-xl`, negrito; "Selecione
+   uma ala" sem ala) e o `LogoutButton` **dourado** à direita. Sem enfeite (o
+   dono recusou a faixinha vertical)
+   (`flex-wrap`: com letra grande o botão desce). A pessoa lê em que ala está e
+   acha o "Sair" logo de cara. Sem o " · owner" de antes (termo técnico na tela).
+4. `WardSwitcher`: só owner, e só se houver alas.
+5. Se a ala tem slug, uma linha com `OpenCalendarButton` (ocupa o espaço que sobra) e
    os dois botões de ícone do `ShareLinkButtons` (copiar e compartilhar), todos com
    a mesma altura (`items-stretch`, `gap-2`, `sm:gap-3`).
-5. `BookingsCard` → `HistoryCard` → `NotificationsCard` (só com ala em foco) → `UsersCard`.
+6. `MonthImageExport` (cartão "Gerar imagem do calendário") → `BookingsCard` →
+   `HistoryCard` → `NotificationsCard` (só com ala em foco) → `UsersCard`.
 
 Do item 3 em diante tudo fica no `<main>`, sobre o fundo creme, em
 `max-w-3xl`. Os cartões são brancos com `ring-1 ring-primary/10` e
@@ -106,8 +113,8 @@ Nome da ala na faixa, nomes e e-mails nos cartões quebram a linha
 
 Props: `mesAtual`, `mesSeguinte` (`YYYY-MM`), `agendamentos` (`{ id, data, nome, telefone }[]`).
 
-- Cabeçalho "Agendamentos" (barrinha rosa) e, à direita, o `MonthImageExport`
-  com os dois meses.
+- Cabeçalho "Agendamentos" (barrinha rosa). A imagem do mês tem cartão próprio,
+  logo antes (`MonthImageExport`).
 - Um `CollapsibleMonth` por mês, com o rótulo (`formatMonthLabel`), o total e os
   disponíveis.
 - Mês vazio: "Nenhum almoço agendado ainda." (caixa tracejada).
@@ -153,28 +160,37 @@ que senão ignora `width: 100%` e fica mais largo que os outros (estoura o conta
 1. Valida com as **mesmas regras do servidor** (`parseEdicao`): nome com 2+
    caracteres e telefone que `normalizarTelefone` entende. Senão o líder via só
    "Erro ao atualizar". Mensagens: "Informe o nome." / "Confira o telefone, com
-   DDD (ou + e o código do país)."
+   DDD (ou + e o código do país)." (embaixo do campo, ligadas por
+   `aria-describedby`); o foco vai para o primeiro campo errado.
 2. `POST /api/agendamentos/update { id, data, nome, telefone }`.
 3. Sucesso → fecha e `router.refresh()` (atualiza a lista sem recarregar a página).
-   Erro → `alert('Erro ao atualizar')`. Sem internet → `alert('Sem conexão com a
-   internet. Verifique e tente de novo.')` (o botão não fica preso em "Salvando…").
+   Erro → dentro do modal, no `ErrorMessage`: **"Não foi possível salvar.
+   Confira se já não há almoço nesse dia e tente de novo."** Sem internet →
+   **"Sem conexão com a internet. Verifique a internet e tente de novo."** (o
+   botão não fica preso em "Salvando…"). A mensagem da API ("Erro ao
+   atualizar") é técnica e não aparece.
 
-Mover para um dia que já tem almoço viola o `unique (ala_id, data)` e cai em
-"Erro ao atualizar".
+Mover para um dia que já tem almoço viola o `unique (ala_id, data)`: é o erro
+mais comum, por isso a mensagem fala dele.
+
+É um `<form noValidate>`: **Enter salva**. No nome, `enterKeyHint="next"` e Enter
+leva ao telefone; no telefone, `enterKeyHint="done"`.
 
 ### Remover
 
 **Confirmação inline**, não `window.confirm` (que falha em vários celulares):
 "Remover agendamento" troca para os botões **"Manter"** e **"Confirmar remoção"**
 (rosa, `accent`, nunca vermelho). Confirmar → `POST /api/agendamentos/delete { id }`.
-Mesmo tratamento de sucesso e erro ("Erro ao remover").
+Mesmo tratamento de sucesso; erro → "Não foi possível remover. Atualize a
+página e tente de novo." (o almoço pode já ter sido removido em outro aparelho).
 
 ### Modal
 
+- Usa o **`Modal`** ([src_components.md](src_components.md)), `max-w-lg`:
+  fundo inerte, foco na caixa ao abrir e **de volta no lápis** ao fechar.
 - Fecha por **toque fora**, **Esc** e **X** (fecho explícito: no celular o
-  toque no fundo pode não pegar). Fechar zera a confirmação de remoção.
-- Trava a página atrás com `useScrollLock(open)` ([src_hooks.md](src_hooks.md)),
-  como todo modal.
+  toque no fundo pode não pegar). Fechar zera a confirmação de remoção e o erro.
+- O lápis não cresce no hover (sem "pulinho", regra de animação).
 - Fundo rolável: com o teclado aberto o modal pode passar da tela e ainda dá
   para rolar até os botões.
 - Botões com alvos **≥ 48px** (`min-h-12`), empilhados e largos; "Salvando…" /
@@ -214,10 +230,11 @@ cadastrado.") e `preferenciasIniciais`.
   salvamento (`role="status"`, `aria-live`): "Salvando…" com Spinner →
   **"Salvo."** (azul). Fica na mesma linha do título para não deixar um espaço
   vazio entre o texto e as chaves.
-- "Escolha quais e-mails quer receber sobre esta ala. Eles chegam em
-  **\<e-mail\>**." (`wrap-anywhere`; sem e-mail: "Esta conta ainda não tem
-  e-mail cadastrado.").
-- Erro de salvamento: linha rosa (`role="alert"`) entre o topo e as chaves, só
+- Para onde vão os avisos, em duas linhas: "Os avisos chegam no e-mail:"
+  (cinza) e, embaixo, o **e-mail** em destaque (`text-lg`, negrito,
+  `wrap-anywhere`). Sem e-mail: "Esta conta ainda não tem e-mail cadastrado.".
+  O dono tirou o "Escolha quais e-mails quer receber…": as chaves já dizem isso.
+- Erro de salvamento: `ErrorMessage` (caixa rosa) entre o topo e as chaves, só
   quando há erro.
 - Espaçamento: 20px entre o topo e as chaves, 12px entre uma chave e outra.
 
@@ -260,10 +277,9 @@ sem querer não cortar um aviso:
   `basis` em rem).
 - Fecha sem mudar nada por "Manter ligado", **Esc** ou **toque fora**. Só
   "Desligar" muda a chave e salva.
-- Igual ao modal de remover acesso do `UsersCard`: tela coberta com fundo azul
-  **desfocado**, página atrás **travada** (`useScrollLock`), `role="alertdialog"`,
-  `aria-modal`, título ligado por `aria-labelledby`, fade curto ao abrir e
-  fechamento na hora.
+- Usa o **`Modal`** com `alerta` (`role="alertdialog"`), igual ao de remover
+  acesso do `UsersCard`. O foco começa em "Manter ligado" (`data-foco-inicial`)
+  e, ao fechar, **volta à chave** que foi tocada.
 
 ### Salvar ao tocar
 
@@ -291,12 +307,18 @@ Exporta `UsersCard` e o tipo `Usuario = { id (do vínculo ala_membro), nome, ema
 - `POST /api/acesso/aprovar` ou `/remover` com `{ membroId }`. Depois de dar
   certo, `router.refresh()` e a limpeza do estado rodam **na mesma transição**
   (`useTransition`): o "Aprovando…" fica até a lista nova chegar e os dois
-  aparecem juntos. Erro → `alert('Não foi possível concluir a ação.')`; sem
-  internet → `alert('Sem conexão…')`.
+  aparecem juntos. Erro → `ErrorMessage` no topo do cartão: "Não foi possível
+  aprovar. Atualize a página e tente de novo." / "Não foi possível remover o
+  acesso. Atualize a página e tente de novo."; sem internet → "Sem conexão com
+  a internet. Verifique a internet e tente de novo." (some na próxima ação).
 - **Remover pede confirmação** num modal que cobre a tela (fundo desfocado,
   `role="alertdialog"`): "Remover acesso?" / "Tem certeza que deseja remover o
   acesso de **\<nome\>**? Para voltar, a pessoa precisará pedir acesso de novo."
-  Cancelar / Remover (rosa). Fecha com Esc e toque fora. A página atrás fica travada (`useScrollLock`).
+  Cancelar / Remover (rosa). Usa o **`Modal`** com `alerta`: foco começa em
+  **Cancelar** (a opção segura) e, ao fechar, volta ao "Remover" da linha.
+- `Linha` é um componente **fora** do `UsersCard` (recebe `emAndamento`,
+  `onAprovar`, `onRemover`). Definido dentro do render, ele era recriado a cada
+  mudança de estado: as linhas remontavam e o foco não tinha para onde voltar.
 - O componente renderiza o próprio `<section>` (cartão branco). O modal é
   `fixed`, então ficar dentro do cartão não muda nada.
 
@@ -354,7 +376,8 @@ Todos com `autoComplete="off"` (dado da ala, não do líder). O fuso define o
 2. `POST /api/alas/criar { nome, endereco, pais, estado, cidade, fuso }`.
 3. Sem internet → "Sem conexão com a internet. Verifique e tente de novo." (o
    botão não fica preso). Erro da API → a mensagem dela (ex.: "Já existe uma ala
-   no endereço "x".") ou "Não foi possível criar a ala.".
+   no endereço "x".") ou "Não foi possível criar a ala.". Erros no
+   `ErrorMessage` (caixa rosa com ícone).
 4. Sucesso → `await onCreated(json.ala.id)` (o WardSwitcher entra na ala nova)
    e só então limpa o formulário. O "Criando…" continua durante a troca.
 
@@ -385,7 +408,7 @@ mandar o link da ala no grupo do WhatsApp. Props: `slug`, `nomeAla`. O link é
 | **Compartilhar** (ícone de três pontos ligados) | no celular abre o menu de compartilhar do sistema (`navigator.share`), com título "Calendário de almoços da \<ala\>", texto "Agende seu almoço para nossos missionários ❤️" e o link (o mesmo da prévia da página da ala). Sem esse menu (computador) abre o WhatsApp (`wa.me`) numa aba nova com a mesma mensagem. Cancelar o menu não faz nada |
 
 - **Mesma cor do botão principal** (azul `bg-secondary`, ícone branco), cantos
-  iguais e mesma altura; largura 3rem no celular e 3.5rem a partir de `sm`
+  `rounded-xl` como os do padrão (`button-classes.ts`) e mesma altura; largura 3rem no celular e 3.5rem a partir de `sm`
   (≥ 44px de alvo).
 - Sem texto visível, então cada um tem `aria-label` ("Copiar o link do
   calendário da ala", "Compartilhar o link do calendário da ala") e `title`
@@ -402,11 +425,10 @@ mandar o link da ala no grupo do WhatsApp. Props: `slug`, `nomeAla`. O link é
    `router.push`): uma requisição limpa ao `/admin`, com os cookies já apagados
    e sem cache de RSC. Evita o vaivém `/admin` ↔ `/dashboard` que prendia a tela.
 
-Enquanto sai: Spinner e "Tchau".
-
-Fica **na faixa azul**: botão translúcido (`bg-white/10`, contorno
-`ring-white/40`, texto branco, ≥ 44px), que não compete com o "Abrir
-calendário". Foco dourado, o da faixa.
+`botao('dourado')` (pedido do dono), na linha azul da ala (fora da faixa):
+fundo dourado, texto marinho (7,8:1), ícone de saída + **"Sair"**, 48px de
+altura. Enquanto sai: `disabled`, `aria-busy`, Spinner no lugar do ícone e
+**"Saindo…"**.
 
 ## `DashboardClientGuard.tsx` (client)
 
@@ -426,13 +448,31 @@ custo é pequeno. Renderiza `null`.
 ## Imagem do mês (`month-image/`)
 
 O líder escolhe o mês e gera uma **imagem PNG do calendário com nomes e
-telefones** para mandar no grupo. **Preserve este comportamento:** no **celular**
-abre o menu de compartilhar do sistema (WhatsApp etc.); no **computador** (ou sem
-suporte a compartilhar arquivo) baixa o PNG.
+telefones** para mandar no grupo da ala.
 
 ### `MonthImageExport.tsx` (client)
 
-Props: `meses` (`YYYY-MM`[]), `agendamentos`.
+O cartão **"Gerar imagem do calendário"** (título do dono), logo **antes** de
+Agendamentos. Props: `meses` (`YYYY-MM`[]: o atual e o seguinte),
+`agendamentos`.
+
+- **Mês:** as abas `MonthTabs` ("Outubro" / "Novembro", as mesmas do calendário
+  público; `label` "Mês da imagem"). Começa no mês atual.
+- **"Baixar imagem"** (ícone de download): salva `almocos-<mês>-<ano>.png`
+  (ex.: `almocos-novembro-2026.png`) por um `<a download>`.
+- **"Enviar no WhatsApp"** (ícone de balão): abre o menu de compartilhar do
+  aparelho com a imagem (`navigator.share({ files, title: 'Almoços de
+  <mês>' })`); a pessoa escolhe o WhatsApp. **Só aparece se o aparelho
+  compartilha arquivo** (`navigator.canShare({ files })`, testado ao montar):
+  no computador quase nunca, então lá só há "Baixar" (e ele fica azul,
+  `primario`); com os dois, "Enviar no WhatsApp" é o azul e "Baixar" o
+  `secundario`. Cancelar o menu (`AbortError`) não mostra erro.
+- Os dois lado a lado (`grow basis-48`), empilhados no celular. Enquanto gera,
+  os dois ficam `disabled` e o tocado mostra Spinner + "Gerando…".
+- Falha ao gerar → `ErrorMessage` "Não foi possível gerar a imagem. Tente de
+  novo."
+
+Como a imagem é feita:
 
 1. Um container `#export-root` **0×0, fixo e escondido** (`overflow: hidden`,
    `z-index: -1`, `pointer-events: none`) recebe por portal (`createPortal`,
@@ -440,13 +480,9 @@ Props: `meses` (`YYYY-MM`[]), `agendamentos`.
    **1024px** de largura, só para virar imagem.
 2. `gerarDiasDoMes(mes, agendamentos)` monta `{ data, numero, agendamentos }`
    para cada dia (via `useMemo`).
-3. "Gerar imagem": espera **2 frames** (`requestAnimationFrame` duplo, para o
-   DOM escondido já ter pintado), captura com `html-to-image` (`toPng`,
-   `pixelRatio: 2`, fundo branco) e cria o arquivo `calendario-YYYY-MM.png`.
-4. Toque (`pointer: coarse`) **e** `navigator.canShare({ files })` →
-   `navigator.share({ files, title: 'Calendário YYYY-MM' })`. Senão, download por
-   um `<a download>`.
-5. Botão: "Gerar imagem" / "Gerando…" com Spinner, `aria-busy`.
+3. Espera **2 frames** (`requestAnimationFrame` duplo, para o DOM escondido já
+   ter pintado), captura com `html-to-image` (`toPng`, `pixelRatio: 2`, fundo
+   branco) e cria o arquivo.
 
 Atenção: `gerarDiasDoMes` monta a data com `toISOString()` (UTC). Funciona nos
 fusos das Américas (atrás de UTC); num navegador em fuso à frente de UTC as
@@ -477,19 +513,8 @@ O calendário **desenhado para a imagem**, separado do calendário público.
   (o nome completo fica no painel). Telefone também quebra.
 - Rodapé: "Obrigada por servir os missionários" entre florzinhas.
 
-### `MonthSelect.tsx` (client)
-
-Dropdown de mês próprio: o `<select>` nativo posicionava e dimensionava mal
-dentro dos cards. Botão com `aria-haspopup="listbox"`/`aria-expanded`, lista
-`role="listbox"` com opções `role="option"`/`aria-selected`, ancorada logo
-abaixo do botão e com a largura dele. Fecha ao escolher ou ao clicar fora
-(`mousedown` no documento).
-
 ## Pontos de atenção
 
-- Avisos de erro em `UsersCard` e `EditBookingModal` usam `alert()`.
-- `UsersCard` define o componente `Linha` dentro do render (cada render cria um
-  componente novo e remonta as linhas).
 - O painel exige login: o Playwright usado nos testes não entra. Teste à mão:
   trocar de ala, criar ala, editar/remover almoço, aprovar/remover usuário,
   histórico e imagem do mês.

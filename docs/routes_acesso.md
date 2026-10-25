@@ -32,8 +32,9 @@ Dependências: `src/lib/server/session.ts` (`getContexto`),
 
 - `dynamic = 'force-dynamic'`, `revalidate = 0`. Metadata: título "Acesso ao painel",
   `robots: noindex, nofollow`.
-- Estrutura: `<HeaderBand />` (faixa azul com o ícone e "Almoço dos
-  Missionários") e, abaixo, o `<main>` com o cartão sobre o fundo creme.
+- Estrutura: `<HeaderBand title="Acesso ao painel" />` e, abaixo, o `<main>`
+  com o cartão sobre o fundo creme. No cartão, "Olá, \<nome\>!" / "Quase lá,
+  \<nome\>!" são `h2` (`text-xl`), sem a florzinha (ela fica na faixa).
 - Sem login → `/admin`. Já tem ala em foco (`ctx.alaId !== null`) →
   `/dashboard`.
 - Busca o vínculo do usuário (`ala_membro`: `status`, `ala_id`) e todas as alas
@@ -57,6 +58,7 @@ Cartão branco com fitinha e florzinha. Props: `nome` (do perfil), `alas`,
   - sucesso → `router.refresh()` (a página passa a mostrar "aguardando");
   - resposta não ok → "Não foi possível solicitar. Tente novamente.";
   - sem internet → "Sem conexão com a internet. Verifique e tente de novo.".
+  - Os erros aparecem no `ErrorMessage` (caixa rosa com ícone).
 
 ### Com vínculo pendente: aguardando
 

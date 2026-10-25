@@ -8,7 +8,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { criarSupabaseBrowser } from '@/lib/supabase/browser-session';
 import { Spinner } from '@/components/Spinner';
+import { ErrorMessage } from '@/components/ErrorMessage';
 import { siteUrl } from '@/lib/site-url';
+import { botao } from '@/components/button-classes';
 
 function mensagemDeCadastro(original: string) {
     const msg = original.toLowerCase();
@@ -264,9 +266,7 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
             )}
 
             {erro && (
-                <p role="alert" className="text-center text-base font-medium text-accent">
-                    {erro}
-                </p>
+                <ErrorMessage key={erro}>{erro}</ErrorMessage>
             )}
             {aviso && (
                 <p role="status" className="text-center text-base font-medium text-secondary">
@@ -278,7 +278,7 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
                 type="submit"
                 disabled={loading}
                 aria-busy={loading}
-                className="mt-1 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-secondary py-4 text-lg font-semibold text-white shadow-md transition duration-100 hover:opacity-95 hover:shadow-lg enabled:active:scale-[0.98] disabled:opacity-70"
+                className={`${botao('primario', 'grande')} mt-1 w-full`}
             >
                 {loading && <Spinner />}
                 {loading

@@ -74,11 +74,44 @@ de quem está agendando.
 
 Ver [database.md](database.md).
 
+## `use-modal-layer.ts`
+
+**A camada de um modal** (ou de uma tela por cima, como o `LoadingOverlay`).
+Usado pelo componente `Modal` ([src_components.md](src_components.md)).
+
+```ts
+const camada = useRef<HTMLDivElement>(null);
+useModalLayer(camada, onEscape);   // onEscape é opcional
+```
+
+A camada precisa ser **filha direta do `<body>`** (portal). Enquanto ela está na
+tela:
+
+- **Trava a rolagem** da página atrás (`useScrollLock`).
+- **Fundo inerte:** põe `inert` em todos os outros filhos do `<body>` (a página,
+  o rodapé, o `NoticeBar`). O teclado (Tab) não sai do modal, o leitor de tela
+  não lê o fundo e nada atrás responde ao toque. Ao fechar, tira só os `inert`
+  que ele mesmo pôs (um modal sobre outro funciona).
+- **Foco entra:** no elemento com `data-foco-inicial` ou, sem ele, na caixa do
+  diálogo (`role="dialog"`/`"alertdialog"`, que tem `tabIndex={-1}`). Não usa o
+  `autoFocus` do React: em desenvolvimento o efeito roda duas vezes e o foco se
+  perdia.
+- **Foco volta** ao elemento que tinha o foco quando a camada abriu (o dia do
+  calendário, o lápis, o "Remover"), guardado **durante o render**, antes de o
+  React mover o foco. Se ele saiu da página (almoço removido), não volta para
+  lugar nenhum. Para isso o botão de origem **não pode ser recriado** enquanto o
+  modal está aberto (componente definido dentro de outro componente recria; ver
+  `UsersCard`).
+- **Esc** chama `onEscape` (a versão mais recente, por `ref`).
+
+Testado no Chromium: abrir pelo teclado, 12 Tabs sem sair do modal, Esc fecha e
+devolve o foco, fundo volta a responder.
+
 ## `use-scroll-lock.ts`
 
-**Trava a rolagem da página atrás de um modal.** Todo modal e tela por cima
-(`BookingModal`, `EditBookingModal`, confirmação de remover acesso, confirmação
-de desligar aviso, `LoadingOverlay`) usa este hook; não reescreva a trava à mão.
+**Trava a rolagem da página atrás de um modal.** Quem chama é o
+`useModalLayer` (abaixo), usado pelo `Modal` e pelo `LoadingOverlay`; não
+reescreva a trava à mão.
 
 ```ts
 useScrollLock()        // trava enquanto o componente estiver na tela

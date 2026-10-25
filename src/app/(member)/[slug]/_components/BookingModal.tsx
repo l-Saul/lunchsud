@@ -9,7 +9,9 @@ import { normalizarTelefone } from '@/lib/phone'
 import { tituloDoDia } from '@/lib/date'
 import { linkGoogleAgenda } from '@/lib/calendar-event'
 import { Spinner } from '@/components/Spinner'
-import { useScrollLock } from '@/hooks/use-scroll-lock'
+import { Modal } from '@/components/Modal'
+import { ErrorMessage } from '@/components/ErrorMessage'
+import { botao } from '@/components/button-classes'
 
 const campoBase =
     'w-full min-w-0 box-border appearance-none rounded-xl border px-4 py-3.5 text-lg text-text ' +
@@ -40,6 +42,7 @@ export function BookingModal({
     const [loading, setLoading] = useState(false)
     const [confirmado, setConfirmado] = useState(false)
     const [apple] = useState(() => /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent))
+    const nomeRef = useRef<HTMLInputElement>(null)
     const telefoneRef = useRef<HTMLInputElement>(null)
     const confirmadoRef = useRef<HTMLHeadingElement>(null)
     const titulo = tituloDoDia(data)
@@ -57,7 +60,8 @@ export function BookingModal({
         if (nomeInvalido || telefoneInvalido) {
             setErroNome(nomeInvalido)
             setErroTelefone(telefoneInvalido)
-            setErro('Preencha corretamente os campos destacados.')
+            setErro('Corrija os campos marcados em rosa e toque em Confirmar almoço.')
+            ;(nomeInvalido ? nomeRef : telefoneRef).current?.focus()
             return
         }
 
@@ -72,7 +76,7 @@ export function BookingModal({
             })
         } catch {
             setLoading(false)
-            setErro('Sem conexão com a internet. Verifique e tente de novo.')
+            setErro('Sem conexão com a internet. Verifique a internet e toque em Confirmar almoço de novo.')
             return
         }
 
@@ -85,7 +89,7 @@ export function BookingModal({
 
         if (!res.ok) {
             const corpo = await res.json().catch(() => null)
-            setErro(corpo?.error ?? 'Não foi possível agendar. Tente de novo.')
+            setErro(corpo?.error ?? 'Não foi possível agendar. Toque em Confirmar almoço de novo.')
             return
         }
 
@@ -98,195 +102,166 @@ export function BookingModal({
         if (confirmado) confirmadoRef.current?.focus()
     }, [confirmado])
 
-    const onCloseRef = useRef(onClose)
-    useEffect(() => {
-        onCloseRef.current = onClose
-    }, [onClose])
-
-    useScrollLock()
-
-    useEffect(() => {
-        const onKey = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onCloseRef.current()
-        }
-        window.addEventListener('keydown', onKey)
-        return () => window.removeEventListener('keydown', onKey)
-    }, [])
-
     return (
-        <div className="fixed inset-0 z-50 animate-aparecer overflow-y-auto overscroll-contain bg-primary/50 backdrop-blur-sm">
-            <div
-                onClick={onClose}
-                className="flex min-h-full items-center justify-center p-4"
-            >
-            <div
-                onClick={e => e.stopPropagation()}
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby={confirmado ? 'agendado-titulo' : 'agendar-titulo'}
-                className="w-full max-w-md animate-surgir rounded-2xl bg-background p-6 shadow-2xl"
-            >
-                {confirmado ? (
-                    <div className="flex flex-col items-center gap-4 text-center">
-                        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-white" aria-hidden="true">
-                            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M20 6 9 17l-5-5" />
-                            </svg>
-                        </span>
-                        <div className="flex flex-col gap-1">
-                            <h2 id="agendado-titulo" ref={confirmadoRef} tabIndex={-1} className="text-2xl font-semibold text-text focus:outline-none">
-                                Almoço agendado!
-                            </h2>
-                            <p className="text-lg text-text">{titulo}</p>
-                            <p className="wrap-anywhere text-base text-muted">{nomeAla}</p>
-                        </div>
-                        <a
-                            href={apple ? `/api/agenda/${slug}?data=${data}` : linkGoogleAgenda(data, nomeAla)}
-                            {...(apple ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
-                            className="mt-2 flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-lg font-semibold text-white shadow-md transition duration-100 hover:opacity-95 active:scale-[0.98]"
-                        >
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
-                                <rect x="3" y="4" width="18" height="18" rx="2" />
-                                <path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4" />
-                            </svg>
-                            Adicionar à agenda do celular
-                        </a>
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="min-h-13 w-full rounded-xl border border-slate-300 px-4 text-lg font-medium text-text transition hover:bg-slate-100 active:scale-[0.98] cursor-pointer"
-                        >
-                            Voltar ao calendário
-                        </button>
-                        <p className="text-base text-muted">
-                            Precisa desmarcar? Fale com a liderança da ala.
-                        </p>
-                    </div>
-                ) : (
-                <>
-                <div className="mb-5 flex items-start justify-between gap-3">
-                    <h2 id="agendar-titulo" className="text-xl font-semibold text-text">
-                        {titulo}
-                    </h2>
-                    <button
-                        onClick={onClose}
-                        aria-label="Fechar"
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-slate-100 cursor-pointer"
-                    >
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <path d="M18 6 6 18M6 6l12 12" />
+        <Modal onClose={onClose} labelledBy={confirmado ? 'agendado-titulo' : 'agendar-titulo'}>
+            {confirmado ? (
+                <div className="flex flex-col items-center gap-4 text-center">
+                    <span className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-white" aria-hidden="true">
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 6 9 17l-5-5" />
                         </svg>
-                    </button>
-                </div>
-
-                <form
-                    noValidate
-                    onSubmit={e => {
-                        e.preventDefault()
-                        agendar()
-                    }}
-                >
-                <div className="flex flex-col gap-4">
-                    <div className="flex flex-col gap-1.5">
-                        <label htmlFor="nome" className="text-base font-medium text-text">
-                            Seu nome
-                        </label>
-                        <input
-                            id="nome"
-                            name="name"
-                            type="text"
-                            autoComplete="name"
-                            autoCapitalize="words"
-                            enterKeyHint="next"
-                            maxLength={80}
-                            placeholder="Digite seu nome aqui"
-                            aria-invalid={erroNome}
-                            aria-describedby={erroNome ? 'nome-erro' : undefined}
-                            className={`${campoBase} ${erroNome ? 'border-accent' : 'border-slate-300'}`}
-                            value={nome}
-                            onChange={e => {
-                                onNomeChange(e.target.value)
-                                if (erroNome) setErroNome(false)
-                            }}
-                            onKeyDown={e => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault()
-                                    telefoneRef.current?.focus()
-                                }
-                            }}
-                        />
-                        {erroNome && (
-                            <p id="nome-erro" role="alert" className="text-base text-accent">
-                                Informe seu nome.
-                            </p>
-                        )}
+                    </span>
+                    <div className="flex flex-col gap-1">
+                        <h2 id="agendado-titulo" ref={confirmadoRef} tabIndex={-1} className="text-2xl font-semibold text-text focus:outline-none">
+                            Almoço agendado!
+                        </h2>
+                        <p className="text-lg text-text">{titulo}</p>
+                        <p className="wrap-anywhere text-base text-muted">{nomeAla}</p>
                     </div>
-
-                    <div className="flex flex-col gap-1.5">
-                        <label htmlFor="telefone" className="text-base font-medium text-text">
-                            Seu telefone (com DDD)
-                        </label>
-                        <input
-                            ref={telefoneRef}
-                            id="telefone"
-                            name="tel"
-                            type="tel"
-                            autoComplete="tel"
-                            inputMode="tel"
-                            enterKeyHint="done"
-                            placeholder="Digite seu telefone aqui"
-                            maxLength={25}
-                            aria-invalid={erroTelefone}
-                            aria-describedby={erroTelefone ? 'telefone-erro' : undefined}
-                            className={`${campoBase} ${erroTelefone ? 'border-accent' : 'border-slate-300'}`}
-                            value={telefone}
-                            onChange={e => {
-                                onTelefoneChange(e.target.value)
-                                if (erroTelefone) setErroTelefone(false)
-                            }}
-                            onBlur={() => {
-                                const lido = normalizarTelefone(telefone)
-                                if (lido) onTelefoneChange(lido.formatado)
-                            }}
-                        />
-                        {erroTelefone && (
-                            <p id="telefone-erro" role="alert" className="text-base text-accent">
-                                Confira o telefone, com DDD. De outro país? Comece com + e o código do país.
-                            </p>
-                        )}
-                    </div>
-                </div>
-
-                {erro && (
-                    <p key={erro} role="alert" className="mt-4 animate-aparecer text-center text-base font-medium text-accent">
-                        {erro}
-                    </p>
-                )}
-
-                <div className="mt-6 flex flex-wrap-reverse gap-3">
+                    <a
+                        href={apple ? `/api/agenda/${slug}?data=${data}` : linkGoogleAgenda(data, nomeAla)}
+                        {...(apple ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
+                        className={`${botao('primario', 'grande')} mt-2 w-full`}
+                    >
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+                            <rect x="3" y="4" width="18" height="18" rx="2" />
+                            <path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4" />
+                        </svg>
+                        Adicionar à agenda do celular
+                    </a>
                     <button
                         type="button"
                         onClick={onClose}
-                        disabled={loading}
-                        className="min-h-13 grow basis-40 rounded-xl border border-slate-300 px-4 text-lg font-medium text-text transition hover:bg-slate-100 disabled:opacity-50 cursor-pointer"
+                        className={`${botao('secundario', 'grande')} w-full`}
                     >
-                        Cancelar
+                        Voltar ao calendário
                     </button>
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        aria-busy={loading}
-                        className="flex min-h-13 grow basis-40 items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-lg font-semibold text-white shadow-md transition duration-100 hover:opacity-95 hover:shadow-lg enabled:active:scale-[0.98] disabled:opacity-70 cursor-pointer"
-                    >
-                        {loading && <Spinner />}
-                        {loading ? 'Confirmando…' : 'Confirmar almoço'}
-                    </button>
+                    <p className="text-base text-muted">
+                        Precisa desmarcar? Fale com a liderança da ala.
+                    </p>
                 </div>
-                </form>
-                </>
-                )}
+            ) : (
+            <>
+            <div className="mb-5 flex items-start justify-between gap-3">
+                <h2 id="agendar-titulo" className="text-xl font-semibold text-text">
+                    {titulo}
+                </h2>
+                <button
+                    onClick={onClose}
+                    aria-label="Fechar"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-slate-100 cursor-pointer"
+                >
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                </button>
             </div>
+
+            <form
+                noValidate
+                onSubmit={e => {
+                    e.preventDefault()
+                    agendar()
+                }}
+            >
+            <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                    <label htmlFor="nome" className="text-base font-medium text-text">
+                        Seu nome
+                    </label>
+                    <input
+                        ref={nomeRef}
+                        id="nome"
+                        name="name"
+                        type="text"
+                        autoComplete="name"
+                        autoCapitalize="words"
+                        enterKeyHint="next"
+                        maxLength={80}
+                        placeholder="Digite seu nome aqui"
+                        aria-invalid={erroNome}
+                        aria-describedby={erroNome ? 'nome-erro' : undefined}
+                        className={`${campoBase} ${erroNome ? 'border-accent' : 'border-slate-300'}`}
+                        value={nome}
+                        onChange={e => {
+                            onNomeChange(e.target.value)
+                            if (erroNome) setErroNome(false)
+                        }}
+                        onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault()
+                                telefoneRef.current?.focus()
+                            }
+                        }}
+                    />
+                    {erroNome && (
+                        <p id="nome-erro" className="text-base text-accent">
+                            Informe seu nome.
+                        </p>
+                    )}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                    <label htmlFor="telefone" className="text-base font-medium text-text">
+                        Seu telefone (com DDD)
+                    </label>
+                    <input
+                        ref={telefoneRef}
+                        id="telefone"
+                        name="tel"
+                        type="tel"
+                        autoComplete="tel"
+                        inputMode="tel"
+                        enterKeyHint="done"
+                        placeholder="Digite seu telefone aqui"
+                        maxLength={25}
+                        aria-invalid={erroTelefone}
+                        aria-describedby={erroTelefone ? 'telefone-erro' : undefined}
+                        className={`${campoBase} ${erroTelefone ? 'border-accent' : 'border-slate-300'}`}
+                        value={telefone}
+                        onChange={e => {
+                            onTelefoneChange(e.target.value)
+                            if (erroTelefone) setErroTelefone(false)
+                        }}
+                        onBlur={() => {
+                            const lido = normalizarTelefone(telefone)
+                            if (lido) onTelefoneChange(lido.formatado)
+                        }}
+                    />
+                    {erroTelefone && (
+                        <p id="telefone-erro" className="text-base text-accent">
+                            Confira o telefone, com DDD. De outro país? Comece com + e o código do país.
+                        </p>
+                    )}
+                </div>
             </div>
-        </div>
+
+            {erro && (
+                <ErrorMessage key={erro} className="mt-4">{erro}</ErrorMessage>
+            )}
+
+            <div className="mt-6 flex flex-wrap-reverse gap-3">
+                <button
+                    type="button"
+                    onClick={onClose}
+                    disabled={loading}
+                    className={`${botao('secundario', 'grande')} grow basis-40`}
+                >
+                    Cancelar
+                </button>
+                <button
+                    type="submit"
+                    disabled={loading}
+                    aria-busy={loading}
+                    className={`${botao('primario', 'grande')} grow basis-40`}
+                >
+                    {loading && <Spinner />}
+                    {loading ? 'Confirmando…' : 'Confirmar almoço'}
+                </button>
+            </div>
+            </form>
+            </>
+            )}
+        </Modal>
     )
 }

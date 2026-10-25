@@ -5,7 +5,8 @@
 'use client'
 
 import { useState } from 'react'
-import { isPday, formatMonthLabel, nomeDoMes, rotuloDoDia } from '@/lib/date'
+import { isPday, formatMonthLabel, rotuloDoDia } from '@/lib/date'
+import { MonthTabs } from '@/components/MonthTabs'
 import { Flower } from '@/components/Flower'
 
 type DiaOcupado = {
@@ -70,35 +71,15 @@ export function MonthCalendar({
         <div className="@container space-y-4">
             <h2 className="sr-only">{formatMonthLabel(mesAtivo)}</h2>
 
-            <div role="group" aria-label="Mês do calendário" className="grid grid-cols-2 gap-2 @max-[15rem]:grid-cols-1">
-                {meses.map(ym => {
-                    const ativo = ym === mesAtivo
-                    return (
-                        <button
-                            key={ym}
-                            type="button"
-                            aria-pressed={ativo}
-                            onClick={() => {
-                                if (ativo) return
-                                setTrocouDeMes(true)
-                                onSelectMonth(ym)
-                            }}
-                            className={`flex min-h-13 items-center justify-center gap-2 rounded-xl border-2 border-secondary px-3 py-2 text-lg font-semibold transition duration-100 active:scale-[0.98] ${
-                                ativo
-                                    ? 'bg-secondary text-white shadow-md cursor-default'
-                                    : 'bg-white text-secondary hover:bg-secondary/10 cursor-pointer'
-                            }`}
-                        >
-                            {ativo && (
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
-                                    <path d="M20 6 9 17l-5-5" />
-                                </svg>
-                            )}
-                            {nomeDoMes(ym)}
-                        </button>
-                    )
-                })}
-            </div>
+            <MonthTabs
+                meses={meses}
+                ativo={mesAtivo}
+                label="Mês do calendário"
+                onChange={ym => {
+                    setTrocouDeMes(true)
+                    onSelectMonth(ym)
+                }}
+            />
 
             <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-base font-semibold text-muted">
                 {SEMANA.map(([abrev, inicial]) => (

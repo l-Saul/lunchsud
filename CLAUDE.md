@@ -168,6 +168,10 @@ de data/fuso/P-day em componentes. Detalhes: [`docs/src_lib.md`](docs/src_lib.md
   feminino), dourado `#ffb81c` (`gold`, **só enfeite**, nunca texto sobre
   claro), branco. **Não existe verde no site:** sucesso = azul + texto. Tabela
   completa em [`docs/src_app.md`](docs/src_app.md).
+- **Detalhe padrão = a fitinha** framboesa → dourado → framboesa
+  (`from-accent via-gold to-accent`): no topo dos cartões e, na vertical, só na
+  borda esquerda dos botões das alas (pedido do dono). **Não ponha faixinha
+  vertical, barrinha ou outro enfeite em nenhum outro lugar sem o dono pedir.**
 - **Fontes:** Source Sans (corpo) + Source Serif (títulos) via `next/font` no layout;
   `h1/h2/h3` já recebem serifa por regra base no CSS.
 - **Tamanho da letra: escala por papel** (base 16px, `html { font-size: 100% }`;
@@ -177,8 +181,8 @@ de data/fuso/P-day em componentes. Detalhes: [`docs/src_lib.md`](docs/src_lib.md
 
   | Papel | Classe | Tamanho |
   |---|---|---|
-  | Título da página pública (home, ala) | `text-3xl` | 30px |
-  | Título de página com cartão (login, acesso, nova senha, 404, erro) e do painel | `text-2xl` | 24px |
+  | Título da página (o `h1` da faixa, em toda página) | `text-3xl` (`sm:text-4xl`) | 30px (36px a partir de 640px) |
+  | Título de estado dentro de um cartão ("Olá, Rita!", "Link expirado") | `text-xl` | 20px |
   | Título de cartão do painel e de modal; nome do site na faixa; nome da ala na home | `text-xl` | 20px |
   | Subtítulo de seção; instrução principal ("Toque em…"); mensagem de resposta; botão principal; campo de formulário; abas do mês; número do dia | `text-lg` | 18px |
   | Texto, rótulo, botão do painel, legenda, dica, erro, rodapé | `text-base` | **16px, o mínimo** |
@@ -324,17 +328,35 @@ o arquivo. Nunca coloque SMTP em migration. Tudo em [`docs/database.md`](docs/da
   130% antes de mudar layout.
 - **Fundo claro + faixa azul:** o `body` é creme (`bg-cream`) e o "céu" azul
   é só a faixa do cabeçalho, o componente `HeaderBand` (utilitário `bg-band` do
-  `globals.css`). Toda página começa com ele e põe o conteúdo num `<main>`
-  abaixo, em texto escuro. Mensagens, avisos e confirmações ficam sempre no
+  `globals.css`). **Toda página começa com ele, igual:** o **título da
+  página** (o único `h1`) com a flor embaixo, e nada mais (nem botão, nem
+  subtítulo). O ícone de Cristo fica no **rodapé** (azul), levando ao site
+  oficial da Igreja. O
+  conteúdo vai num `<main>` abaixo, em texto escuro; cartão não repete título
+  nem flor. Mensagens, avisos e confirmações ficam sempre no
   claro. Dentro da faixa o foco é dourado (`--focus-color`): o azul de ação
   some sobre o azul. Cartão sobre o creme: `bg-background` +
   `ring-1 ring-primary/10` + sombra leve.
-- **Todo modal** (e tela por cima, como o `LoadingOverlay`): **fundo desfocado**
-  (`bg-primary/40`–`50` + `backdrop-blur-sm`) e **página atrás travada** com
-  `useScrollLock` (`src/hooks/use-scroll-lock.ts`); nunca reescreva a trava à mão
-  (o iOS ignora `overflow: hidden`). Fecham por toque fora / Esc / botão.
-  Confirmação de remover ou desligar em modal próprio ou inline (não
-  `window.confirm`), alvos ≥48px e cor **rosa** (`accent`), não vermelho.
+- **Todo modal usa o componente `Modal`** (`src/components/Modal.tsx`); tela
+  por cima sem diálogo (como o `LoadingOverlay`) usa o hook `useModalLayer`.
+  Eles dão, sempre: **fundo desfocado** (`bg-primary/50` + `backdrop-blur-sm`),
+  **página atrás travada** (`useScrollLock`; o iOS ignora `overflow: hidden`),
+  **fundo inerte** (teclado e leitor de tela não saem do modal), **foco que
+  entra** no modal e **volta** ao botão que abriu, fechar por toque fora / Esc /
+  botão. Nunca refaça isso à mão. Na confirmação, o foco começa na opção segura
+  (`data-foco-inicial`). Confirmação de remover ou desligar em modal próprio ou
+  inline (não `window.confirm`), alvos ≥48px e cor **rosa** (`accent`), não
+  vermelho.
+- **Botão de ação: sempre `botao(tipo, tamanho)`** de
+  `src/components/button-classes.ts` (primário azul, secundário com contorno,
+  perigo framboesa, dourado só no "Sair"; `normal` 48px no painel, `grande`
+  52px nas páginas públicas). Quem chama só acrescenta layout. Botão novo
+  "do jeito dele" sai do padrão: não faça.
+- **Erro na tela:** o geral de um formulário ou ação vai no `ErrorMessage`
+  (caixa rosa-claro com ícone, `role="alert"`) e diz o que fazer ("…e toque em
+  Confirmar almoço de novo"). Erro de campo fica embaixo do campo, ligado por
+  `aria-describedby`, sem `role="alert"` (um alerta por vez), e o foco vai para
+  o primeiro campo errado. **Nunca `alert()`.**
 - **Aviso na tela (toast):** sempre o `NoticeBar` (`src/components/`), **no
   topo**, com o mesmo visual. O que **confirma** uma ação ("Link copiado!")
   some sozinho em 3 s; o que **explica** algo (dia ocupado, P-day, erro) fica

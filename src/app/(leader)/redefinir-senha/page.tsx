@@ -21,7 +21,7 @@ export default async function RedefinirSenhaPage() {
 
     return (
         <>
-            <HeaderBand />
+            <HeaderBand title="Nova senha" />
             <main className="flex justify-center px-4 py-10">
                 <section className="w-full max-w-md">
                     <ResetPasswordForm email={usuario?.email ?? null} />

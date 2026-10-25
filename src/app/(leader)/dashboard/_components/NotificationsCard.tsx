@@ -4,10 +4,12 @@
  */
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { Spinner } from '@/components/Spinner';
-import { useScrollLock } from '@/hooks/use-scroll-lock';
+import { Modal } from '@/components/Modal';
+import { ErrorMessage } from '@/components/ErrorMessage';
 import type { PreferenciasEmail, TipoAviso } from '@/lib/email-preferences';
+import { botao } from '@/components/button-classes';
 
 type Props = {
     alaId: number;
@@ -137,26 +139,15 @@ export function NotificationsCard({ alaId, email, preferenciasIniciais }: Props)
         setConfirmar(null);
     }
 
-    useScrollLock(confirmar !== null);
-
-    useEffect(() => {
-        if (!confirmar) return;
-        const onKey = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') setConfirmar(null);
-        };
-        window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
-    }, [confirmar]);
-
     const avisoConfirmando = AVISOS.find(a => a.tipo === confirmar);
 
     return (
-        <section className="flex flex-col gap-5 rounded-3xl bg-background p-4 shadow-md ring-1 ring-primary/10 sm:p-8">
-            <div className="flex flex-col gap-2">
+        <section className="flex flex-col gap-6 rounded-3xl bg-background p-4 shadow-md ring-1 ring-primary/10 sm:p-8">
+            <div className="flex flex-col gap-4">
                 <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                     <div className="flex items-center gap-2">
                         <span className="h-5 w-1.5 rounded-full bg-accent" />
-                        <h2 className="text-xl font-semibold text-text">Notificações</h2>
+                        <h2 className="min-w-0 hyphens-auto wrap-break-word text-xl font-semibold text-text">Notificações</h2>
                     </div>
                     <p role="status" aria-live="polite" className="text-base font-medium">
                         {status === 'salvando' && (
@@ -168,20 +159,18 @@ export function NotificationsCard({ alaId, email, preferenciasIniciais }: Props)
                         {status === 'salvo' && <span className="animate-aparecer text-secondary">Salvo.</span>}
                     </p>
                 </div>
-                <p className="wrap-anywhere text-base leading-snug text-muted">
-                    Escolha quais e-mails quer receber sobre esta ala.{' '}
-                    {email ? (
-                        <>Eles chegam em <strong className="text-text">{email}</strong>.</>
-                    ) : (
-                        'Esta conta ainda não tem e-mail cadastrado.'
-                    )}
-                </p>
+                {email ? (
+                    <div className="flex flex-col gap-0.5">
+                        <p className="text-base text-muted">Os avisos chegam no e-mail:</p>
+                        <p className="wrap-anywhere text-lg font-semibold text-text">{email}</p>
+                    </div>
+                ) : (
+                    <p className="text-base text-muted">Esta conta ainda não tem e-mail cadastrado.</p>
+                )}
             </div>
 
             {status === 'erro' && (
-                <p key={erro} role="alert" className="animate-aparecer text-base font-medium text-accent">
-                    {erro}
-                </p>
+                <ErrorMessage key={erro}>{erro}</ErrorMessage>
             )}
 
             <div className="flex flex-col gap-3">
@@ -197,39 +186,28 @@ export function NotificationsCard({ alaId, email, preferenciasIniciais }: Props)
             </div>
 
             {avisoConfirmando && (
-                <div
-                    onClick={() => setConfirmar(null)}
-                    className="fixed inset-0 z-60 flex animate-aparecer items-center justify-center bg-primary/50 p-4 backdrop-blur-sm"
-                >
-                    <div
-                        onClick={e => e.stopPropagation()}
-                        role="alertdialog"
-                        aria-modal="true"
-                        aria-labelledby="desligar-aviso-titulo"
-                        className="w-full max-w-sm animate-surgir rounded-2xl bg-background p-6 text-center shadow-2xl"
-                    >
-                        <h3 id="desligar-aviso-titulo" className="text-xl font-semibold text-text">
-                            Desligar este aviso?
-                        </h3>
-                        <div className="mt-6 flex flex-wrap gap-3">
-                            <button
-                                type="button"
-                                autoFocus
-                                onClick={() => setConfirmar(null)}
-                                className="min-h-12 grow basis-28 rounded-xl border border-slate-300 px-4 text-base font-medium text-text transition hover:bg-slate-100 cursor-pointer"
-                            >
-                                Manter ligado
-                            </button>
-                            <button
-                                type="button"
-                                onClick={desligar}
-                                className="min-h-12 grow basis-28 rounded-xl bg-accent px-4 text-base font-semibold text-white shadow-md transition duration-100 hover:opacity-95 active:scale-[0.98] cursor-pointer"
-                            >
-                                Desligar
-                            </button>
-                        </div>
+                <Modal onClose={() => setConfirmar(null)} labelledBy="desligar-aviso-titulo" alerta className="max-w-sm text-center">
+                    <h3 id="desligar-aviso-titulo" className="text-xl font-semibold text-text">
+                        Desligar este aviso?
+                    </h3>
+                    <div className="mt-6 flex flex-wrap gap-3">
+                        <button
+                            type="button"
+                            data-foco-inicial
+                            onClick={() => setConfirmar(null)}
+                            className={`${botao('secundario', 'normal')} grow basis-28`}
+                        >
+                            Manter ligado
+                        </button>
+                        <button
+                            type="button"
+                            onClick={desligar}
+                            className={`${botao('perigo', 'normal')} grow basis-28`}
+                        >
+                            Desligar
+                        </button>
                     </div>
-                </div>
+                </Modal>
             )}
         </section>
     );

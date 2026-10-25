@@ -23,7 +23,7 @@ export function CollapsibleMonth({ label, total, disponiveis, defaultOpen = true
                 type="button"
                 onClick={() => setOpen(o => !o)}
                 aria-expanded={open}
-                className="group -mx-2 flex w-full cursor-pointer items-center justify-between gap-2 rounded-xl px-2 py-1.5 text-left transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+                className="group -mx-2 flex w-full cursor-pointer flex-wrap items-center justify-between gap-2 rounded-xl px-2 py-1.5 text-left transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
             >
                 <span className="flex items-center gap-2">
                     <svg
@@ -36,7 +36,7 @@ export function CollapsibleMonth({ label, total, disponiveis, defaultOpen = true
                     </svg>
                     <h3 className="text-lg font-semibold text-text transition-colors group-hover:text-secondary">{label}</h3>
                 </span>
-                <span className="rounded-full bg-accent/10 px-3 py-1 text-base font-medium text-accent whitespace-nowrap">
+                <span className="rounded-full bg-accent/10 px-3 py-1 text-base font-medium text-accent">
                     {total} de {disponiveis} dias
                 </span>
             </button>

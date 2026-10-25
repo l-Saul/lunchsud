@@ -11,7 +11,7 @@ import { siteUrl } from '@/lib/site-url';
 type Props = { slug: string; nomeAla: string };
 
 const botaoIcone =
-    'flex w-12 shrink-0 items-center justify-center rounded-2xl bg-secondary text-white shadow-lg transition duration-100 hover:opacity-95 active:scale-95 sm:w-14 cursor-pointer';
+    'flex w-12 shrink-0 items-center justify-center rounded-xl bg-secondary text-white shadow-md transition duration-100 hover:opacity-90 active:scale-[0.98] sm:w-13 cursor-pointer';
 
 function copiarComFallback(texto: string) {
     const campo = document.createElement('textarea');

@@ -4,11 +4,9 @@
  */
 'use client'
 
-import Image from 'next/image'
 import useSWR from 'swr'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Flower } from '@/components/Flower'
 import { HeaderBand } from '@/components/HeaderBand'
 import { Spinner } from '@/components/Spinner'
 
@@ -38,26 +36,7 @@ export default function IndexPage() {
 
     return (
         <>
-            <HeaderBand>
-                <div className="flex flex-col items-center gap-5 pt-10 pb-8">
-                    <Image
-                        src="/lds.jpg"
-                        alt="Igreja de Jesus Cristo dos Santos dos Últimos Dias"
-                        width={160}
-                        height={160}
-                        className="rounded-2xl shadow-xl ring-2 ring-white/15"
-                        priority
-                    />
-                    <h1 className="hyphens-auto wrap-break-word text-3xl font-semibold">
-                        Almoço dos Missionários
-                    </h1>
-                    <div className="flex items-center gap-3" aria-hidden="true">
-                        <span className="h-px w-10 bg-linear-to-r from-transparent to-gold/70" />
-                        <Flower size={22} />
-                        <span className="h-px w-10 bg-linear-to-l from-transparent to-gold/70" />
-                    </div>
-                </div>
-            </HeaderBand>
+            <HeaderBand title="Almoço dos Missionários" />
 
             <main className="flex justify-center">
                 <div
@@ -96,12 +75,13 @@ export default function IndexPage() {
                                             setLoadingSlug(ala.slug)
                                             router.push(`/${ala.slug}`)
                                         }}
-                                        className={`group flex w-full items-center justify-between gap-4 rounded-2xl border-l-4 border-secondary px-6 py-5 text-left text-xl font-medium shadow-md ring-1 ring-primary/10 transition duration-100 enabled:active:scale-[0.98] cursor-pointer disabled:cursor-default
+                                        className={`group relative flex w-full items-center justify-between gap-4 overflow-hidden rounded-2xl px-6 py-5 text-left text-xl font-medium shadow-md ring-1 ring-primary/10 transition duration-100 enabled:active:scale-[0.98] cursor-pointer disabled:cursor-default
                                             ${isLoading
                                                 ? 'bg-secondary text-white'
                                                 : 'bg-white text-primary hover:bg-secondary hover:text-white hover:shadow-xl'}
                                         `}
                                     >
+                                        <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1.5 bg-linear-to-b from-accent via-gold to-accent" />
                                         <span className="min-w-0 hyphens-auto wrap-break-word">{ala.nome}</span>
                                         {isLoading ? (
                                             <span className="flex shrink-0 items-center gap-2 text-base">

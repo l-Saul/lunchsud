@@ -7,7 +7,7 @@ Porta de entrada para quem não tem o link da ala. Mostra o logo, o título
 
 `src/app/(member)/page.tsx`: a página inteira é um componente client
 (`'use client'`). Dependências: `swr`,
-`src/components/{Flower,Spinner,HeaderBand}`, `GET /api/alas` (ver [routes_api.md](routes_api.md)).
+`src/components/{Spinner,HeaderBand}`, `GET /api/alas` (ver [routes_api.md](routes_api.md)).
 
 ## Renderização e dados
 
@@ -34,14 +34,17 @@ Porta de entrada para quem não tem o link da ala. Mostra o logo, o título
   tocou) e "Abrindo…" + `<Spinner />` aparecem no lugar da seta até a página da
   ala abrir. O loading não é desligado de propósito: a navegação desmonta a tela.
 - `aria-busy` no botão tocado; `active:scale-[0.98]` ao tocar.
-- Visual: cartão branco com contorno fino (`ring-primary/10`), borda azul
-  (`secondary`) à esquerda, texto marinho, `text-xl` (20px: é a ação principal da página); hover azul com texto branco. Divisória do título: linhas douradas
-  (`gold`) com a florzinha.
+- Visual: cartão branco com contorno fino (`ring-primary/10`), **fitinha
+  vertical** framboesa → dourado → framboesa na borda esquerda (o detalhe padrão
+  do site, o mesmo do topo do calendário; `span` absoluto `w-1.5` com
+  `overflow-hidden` no botão), texto marinho, `text-xl` (20px: é a ação
+  principal da página); hover azul com texto branco.
 
 ## Layout
 
-- `HeaderBand` (faixa azul): logo `public/lds.jpg` (160×160, `priority`, branca,
-  por isso fica na faixa), título `h1` e divisória com florzinha.
+- `HeaderBand title="Almoço dos Missionários"`: a mesma faixa das outras
+  páginas (título e flor). **Sem a imagem grande**
+  (decisão do dono, 25/10/2026): a lista de alas aparece logo.
 - `<main>` no fundo creme, largura máxima `max-w-xl`: "Toque na sua ala para
   agendar." (`text-lg`, texto escuro) e a lista de alas. **Sem escritura**: o
   dono tirou em 24/10/2026 (não use de novo).

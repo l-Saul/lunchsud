@@ -16,7 +16,7 @@ export function HistoryCard({ historico }: { historico: MesHistorico[] }) {
         <section className="flex flex-col gap-5 rounded-3xl bg-background p-4 shadow-md ring-1 ring-primary/10 sm:p-8">
             <div className="flex items-center gap-2">
                 <span className="h-5 w-1.5 rounded-full bg-accent" />
-                <h2 className="text-xl font-semibold text-text">Histórico de almoços</h2>
+                <h2 className="min-w-0 hyphens-auto wrap-break-word text-xl font-semibold text-text">Histórico de almoços</h2>
             </div>
 
             {historico.length === 0 ? (
@@ -26,12 +26,12 @@ export function HistoryCard({ historico }: { historico: MesHistorico[] }) {
                     {historico.map(({ ym, total, disponiveis }) => {
                         const pct = disponiveis ? Math.round((total / disponiveis) * 100) : 0;
                         return (
-                            <li key={ym} className="flex items-center gap-3">
+                            <li key={ym} className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                 <span className="w-32 shrink-0 text-base font-medium text-text">
                                     {formatMonthLabel(ym)}
                                 </span>
                                 <div
-                                    className="h-7 flex-1 overflow-hidden rounded-full bg-accent/10"
+                                    className="h-7 min-w-24 flex-1 overflow-hidden rounded-full bg-accent/10"
                                     role="img"
                                     aria-label={`${total} de ${disponiveis} dias`}
                                 >

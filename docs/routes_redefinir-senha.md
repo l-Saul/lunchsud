@@ -31,8 +31,10 @@ O convite (`invite-user.html`) usa o mesmo destino: `type=invite&next=/redefinir
 
 - `dynamic = 'force-dynamic'`, `revalidate = 0`. Metadata: título "Nova senha",
   `robots: noindex, nofollow`.
-- Estrutura: `<HeaderBand />` (faixa azul com o ícone e "Almoço dos
-  Missionários") e, abaixo, o `<main>` com o cartão sobre o fundo creme.
+- Estrutura: `<HeaderBand title="Nova senha" />` e, abaixo, o `<main>` com o
+  cartão sobre o fundo creme. Os títulos de estado do cartão ("Link expirado",
+  "Senha atualizada!") são `h2` (`text-xl`); na tela de criar a senha o cartão
+  não repete "Nova senha".
 - Lê o usuário da sessão e passa o `email` dele ao formulário, ou `null` **sem
   sessão** (link expirado, já usado, ou alguém abriu `/redefinir-senha` direto).
 
@@ -49,7 +51,7 @@ Prop `email: string | null`. Três telas, no mesmo cartão (fitinha + florzinha)
 
 ### Com sessão: nova senha
 
-- Título **"Nova senha"** e "Escolha uma nova senha para a conta
+- (Título "Nova senha" na faixa.) "Escolha uma nova senha para a conta
   **\<e-mail\>**." (a pessoa vê de qual conta é; `wrap-anywhere`).
 
 | Campo | Atributos |
@@ -70,8 +72,8 @@ senha", `aria-pressed`).
 | `updateUser` falhou por outro motivo (sessão caiu) | "O link expirou. Peça um novo na tela de entrar, em "Esqueci minha senha"." |
 | sucesso | a terceira tela |
 
-Botão enquanto salva: `disabled`, `aria-busy`, Spinner e "Salvando…". Erro em
-`role="alert"`, rosa.
+Botão enquanto salva: `disabled`, `aria-busy`, Spinner e "Salvando…". Erro no
+`ErrorMessage` (caixa rosa com ícone, `role="alert"`).
 
 ### Senha salva
 

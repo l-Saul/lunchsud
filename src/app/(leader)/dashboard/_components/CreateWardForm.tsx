@@ -8,6 +8,8 @@ import { useMemo, useState } from 'react';
 import { gerarSlug, normalizarNomeAla } from '@/lib/wards';
 import { FUSO_PADRAO, PAISES, UFS, fusosDasAmericas } from '@/lib/location';
 import { Spinner } from '@/components/Spinner';
+import { ErrorMessage } from '@/components/ErrorMessage';
+import { botao } from '@/components/button-classes';
 
 const campoClasse =
     'min-h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-lg text-text shadow-sm focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary disabled:opacity-60';
@@ -257,14 +259,14 @@ export function CreateWardForm({ onCreated }: { onCreated: (novaId: number | und
             </div>
 
             {erro && (
-                <p role="alert" className="text-base font-medium text-accent">{erro}</p>
+                <ErrorMessage key={erro}>{erro}</ErrorMessage>
             )}
 
             <button
                 type="submit"
                 disabled={salvando || !nome.trim()}
                 aria-busy={salvando}
-                className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-base font-semibold text-white transition duration-100 hover:opacity-90 enabled:active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                className={botao('primario', 'normal')}
             >
                 {salvando && <Spinner className="h-4 w-4" />}
                 {salvando ? 'Criando…' : 'Criar e entrar'}

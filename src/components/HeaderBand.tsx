@@ -3,23 +3,19 @@
  * Mudou o comportamento? Atualize o doc na mesma mudança.
  */
 
-import Image from 'next/image';
+import { Flower } from '@/components/Flower';
 
-export function HeaderBand({ children, className = '' }: { children?: React.ReactNode; className?: string }) {
+export function HeaderBand({ title }: { title: React.ReactNode }) {
     return (
-        <header className={`bg-band relative overflow-hidden px-4 text-center text-white [--focus-color:var(--color-gold)] ${className}`}>
-            {children ?? (
-                <div className="flex flex-col items-center gap-3 py-7">
-                    <Image
-                        src="/lunchsud180x180.png"
-                        alt=""
-                        width={56}
-                        height={56}
-                        className="rounded-xl"
-                    />
-                    <p className="font-serif text-xl font-semibold">Almoço dos Missionários</p>
+        <header className="bg-band px-4 py-8 text-white [--focus-color:var(--color-gold)] sm:px-6 sm:py-10">
+            <div className="flex min-w-0 flex-col items-center gap-3 text-center">
+                <h1 className="wrap-anywhere text-3xl font-semibold sm:text-4xl">{title}</h1>
+                <div className="flex items-center gap-3" aria-hidden="true">
+                    <span className="h-px w-12 bg-linear-to-r from-transparent to-gold/70 sm:w-20" />
+                    <Flower size={26} />
+                    <span className="h-px w-12 bg-linear-to-l from-transparent to-gold/70 sm:w-20" />
                 </div>
-            )}
+            </div>
         </header>
     );
 }

@@ -98,8 +98,8 @@ Regras completas de animação no `CLAUDE.md`.
 
   | Papel | Classe | Tamanho |
   |---|---|---|
-  | Título da página pública (home, ala) | `text-3xl` | 30px |
-  | Título de página com cartão (login, acesso, nova senha, 404, erro) e do painel | `text-2xl` | 24px |
+  | Título da página (o `h1` da faixa, em toda página) | `text-3xl` (`sm:text-4xl`) | 30px (36px a partir de 640px) |
+  | Título de estado dentro de um cartão ("Olá, Rita!", "Link expirado") | `text-xl` | 20px |
   | Título de cartão do painel e de modal; nome do site na faixa; nome da ala na home | `text-xl` | 20px |
   | Subtítulo de seção; instrução principal ("Toque em…"); mensagem de resposta; botão principal; campo de formulário; abas do mês; número do dia | `text-lg` | 18px |
   | Texto, rótulo, botão do painel, legenda, dica, erro, rodapé | `text-base` | **16px, o mínimo** |
@@ -187,8 +187,8 @@ home, onde a pessoa acha a sua com um toque:
 - Título da aba: "Página não encontrada" (`metadata` do próprio arquivo, com
   `robots: noindex`), para endereços com mais de um nível (`/a/b`); os de um
   nível caem no `[slug]`, que dá o mesmo título.
-- `<HeaderBand />` no topo e o cartão num `<main>` sobre o creme.
-- Título: **"Não encontramos essa página"**
+- `<HeaderBand title="Página não encontrada" />` no topo e o cartão num
+  `<main>` sobre o creme (sem título nem flor no cartão).
 - Texto: "Confira o link que você recebeu ou escolha a sua ala na lista."
 - Botão **"Ver as alas"** → `/`.
 

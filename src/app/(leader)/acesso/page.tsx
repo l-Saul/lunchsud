@@ -41,7 +41,7 @@ export default async function AcessoPage() {
 
     return (
         <>
-            <HeaderBand />
+            <HeaderBand title="Acesso ao painel" />
             <main className="flex justify-center px-4 py-10">
                 <section className="w-full max-w-md">
                     <RequestAccess nome={ctx.nome} alas={lista} pendenteEm={pendenteEm} />

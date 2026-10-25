@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Spinner } from '@/components/Spinner';
+import { botao } from '@/components/button-classes';
 
 export function OpenCalendarButton({ slug }: { slug: string }) {
     const router = useRouter();
@@ -23,7 +24,7 @@ export function OpenCalendarButton({ slug }: { slug: string }) {
             onClick={abrir}
             disabled={loading}
             aria-busy={loading}
-            className="flex min-w-0 flex-1 items-center justify-center gap-3 rounded-2xl bg-secondary px-3 py-4 sm:px-4 text-center text-balance text-base font-semibold text-white shadow-lg transition duration-100 hover:opacity-95 hover:shadow-xl active:scale-[0.98] disabled:opacity-80 sm:text-lg cursor-pointer"
+            className={`${botao('primario', 'normal')} min-w-0 grow basis-40 text-balance sm:min-h-13 sm:text-lg`}
         >
             {loading ? (
                 <>

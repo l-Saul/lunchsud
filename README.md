@@ -256,6 +256,6 @@ build-manifest.json`).
 ---
 
 Desenvolvido por **Luis Henrique Engel Saul**:
-[luishsaul.com.br](https://luishsaul.com.br/#contato). Site independente, sem
-vínculo institucional ou oficial com a Igreja de Jesus Cristo dos Santos dos
-Últimos Dias.
+[luishsaul.com.br](https://luishsaul.com.br/#contato). Feito por um membro
+voluntário para ajudar as alas a organizar os almoços dos missionários. Não é
+mantido nem aprovado pela Igreja de Jesus Cristo dos Santos dos Últimos Dias.

@@ -7,8 +7,9 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { criarSupabaseBrowser } from '@/lib/supabase/browser-session';
-import { Flower } from '@/components/Flower';
 import { Spinner } from '@/components/Spinner';
+import { ErrorMessage } from '@/components/ErrorMessage';
+import { botao } from '@/components/button-classes';
 
 type Ala = { id: number; nome: string };
 
@@ -64,15 +65,9 @@ export default function RequestAccess({
         <div className="relative flex flex-col items-center gap-6 overflow-hidden rounded-3xl bg-background px-6 py-10 text-center shadow-lg ring-1 ring-primary/10 sm:px-10">
             <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-accent via-gold to-accent" />
 
-            <div className="flex items-center gap-3" aria-hidden="true">
-                <span className="h-px w-8 bg-linear-to-r from-transparent to-gold/70" />
-                <Flower size={22} />
-                <span className="h-px w-8 bg-linear-to-l from-transparent to-gold/70" />
-            </div>
-
             {pendenteEm ? (
                 <>
-                    <h1 className="text-2xl font-semibold text-text">Quase lá, {nome}!</h1>
+                    <h2 className="text-xl font-semibold text-text">Quase lá, {nome}!</h2>
                     <p className="text-base text-muted">
                         Seu acesso à <strong className="text-text">{pendenteEm}</strong> está
                         aguardando a aprovação de um responsável da ala.
@@ -81,7 +76,7 @@ export default function RequestAccess({
                         onClick={() => iniciarAtualizar(() => router.refresh())}
                         disabled={atualizando}
                         aria-busy={atualizando}
-                        className="flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-lg font-semibold text-white transition duration-100 hover:opacity-95 hover:shadow-lg enabled:active:scale-[0.98] disabled:opacity-70 cursor-pointer"
+                        className={`${botao('primario', 'grande')} w-full`}
                     >
                         {atualizando && <Spinner />}
                         {atualizando ? 'Atualizando…' : 'Já fui aprovado? Atualizar'}
@@ -89,7 +84,7 @@ export default function RequestAccess({
                 </>
             ) : (
                 <>
-                    <h1 className="text-2xl font-semibold text-text">Olá, {nome}!</h1>
+                    <h2 className="text-xl font-semibold text-text">Olá, {nome}!</h2>
                     <p className="text-base text-muted">
                         Escolha a sua ala para pedir acesso ao painel.
                     </p>
@@ -119,14 +114,14 @@ export default function RequestAccess({
                     </div>
 
                     {erro && (
-                        <p role="alert" className="text-base font-medium text-accent">{erro}</p>
+                        <ErrorMessage key={erro}>{erro}</ErrorMessage>
                     )}
 
                     <button
                         onClick={pedirAcesso}
                         disabled={!alaId || loading}
                         aria-busy={loading}
-                        className="flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 text-lg font-semibold text-white transition duration-100 hover:opacity-95 hover:shadow-lg enabled:active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+                        className={`${botao('primario', 'grande')} w-full`}
                     >
                         {loading && <Spinner />}
                         {loading ? 'Enviando…' : 'Pedir acesso'}

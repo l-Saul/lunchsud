@@ -8,8 +8,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { criarSupabaseBrowser } from '@/lib/supabase/browser-session';
-import { Flower } from '@/components/Flower';
 import { Spinner } from '@/components/Spinner';
+import { ErrorMessage } from '@/components/ErrorMessage';
+import { botao } from '@/components/button-classes';
 
 export default function ResetPasswordForm({ email }: { email: string | null }) {
     const router = useRouter();
@@ -67,33 +68,26 @@ export default function ResetPasswordForm({ email }: { email: string | null }) {
         <div className="relative flex flex-col items-center gap-6 overflow-hidden rounded-3xl bg-background px-6 py-10 text-center shadow-lg ring-1 ring-primary/10 sm:px-10">
             <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-accent via-gold to-accent" />
 
-            <div className="flex items-center gap-3" aria-hidden="true">
-                <span className="h-px w-8 bg-linear-to-r from-transparent to-gold/70" />
-                <Flower size={22} />
-                <span className="h-px w-8 bg-linear-to-l from-transparent to-gold/70" />
-            </div>
-
             {!email ? (
                 <>
-                    <h1 className="text-2xl font-semibold text-text">Link expirado</h1>
+                    <h2 className="text-xl font-semibold text-text">Link expirado</h2>
                     <p className="text-base text-muted">
                         O link para criar uma nova senha expirou ou já foi usado. Peça um novo na tela de entrar, em &quot;Esqueci minha senha&quot;.
                     </p>
                     <Link
                         href="/admin"
-                        className="flex min-h-13 w-full items-center justify-center rounded-xl bg-secondary px-4 text-lg font-semibold text-white transition duration-100 hover:opacity-90 active:scale-[0.98]"
+                        className={`${botao('primario', 'grande')} w-full`}
                     >
                         Ir para a tela de entrar
                     </Link>
                 </>
             ) : pronto ? (
                 <>
-                    <h1 className="text-2xl font-semibold text-text">Senha atualizada!</h1>
+                    <h2 className="text-xl font-semibold text-text">Senha atualizada!</h2>
                     <p className="text-base text-muted">Abrindo o painel…</p>
                 </>
             ) : (
                 <>
-                    <h1 className="text-2xl font-semibold text-text">Nova senha</h1>
                     <p className="wrap-anywhere text-base text-muted">
                         Escolha uma nova senha para a conta <strong className="text-text">{email}</strong>.
                     </p>
@@ -188,14 +182,14 @@ export default function ResetPasswordForm({ email }: { email: string | null }) {
                         </div>
 
                         {erro && (
-                            <p role="alert" className="text-base font-medium text-accent">{erro}</p>
+                            <ErrorMessage key={erro}>{erro}</ErrorMessage>
                         )}
 
                         <button
                             type="submit"
                             disabled={loading}
                             aria-busy={loading}
-                            className="mt-1 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-secondary py-4 text-lg font-semibold text-white transition duration-100 hover:opacity-90 enabled:active:scale-[0.98] disabled:opacity-70"
+                            className={`${botao('primario', 'grande')} mt-1 w-full`}
                         >
                             {loading && <Spinner />}
                             {loading ? 'Salvando…' : 'Salvar nova senha'}

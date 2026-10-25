@@ -31,8 +31,8 @@ Dependências: `src/lib/server/session.ts` (`getUsuario`),
 ## `page.tsx`
 
 - `dynamic = 'force-dynamic'`, `revalidate = 0`: sempre lê a sessão atual.
-- Estrutura: `<HeaderBand />` (faixa azul com o ícone e "Almoço dos
-  Missionários") e, abaixo, o `<main>` com o cartão sobre o fundo creme.
+- Estrutura: `<HeaderBand title="Acesso do líder" />` e, abaixo, o `<main>`
+  com o cartão sobre o fundo creme.
 - Metadata: título "Entrar" e `robots: noindex, nofollow`.
 - Já logado (`getUsuario()`) → `redirect('/dashboard')`. O painel, por sua vez,
   manda para `/acesso` quem ainda não tem ala aprovada.
@@ -42,8 +42,9 @@ Dependências: `src/lib/server/session.ts` (`getUsuario`),
 
 ## `LoginCard.tsx`
 
-Cartão branco com fitinha framboesa→dourado→framboesa no topo, título **"Acesso do líder"**,
-divisória com florzinha e "Entre para gerenciar os almoços da sua ala.". Repassa
+Cartão branco com fitinha framboesa→dourado→framboesa no topo e o formulário.
+**Sem título nem frase:** "Acesso do líder" fica na faixa (pedido do dono, que
+também tirou "Entre para gerenciar os almoços da sua ala."). Repassa
 `erroInicial` ao formulário.
 
 ## `LoginForm.tsx` (client)
@@ -146,7 +147,7 @@ Formulário `<form>` real, botão principal `type="submit"` (a tecla "Ir" envia)
 
 ### Feedback
 
-- Erro: `role="alert"`, rosa. Aviso: `role="status"`, azul.
+- Erro: `ErrorMessage` (caixa rosa com ícone, `role="alert"`). Aviso: `role="status"`, azul.
 - Botão principal enquanto trabalha: `disabled`, `aria-busy`, `<Spinner />` e
   "Entrando…" / "Criando conta…".
 - `loading` também bloqueia "Esqueci minha senha" e desativa os campos.

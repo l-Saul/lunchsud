@@ -5,7 +5,6 @@
 
 import { formatMonthLabel, diaTile, diasDisponiveisNoMes } from '@/lib/date';
 import EditBookingModal from './EditBookingModal';
-import MonthImageExport from './month-image/MonthImageExport';
 import { CollapsibleMonth } from './CollapsibleMonth';
 
 type Agendamento = {
@@ -24,12 +23,9 @@ type Props = {
 export function BookingsCard({ mesAtual, mesSeguinte, agendamentos }: Props) {
     return (
         <section className="flex flex-col gap-6 rounded-3xl bg-background p-4 shadow-md ring-1 ring-primary/10 sm:p-8">
-            <div className="flex flex-col gap-4 border-b border-slate-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2">
-                    <span className="h-5 w-1.5 rounded-full bg-accent" />
-                    <h2 className="text-xl font-semibold text-text">Agendamentos</h2>
-                </div>
-                <MonthImageExport meses={[mesAtual, mesSeguinte]} agendamentos={agendamentos} />
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-5">
+                <span className="h-5 w-1.5 rounded-full bg-accent" />
+                <h2 className="min-w-0 hyphens-auto wrap-break-word text-xl font-semibold text-text">Agendamentos</h2>
             </div>
 
             <div className="flex flex-col divide-y divide-slate-100">
@@ -55,13 +51,13 @@ export function BookingsCard({ mesAtual, mesSeguinte, agendamentos }: Props) {
                                         return (
                                             <li
                                                 key={row.id}
-                                                className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-accent/40 hover:bg-accent/5"
+                                                className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-accent/40 hover:bg-accent/5"
                                             >
                                                 <div className="flex size-14 shrink-0 flex-col items-center justify-center rounded-xl bg-primary text-white">
                                                     <span className="text-lg font-bold leading-none">{dia}</span>
                                                     <span className="mt-1 text-base leading-none text-white/85">{semana}</span>
                                                 </div>
-                                                <div className="min-w-0 flex-1">
+                                                <div className="min-w-0 grow basis-40">
                                                     <p className="wrap-anywhere font-medium text-text">{row.nome}</p>
                                                     <p className="text-base text-muted">{row.telefone}</p>
                                                 </div>

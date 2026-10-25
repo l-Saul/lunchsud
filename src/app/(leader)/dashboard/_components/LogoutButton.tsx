@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { criarSupabaseBrowser } from '@/lib/supabase/browser-session';
 import { Spinner } from '@/components/Spinner';
+import { botao } from '@/components/button-classes';
 
 export function LogoutButton() {
     const [supabase] = useState(() => criarSupabaseBrowser());
@@ -27,17 +28,19 @@ export function LogoutButton() {
         <button
             onClick={handleLogout}
             disabled={loading}
-            className={`
-                min-h-11 shrink-0 px-4 py-2 rounded-lg font-medium text-white ring-1 ring-white/40
-                transition duration-100 cursor-pointer
-                flex items-center justify-center gap-2
-                ${loading
-                    ? 'bg-white/20 cursor-not-allowed'
-                    : 'bg-white/10 hover:bg-white/20 active:scale-[0.98]'}
-            `}
+            aria-busy={loading}
+            className={`${botao('dourado', 'normal')} shrink-0`}
         >
-            {loading && <Spinner className="h-4 w-4" />}
-            {loading ? 'Tchau' : 'Sair'}
+            {loading ? (
+                <Spinner className="h-5 w-5" />
+            ) : (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <path d="m16 17 5-5-5-5" />
+                    <path d="M21 12H9" />
+                </svg>
+            )}
+            {loading ? 'Saindo…' : 'Sair'}
         </button>
     );
 }
