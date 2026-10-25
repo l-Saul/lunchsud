@@ -9,11 +9,12 @@ import { useRouter } from 'next/navigation';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
 import { Modal } from '@/components/Modal';
 import { WardForm } from '@/components/WardForm';
+import { WardFilter } from '@/components/WardFilter';
 import { ErrorMessage } from '@/components/ErrorMessage';
 import { Spinner } from '@/components/Spinner';
 import { botao } from '@/components/button-classes';
 
-type Ala = { id: number; nome: string };
+type Ala = { id: number; nome: string; estado: string; cidade: string };
 
 export type PedidoAla = {
     id: number;
@@ -234,33 +235,15 @@ export function WardSwitcher({ alas, atualId, pedidos }: { alas: Ala[]; atualId:
                     )}
 
                     {alas.length > 0 && (
-                        <div className="flex flex-col gap-2">
-                            <p id="trocar-ala" className="text-base font-medium text-text">
-                                Trocar de ala
-                            </p>
-                            <ul aria-labelledby="trocar-ala" className="flex flex-col gap-2">
-                                {alas.map(a => {
-                                    const atual = a.id === atualId;
-                                    return (
-                                        <li key={a.id}>
-                                            <button
-                                                type="button"
-                                                onClick={() => trocar(a.id)}
-                                                aria-current={atual || undefined}
-                                                disabled={transicao !== null}
-                                                className={`flex min-h-12 w-full items-center justify-between gap-3 rounded-xl px-4 py-2 text-left text-lg font-medium transition duration-100 active:scale-[0.98] disabled:opacity-60 cursor-pointer ${atual ? 'bg-secondary text-white shadow-md' : 'border border-slate-300 bg-white text-text hover:border-secondary hover:bg-secondary/5'}`}
-                                            >
-                                                <span className="min-w-0 wrap-anywhere">{a.nome}</span>
-                                                {atual && (
-                                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
-                                                        <path d="M20 6 9 17l-5-5" />
-                                                    </svg>
-                                                )}
-                                            </button>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
+                        <div className="flex flex-col gap-4">
+                            <h3 className="text-lg font-semibold text-text">Trocar de ala</h3>
+                            <WardFilter
+                                alas={alas.map(a => ({ ...a, chave: String(a.id) }))}
+                                instrucao="Toque na ala que quer abrir."
+                                marcada={atualId === null ? null : String(atualId)}
+                                desativado={transicao !== null}
+                                onEscolher={a => trocar(Number(a.chave))}
+                            />
                         </div>
                     )}
 

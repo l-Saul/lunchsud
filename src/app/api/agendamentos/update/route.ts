@@ -32,6 +32,9 @@ export async function POST(req: Request) {
         .select();
 
     if (error) {
+        if (error.code === '23505') {
+            return NextResponse.json({ error: 'Já há um almoço nesse dia.' }, { status: 409 });
+        }
         return NextResponse.json({ error: 'Erro ao atualizar' }, { status: 400 });
     }
 

@@ -60,8 +60,9 @@ Prop `email: string | null`. Três telas, no mesmo cartão (fitinha + florzinha)
 | Nova senha (`#nova-senha`) | `name="new-password"`, `autoComplete="new-password"` (a regra dos 6 caracteres aparece só no erro; o dono tirou o texto fixo) |
 | Confirmar senha (`#confirmar-nova-senha`) | `name="new-password-confirm"`, `autoComplete="new-password"` |
 
-Cada campo de senha tem botão de olho (`aria-label` "Mostrar senha"/"Ocultar
-senha", `aria-pressed`).
+Cada campo de senha é um `PasswordField` (ver
+[src_components.md](src_components.md)), no padrão `campo()`, com botão de olho
+(`aria-label` "Mostrar senha"/"Ocultar senha", `aria-pressed`).
 
 | Situação | Resultado |
 |---|---|

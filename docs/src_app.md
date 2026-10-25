@@ -223,11 +223,11 @@ função: roda antes da requisição). Aqui ela **renova a sessão do Supabase A
 ```
 /dashboard/:path*  /admin/:path*  /acesso/:path*  /redefinir-senha/:path*  /auth/:path*
 /api/acesso/:path*  /api/agendamentos/update  /api/agendamentos/delete
-/api/ala-atual  /api/alas/criar  /api/avisos/:path*
+/api/ala-atual  /api/alas/criar  /api/alas/aprovar  /api/alas/recusar  /api/avisos/:path*
 ```
 
 O caminho do membro (home, calendário da ala, `/api/agendar`,
-`/api/agendamentos/[slug]`, `/api/alas`) **não tem login**, então vai direto para
+`/api/agendamentos/[slug]`, `/api/alas`, `/api/alas/pedir`) **não tem login**, então vai direto para
 a rota, sem esse passo extra. O cron (`/api/cron/avisos`) também fica fora: não
 tem sessão, é protegido pelo `CRON_SECRET`. **Rota nova que use sessão
 (`getUsuario`/`getContexto`) precisa entrar no matcher.**

@@ -35,6 +35,7 @@ mês "viraria" perto da meia-noite, e Manaus vira o dia 1 h depois de São Paulo
 | `nomeDoMes('2026-12')` | `'Dezembro'` | só o nome do mês |
 | `somarDias('2026-10-30', 3)` | `'2026-11-02'` | soma dias em texto `YYYY-MM-DD` (conta em UTC, ao meio-dia, sem efeito de fuso) |
 | `dataPorExtenso('2026-04-16')` | `'quinta-feira, 16 de abril'` | data por extenso dos e-mails |
+| `diaNoFuso('2026-10-25T02:30:00Z', fuso?)` | `'2026-10-24'` | o dia (`YYYY-MM-DD`) de um instante (`timestamptz`) no fuso dado; usado para mostrar quando um pedido de ala foi feito |
 | `diaDaSemanaEDia('2026-10-27')` | `'terça-feira, 27'` | linha do e-mail da semana |
 | `tituloDoDia('2026-11-12')` | `'Quinta-feira, 12 de novembro'` | título do modal de agendar e da confirmação (`dataPorExtenso` com maiúscula) |
 | `rotuloDoDia('2026-11-12')` | `'12 de novembro, quinta-feira'` | nome do dia para leitor de tela; começa pelo número, que é o texto visível do botão |
@@ -118,53 +119,61 @@ sair dele (`onBlur`), e de novo no servidor.
 
 ---
 
-## `location.ts`: país, estado, cidade e fuso da ala
+## `location.ts`: estado e fuso da ala (só Brasil)
 
-Só dados e validação, sem dependências. Usado no formulário de nova ala
-(navegador) e na validação do servidor.
+Só dados, sem dependências. Usado no formulário de ala, na busca de ala e na
+validação do servidor. **O site é só do Brasil** (regra do dono, 25/10/2026):
+não há país, e o fuso sai sempre da UF.
 
 O **fuso** é o que importa para as regras de data: o "hoje" (dia passado
 bloqueado), a janela de 2 meses e a virada do mês são calculados no fuso da ala.
-No Brasil ele sai da UF; nos outros países o owner escolhe (EUA, México… têm
-vários fusos).
 
 | Export | Conteúdo |
 |---|---|
 | `FUSO_PADRAO` | `'America/Sao_Paulo'` |
 | `UFS` | as 27 UFs: `{ sigla, nome, fuso }` (fuso da capital; ex. AM → `America/Manaus`, AC → `America/Rio_Branco`) |
-| `PAISES` | países do foco (Brasil, América Latina, EUA, Canadá, Porto Rico, Rep. Dominicana): `{ codigo (ISO 2 letras), nome, fuso sugerido }`. O owner troca se a ala for em outro fuso do país |
-| `fusoValido(fuso)` | formato IANA (`Continente/Cidade`) **e** conhecido pelo `Intl` (fuso inválido faz o `Intl` lançar `RangeError`) |
-| `fusosDasAmericas()` | fusos `America/*` do `Intl.supportedValuesOf('timeZone')` (lista vazia se o navegador não suportar) |
+| `nomeDaUf(sigla)` | `'PR'` → `'Paraná'` (a sigla mesmo, se não achar); usado nas listas de estado |
 
 ---
 
-## `wards.ts`: nome e slug da ala
+## `wards.ts`: nome, cidade e link da ala
 
 Também importado pelo navegador (prévia do nome e do link ao criar ala). O
 servidor usa as mesmas funções, então a prévia bate com o que é gravado.
 
-### `normalizarNomeAla(nome)`
+### `normalizarNomeAla(nome, tipo = 'ala')` e `nomeSemTipo(nome)`
 
-Nome de exibição, antes de gravar:
+Nome de exibição, antes de gravar. `tipo` é `'ala'` ou `'ramo'` (`TipoUnidade`):
 
 - espaços normalizados; **title case** (é nome próprio), com as preposições
   `de, da, do, das, dos, e` minúsculas no meio ("Ala Vila do Sol");
-- garante o prefixo **"Ala "**: "são lourenço" → "Ala São Lourenço". Os acentos
-  só existem se a pessoa digitar.
+- `nomeSemTipo` tira um "Ala"/"Ramo" que a pessoa tenha digitado na frente;
+  `normalizarNomeAla` põe o certo: "são lourenço" → "Ala São Lourenço",
+  ("vila nova", `'ramo'`) → "Ramo Vila Nova", ("Ala Centro", `'ramo'`) →
+  "Ramo Centro". Os acentos só existem se a pessoa digitar.
 
-### `gerarSlug(nome)`
+### `normalizarCidade(cidade)`
 
-O link público (`/sao_lourenco`), na convenção do projeto. **Não invente outro
-formato.**
+O mesmo nome próprio: "  são josé   dos pinhais " → "São José dos Pinhais".
+Importa para a busca da home: a cidade é agrupada pelo texto exato.
 
-1. separa letra e acento (`NFD`) e remove tudo que não é ASCII (tira acentos);
-2. minúsculo; tira o "ala " da frente;
-3. espaços e pontuação viram `_`; tira `_` das pontas;
-4. no máximo 60 caracteres (sem `_` no fim).
+### `gerarSlug(uf, cidade, nome)`
 
-Ex.: "Ala Jardim Brasil" → `jardim_brasil`. Sai no formato aceito pela validação
-(`[a-z0-9_-]`). **Pode dar texto vazio** se o nome não tiver letras ou números:
-quem chama trata (o servidor recusa).
+O link público das **alas novas**: `<uf>_<cidade>_<nome>`. **Não invente outro
+formato. E o slug de uma ala que já existe nunca muda** (regra de negócio: o
+link já está nos grupos do WhatsApp; as 3 primeiras alas mantêm o formato
+antigo, só o nome).
+
+1. cada parte: separa letra e acento (`NFD`) e remove o que não é ASCII (tira
+   acentos), minúsculo, espaços e pontuação viram `_`, sem `_` nas pontas;
+2. do nome sai só o "Ala " da frente; **"Ramo" fica** (uma "Ala Centro" e um
+   "Ramo Centro" na mesma cidade não colidem);
+3. junta com `_`; no máximo 100 caracteres (sem `_` no fim).
+
+Ex.: ("PR", "Curitiba", "Ala São Lourenço") → `pr_curitiba_sao_lourenco`;
+("SP", "São José do Rio Preto", "Ramo Jardim") →
+`sp_sao_jose_do_rio_preto_ramo_jardim`. Sai no formato aceito pela validação
+(`[a-z0-9_-]{1,100}`).
 
 ---
 
@@ -211,6 +220,9 @@ service-role, no servidor.
 - Passa por `parseSlug`: normaliza (link digitado com maiúscula funciona) e
   **descarta lixo sem consultar o banco** (robôs pedindo `/wp-login.php`, por
   exemplo). Slug inválido → `null` (vira 404).
+- **Só ala ativa** (`status = 'ativa'`): ala pedida e ainda não aprovada dá
+  `null`, então não abre página, não aceita agendamento nem gera a imagem da
+  prévia do link.
 
 ### `buscarOcupados(ala)` → `DiaOcupado[] | null`
 
@@ -222,6 +234,32 @@ service-role, no servidor.
   sem esse filtro a lista crescia com todo o histórico.
 - Seleciona `data::text` para manter `YYYY-MM-DD` sem fuso. Ordenado por data.
 - **Nunca o telefone.** `null` = erro no banco.
+
+---
+
+## `server/ward-request.ts`: pedido de ala nova
+
+O pedido da home (`/api/alas/pedir`) e a recusa do owner (`/api/alas/recusar`).
+Pelo service-role, no servidor.
+
+- **`pedirAla(entrada)`** → `{ ok: true, alaId }` ou `{ ok: false, status, erro }`
+  (o `erro` é o texto que aparece na tela), nesta ordem:
+  1. **teto:** `LIMITE_PEDIDOS_PENDENTES` (10) alas pendentes → 429;
+  2. **ala repetida** pelo slug: ativa → 409 "…já usa o calendário. Procure por
+     ela na página inicial."; pendente → 409 "…já foi pedida e está esperando
+     aprovação.";
+  3. **conta nova do líder** (sempre nova, regra do dono): e-mail que já está em
+     `perfil` → 409 "Este e-mail já tem conta no painel. Use outro e-mail para o
+     líder responsável."; senão `auth.admin.createUser` (e-mail já confirmado,
+     nome em `user_metadata`, que o trigger `handle_new_user` copia para o
+     `perfil`). Nenhum e-mail sai do Supabase aqui;
+  4. **grava** a ala `pendente` (com `pedido_por` e `pedido_conta_nova = true`)
+     e o vínculo `pendente` do líder. Se a ala falhar, apaga a conta; se o
+     vínculo falhar, apaga a ala e a conta. Assim um erro no meio não deixa
+     conta solta.
+- **`recusarPedido(alaId)`** → `true`/`false`: só para ala **pendente**. Apaga a
+  ala (o vínculo vai junto) e, se `pedido_conta_nova`, apaga a conta do líder,
+  desde que ela não tenha outro vínculo e não seja owner.
 
 ---
 
@@ -244,8 +282,8 @@ type Contexto = { userId: string; nome: string; isOwner: boolean; alaId: number 
 ### Ala em foco (`alaId`)
 
 - **owner** (`perfil.is_owner`): acessa todas as alas. A ala em foco vem do
-  cookie **`ala_atual`** (gravado por `/api/ala-atual`) ou, sem cookie, é a
-  primeira ala por nome.
+  cookie **`ala_atual`** (gravado por `/api/ala-atual`, que só aceita ala ativa)
+  ou, sem cookie, é a primeira ala **ativa** por nome.
 - **member**: a ala do vínculo `aprovado` (uma só). Sem vínculo aprovado → `null`.
 
 ---
@@ -275,9 +313,10 @@ Evita payloads gigantes e corpos malformados.
 | telefone | `normalizarTelefone` sobre no máximo 40 caracteres; grava o `formatado` |
 | data | `^\d{4}-\d{2}-\d{2}$` e data real (`Date.parse`) |
 | id | inteiro positivo |
-| slug | `^[a-z0-9_-]{1,60}$`, minúsculo. O `_` entra pela convenção de nomes ("Jardim Brasil" → `jardim_brasil`) |
-| endereço | opcional; até 200, sem `<` `>` nem controle; vazio vira `null` |
-| cidade (sempre) e estado (fora do BR) | texto com espaços normalizados, cidade 2–80 e estado 1–60, sem `<` `>` nem controle |
+| slug | `^[a-z0-9_-]{1,100}$`, minúsculo. O `_` entra pela convenção (`pr_curitiba_sao_lourenco`; os antigos, como `jardim_brasil`, continuam valendo) |
+| cidade | texto com espaços normalizados, 2–80, sem `<` `>` nem controle; gravada como nome próprio (`normalizarCidade`) |
+| e-mail (pedido de ala) | sem espaços nas pontas, minúsculo, até 254, formato `algo@algo.algo` |
+| senha (pedido de ala) | 6–72 caracteres (o limite do Supabase Auth) |
 
 ### Parsers
 
@@ -290,19 +329,29 @@ Evita payloads gigantes e corpos malformados.
 | `parseAlaId` | `/api/acesso/solicitar`, `/api/ala-atual` | `alaId` |
 | `parseSlug` | slug da URL (`buscarAlaPorSlug`) | slug minúsculo |
 | `parseData` | `?data=` de `/api/agenda/[slug]` | `YYYY-MM-DD` válido |
-| `parseNovaAla` | `/api/alas/criar` | `{ nome, slug, endereco, pais, estado, cidade, fuso }` |
+| `parseNovaAla` | `/api/alas/criar` (e dentro do `parsePedidoAla`) | `{ nome, slug, estado, cidade, fuso }` |
+| `parsePedidoAla` | `/api/alas/pedir` | `{ ala, lider: { nome, email, senha }, pareceRobo, rapidoDemais }` |
 | `parsePreferencias` | `/api/avisos/preferencias` | `{ novo_almoco, dia_sem_almoco, proximo_mes, semana, pedido_acesso }` |
 
 `parsePreferencias`: as cinco chaves de `TIPOS_AVISO` precisam ser booleanos de
 verdade (nada de `"true"`). A ala vem à parte, por `parseAlaId`.
 
-`parseNovaAla`: nome saneado e normalizado (`normalizarNomeAla`); **slug sempre
-gerado do nome** (`gerarSlug`); país da lista `PAISES`; no Brasil o estado é uma
-UF e o **fuso sai dela**; fora, estado livre (1–60) e fuso validado por
-`fusoValido`; cidade 2–80; endereço opcional. As mensagens ("Escolha o país.",
-"Escolha o estado.", "Informe o estado ou província.", "Escolha o fuso
-horário.", "Informe a cidade.", "Não foi possível gerar um link válido a partir
-desse nome") são escritas para o owner e devolvidas pela rota.
+`parseNovaAla` (**só Brasil**): `tipo` `'ala'`/`'ramo'` (outro valor vira
+`'ala'`); nome sem o tipo, 2–80, normalizado com o tipo na frente
+(`nomeSemTipo` + `normalizarNomeAla`); `estado` precisa ser uma das `UFS` e o
+**fuso sai dela**; cidade 2–80 em nome próprio; **slug sempre gerado**
+(`gerarSlug(uf, cidade, nome)`), nunca vem do cliente. Sem país e sem endereço.
+As mensagens ("Digite o nome da ala." / "Digite o nome do ramo.", "Escolha o
+estado.", "Digite a cidade.", "Não foi possível gerar um link válido a partir
+desse nome") são devolvidas pela rota e aparecem na tela.
+
+`parsePedidoAla`: a ala pelo `parseNovaAla` e o líder responsável (nome 2–80 →
+"Digite o nome do líder responsável."; e-mail → "Digite um e-mail válido.";
+senha → "A senha precisa ter pelo menos 6 caracteres."). Também lê as duas
+proteções contra robô, sem decidir nada (quem decide é a rota): `pareceRobo` =
+o campo-armadilha `website` veio preenchido; `rapidoDemais` = `tempo` ausente ou
+menor que `TEMPO_MINIMO_PEDIDO_MS` (5 s). A confirmação de senha é conferida só
+no navegador (`AccountFields`).
 
 Os checks do banco espelham estas regras (ver [database.md](database.md)).
 
@@ -447,6 +496,7 @@ Regras de texto:
 | `emailSemana` | "Almoços desta semana" | "Estes são os almoços dos missionários da Ala X, de terça a domingo:" e a lista | — |
 | `emailProximoMes` | "Almoços de novembro" | "Os membros da Ala X já podem agendar os almoços de novembro." + "Novembro já tem 1 almoço agendado e ainda tem 24 dias livres." (ou "…ainda não tem nenhum almoço agendado.") + "Dias de novembro:" em lista | — |
 | `emailPedidoAcesso` | "Rita de Cássia pediu para entrar no painel" | "Rita de Cássia (rita@gmail.com) criou uma conta de líder e pediu para usar o painel da Ala X." + "Para aceitar, abra o painel e toque em "Aprovar", na parte Usuários." | Abrir o painel |
+| `emailPedidoDeAla` | "Pedido de nova ala — Ala X" | "Rita (rita@gmail.com) pediu para usar o calendário com a Ala X, de Curitiba (PR)." + "A ala só aparece no site depois que for aprovada. Para ver o pedido, abra o painel e toque no botão dourado, no canto da tela." | Abrir o painel |
 | `emailAcessoAprovado` | "Pedido aprovado" | "O seu pedido para usar o painel da Ala X foi aprovado." + "Toque no botão abaixo para entrar." | Entrar no painel |
 
 `urlDoSite(caminho)` monta o endereço do botão e do ícone: `siteUrl()`
@@ -466,7 +516,10 @@ Quem recebe o quê. Lê pelo service-role.
   - `avisarNovoAlmoco(alaId, almoco)`: chamado pelo `/api/agendar`; só segue se
     a data é do mês atual da ala;
   - `avisarPedidoDeAcesso(alaId, solicitanteId)`;
-  - `avisarAcessoAprovado(alaId, userId)`: sempre, sem chave.
+  - `avisarAcessoAprovado(alaId, userId)`: sempre, sem chave;
+  - `avisarPedidoDeAla(alaId)`: o "Pedido de nova ala", a **todos os owners**
+    (`perfil.is_owner`), sempre, sem chave (é do dono do sistema, não de uma
+    ala). Sem "Para parar de receber".
 - `planejarAvisos(ala, { hoje, fim, mesSeguinte }, almocos, destinatarios)`:
   **função pura** que decide os avisos do cron de uma ala. Para cada pessoa com a
   chave ligada:

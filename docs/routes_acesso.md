@@ -37,21 +37,25 @@ Dependências: `src/lib/server/session.ts` (`getContexto`),
   \<nome\>!" são `h2` (`text-xl`), sem a florzinha (ela fica na faixa).
 - Sem login → `/admin`. Já tem ala em foco (`ctx.alaId !== null`) →
   `/dashboard`.
-- Busca o vínculo do usuário (`ala_membro`: `status`, `ala_id`) e todas as alas
-  (`id, nome, slug`, por nome), pelo service-role.
+- Busca o vínculo do usuário (`ala_membro`: `status`, `ala_id`), as alas
+  **ativas** (`id, nome, estado, cidade`, por nome) e a ala do vínculo
+  (`nome, status`, mesmo se pendente), pelo service-role.
 - `pendenteEm` = nome da ala do vínculo pendente (ou "sua ala" se não achar),
-  ou `null` se não há vínculo.
+  ou `null` se não há vínculo. `alaEsperando` = a ala do vínculo ainda está
+  pendente (foi pedida pela home e o owner não aprovou).
 
 ## `RequestAccess.tsx` (client)
 
 Cartão branco com fitinha e florzinha. Props: `nome` (do perfil), `alas`,
-`pendenteEm`.
+`pendenteEm`, `alaEsperando`.
 
 ### Sem vínculo: pedir acesso
 
 - "Olá, \<nome\>!" e "Escolha a sua ala para pedir acesso ao painel."
-- `<select id="ala">` ("Sua ala") com "Selecione…" e as alas. Chevron próprio
-  (`appearance-none`); a lista que abre é a do sistema.
+- A escolha da ala é o **`WardFilter`** (o mesmo da home e do painel; ver
+  [src_components.md](src_components.md)): Estado e Cidade em lista, as alas da
+  cidade e a instrução "Toque na sua ala:". Tocar **marca** a ala (azul com ✓,
+  `aria-pressed`); não envia nada ainda. O `<select>` de alas de antes saiu.
 - **"Pedir acesso"**: desativado sem ala escolhida. Enviando: `disabled`,
   `aria-busy`, Spinner e "Enviando…".
 - `POST /api/acesso/solicitar { alaId }`:
@@ -65,6 +69,10 @@ Cartão branco com fitinha e florzinha. Props: `nome` (do perfil), `alas`,
 - "Quase lá, \<nome\>!" e "Seu acesso à **\<ala\>** está aguardando a aprovação
   de um responsável da ala. Você recebe um e-mail quando for aprovado." (o
   e-mail "Pedido aprovado" sai quando alguém aprova)"
+- Se a **ala** ainda está esperando (pedida pela home, `alaEsperando`): "O
+  pedido da **\<ala\>** ainda está esperando aprovação. Depois que a ala for
+  aprovada, o seu acesso ao painel também é aprovado. Você recebe um e-mail
+  quando tudo estiver pronto."
 - **"Já fui aprovado? Atualizar"** → `router.refresh()` dentro de
   `useTransition`. Enquanto atualiza: Spinner e "Atualizando…". Aprovado, a
   página redireciona para o painel.

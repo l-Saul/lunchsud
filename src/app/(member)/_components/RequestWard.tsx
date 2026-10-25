@@ -24,7 +24,7 @@ export function RequestWard() {
     }
 
     return (
-        <section id="nova-ala" aria-labelledby="nova-ala-titulo" className="mt-6 border-t border-primary/10 pt-10">
+        <section id="nova-ala" aria-labelledby="nova-ala-titulo" className="scroll-mt-6">
             <div className="flex flex-col gap-4 rounded-2xl bg-background px-5 py-5 ring-1 ring-primary/10">
                 <div>
                     <h2 id="nova-ala-titulo" className="text-lg font-semibold text-text">

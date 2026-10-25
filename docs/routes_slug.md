@@ -87,8 +87,9 @@ reconhece que é da ala dela, não um link estranho).
 ### Página
 
 1. `buscarAlaPorSlug(slug)`. O nome real vem do banco: não dá para derivar do
-   slug, que perde acentos e troca espaço por `_`. Slug inexistente ou
-   malformado → `notFound()` (404 em português, ver [src_app.md](src_app.md)), nunca 500.
+   slug, que perde acentos e troca espaço por `_`. Slug inexistente,
+   malformado **ou de ala ainda pendente** (pedida pela home, sem aprovação) →
+   `notFound()` (404 em português, ver [src_app.md](src_app.md)), nunca 500.
    `buscarAlaPorSlug` usa `cache()` do React, então `generateMetadata` e a
    página fazem **uma** consulta só.
 2. `buscarOcupados(ala)`: dias ocupados **só da janela agendável** (de hoje até
@@ -277,6 +278,8 @@ com DDD. De outro país? Comece com + e o código do país."
 É um `<form noValidate>` de verdade: é o que faz o celular oferecer o nome e o
 telefone salvos, e a tecla "Ir" do teclado enviar (`type="submit"`). O
 `noValidate` deixa os erros serem os nossos, em português, embaixo de cada campo.
+Os campos usam o padrão `campo()` do site (`field-classes`, ver
+[src_components.md](src_components.md)).
 
 | Campo | Atributos |
 |---|---|

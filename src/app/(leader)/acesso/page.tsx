@@ -30,7 +30,7 @@ export default async function AcessoPage() {
         .maybeSingle();
 
     const [{ data: alas }, { data: alaDoVinculo }] = await Promise.all([
-        supabaseServer.from('ala').select('id, nome, slug').eq('status', 'ativa').order('nome'),
+        supabaseServer.from('ala').select('id, nome, estado, cidade').eq('status', 'ativa').order('nome'),
         vinculo
             ? supabaseServer.from('ala').select('nome, status').eq('id', vinculo.ala_id).maybeSingle()
             : Promise.resolve({ data: null }),

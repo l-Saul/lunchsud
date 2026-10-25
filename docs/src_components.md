@@ -10,9 +10,16 @@ na pasta dela, em `_components/`.
 | `HeaderBand` | todas as páginas: home, ala, erro da ala, 404, login, acesso, redefinir senha, painel |
 | `LoadingOverlay` | `WardSwitcher` (painel) |
 | `button-classes` (`botao()`) | todo botão de ação do site (público e painel) |
+| `field-classes` (`campo()`, `rotulo`) | todo campo de formulário do site |
+| `SelectField` | `WardFilter`, `WardForm` (estado) |
+| `PasswordField` | `AccountFields`, `ResetPasswordForm` |
+| `AccountFields` | `LoginForm` (entrar e criar conta), `WardForm` (líder responsável do pedido) |
+| `WardFilter` | home (abrir o calendário), modal do owner (trocar de ala), `/acesso` (pedir acesso) |
+| `WardForm` | home (pedir ala nova, `RequestWard`), modal do owner (criar ala) |
+| `ChoiceGroup` | `MonthTabs`, `WardForm` ("É ala ou ramo?") |
 | `MonthTabs` | calendário da ala (`MonthCalendar`), cartão "Gerar imagem do calendário" (painel) |
 | `Modal` | `BookingModal` (ala), `EditBookingModal`, confirmação de remover acesso, confirmação de desligar aviso (painel) |
-| `ErrorMessage` | `BookingModal`, `EditBookingModal`, `UsersCard`, `NotificationsCard`, `CreateWardForm`, `LoginForm`, `RequestAccess`, `ResetPasswordForm` |
+| `ErrorMessage` | `BookingModal`, `EditBookingModal`, `UsersCard`, `NotificationsCard`, `WardForm`, `WardSwitcher`, `LoginForm`, `RequestAccess`, `ResetPasswordForm` |
 | `NoticeBar` | página da ala (avisos do calendário), painel (`ShareLinkButtons`: "Link copiado!") |
 | `Spinner` | todos os botões de ação, `LoadingOverlay`, home |
 
@@ -125,20 +132,127 @@ fora do padrão de propósito: botões só de ícone (X, lápis, copiar/comparti
 que têm medidas próprias), as abas do mês, os botões das alas na home, as chaves
 de notificação e os botões de texto ("Remover" na lista, "Esqueci minha senha").
 
-## `MonthTabs.tsx`
+## `ChoiceGroup.tsx`
 
-As **abas de mês**: um botão por mês (`nomeDoMes`: "Outubro", "Novembro"), o
-escolhido em azul cheio com ✓ e sombra, o outro branco com contorno azul de
-2px. Props: `meses` (`YYYY-MM`[]), `ativo`, `onChange(ym)`, `label` (nome do
-grupo para leitor de tela).
+**Escolher uma opção entre poucas**, com botões grandes: a escolhida em azul
+cheio com ✓ e sombra, as outras brancas com contorno azul de 2px. Props:
+`opcoes` (`{ valor, rotulo }[]`), `ativo`, `onChange(valor)` e o nome do grupo
+para leitor de tela (`label` ou `labelledBy`).
 
 - `<button aria-pressed>` dentro de `role="group"`, não o padrão "abas" do ARIA
-  (para duas opções, setas e foco móvel são complexidade sem ganho). Nome
+  (para poucas opções, setas e foco móvel são complexidade sem ganho). Nome
   acessível = texto visível.
-- `text-lg`, `min-h-13`. Tocar no já escolhido não chama `onChange`.
+- `text-lg`, `min-h-13`, duas colunas. Tocar no já escolhido não chama
+  `onChange`. Rótulo comprido quebra a linha (`hyphens-auto wrap-break-word`).
 - Tem o próprio `@container`: com pouco espaço para o tamanho da letra
   (`@max-[15rem]`), empilha.
-- Detalhes de uso no calendário em [routes_slug.md](routes_slug.md).
+- Para listas longas (estados, cidades), **não** use: vai `SelectField`.
+
+## `MonthTabs.tsx`
+
+As **abas de mês** ("Outubro", "Novembro", por `nomeDoMes`): só um
+`ChoiceGroup` com os meses. Props: `meses` (`YYYY-MM`[]), `ativo`,
+`onChange(ym)`, `label`. Mudar o visual = mudar o `ChoiceGroup`. Detalhes de uso
+no calendário em [routes_slug.md](routes_slug.md).
+
+## `field-classes.ts`
+
+**O padrão de campo do site**, como o `botao()` é dos botões (pedido do dono:
+"padronize os campos"). Todo `<input>`, `<select>` e `<textarea>` usa:
+
+- `campo(erro = false)`: largura total, `rounded-xl`, borda cinza (rosa
+  `accent` com erro), fundo branco, `px-4 py-3.5`, **`text-lg`** (abaixo de 16px
+  o iPhone dá zoom sozinho), foco azul com anel, `appearance-none` (o iOS tira a
+  sombra interna) e `disabled:opacity-60`. Quem chama só soma layout (ex.:
+  `pr-12` para um ícone).
+- `rotulo`: a classe do `<label>` (`text-base font-medium text-text`).
+
+Erro de campo: o texto vai embaixo do campo, ligado por `aria-describedby`, com
+`aria-invalid` no campo (sem `role="alert"`; ver `CLAUDE.md`).
+
+## `SelectField.tsx`
+
+Lista de escolha (`<select>` nativo) com a cara do `campo()` e uma seta própria
+à direita (`appearance-none` some com a seta do sistema, que era diferente em
+cada aparelho). Recebe tudo que um `<select>` recebe, mais `erro`. É o
+"dropdown" do site: no celular abre o seletor do próprio aparelho, que é o mais
+fácil de usar.
+
+## `PasswordField.tsx`
+
+Campo de senha com o botão de olho "Mostrar senha" / "Ocultar senha"
+(`aria-pressed`, ícone de 22px, à direita, dentro do campo). Guarda sozinho se
+está mostrando. Recebe tudo que um `<input>` recebe (menos `type`), mais `erro`.
+
+## `AccountFields.tsx`
+
+**Os campos de conta do líder**, um componente só para o login e para o pedido
+de ala nova (pedido do dono: "os campos iguais o cara faz para criar uma conta,
+mesmo componente").
+
+- `modo="entrar"`: E-mail (`autoComplete="username"`) e Senha
+  (`current-password`).
+- `modo="criar"`: **Seu nome** (`name`), **E-mail** (`email`), **Senha** e
+  **Confirmar senha** (`new-password`), com os textos de exemplo "Digite seu
+  nome aqui", "Digite seu e-mail aqui", "Digite sua senha aqui", "Digite a senha
+  novamente".
+- Controlado: `dados` (`DadosConta`: `nome`, `email`, `senha`, `confirmar`),
+  `onChange(campo, valor)`, `erros` (texto por campo), `disabled`, `prefixo` dos
+  `id` (o login usa `''`: `nome`, `email`, `senha`, `confirmar-senha`).
+- `conferirConta(dados)` devolve os erros de "criar": "Informe seu nome.",
+  "Digite um e-mail válido.", "A senha precisa ter pelo menos 6 caracteres.",
+  "As senhas não conferem.". `ORDEM_CONTA` e `idDoCampoConta` servem para pôr o
+  foco no primeiro campo errado.
+
+## `WardFilter.tsx`
+
+**A busca de ala**, um componente só para tudo que escolhe uma ala (pedido do
+dono: "uma mudança ajusta tudo, mesmo tendo utilidades diferentes do botão
+final"): a home (abre o calendário), o modal do owner (troca a ala em foco) e
+o `/acesso` (escolhe a ala e depois "Pedir acesso").
+
+- **Estado** e **Cidade** em `SelectField` (só os estados e cidades que têm ala
+  ativa, em ordem alfabética; estado pelo nome, "Paraná"). Cidade fica
+  desativada ("Escolha o estado primeiro") até escolher o estado.
+- **Sem escolha automática** (regra do dono): os dois campos começam vazios em
+  todo lugar, mesmo com um estado ou uma cidade só, e a pessoa escolhe. Trocar
+  o estado limpa a cidade.
+- Com estado e cidade, a `instrucao` (`text-lg`) e as alas da cidade: o mesmo
+  botão em toda parte, branco com a fitinha na borda esquerda, `text-xl`, seta
+  "›"; hover azul.
+- `onEscolher(ala)` é o que muda de um uso para o outro. `marcada` (opcional)
+  liga o `aria-pressed` e pinta de azul com ✓ a ala escolhida (owner: a ala em
+  foco; acesso: a escolhida). `ocupada` + `textoOcupado` ("Abrindo…") mostram
+  o spinner e travam a lista; `desativado` só trava.
+- `AlaDoFiltro = { chave, nome, estado, cidade }`: `chave` é o slug na home e o
+  `id` (texto) no painel e no acesso.
+- Não tem cartão próprio: a home põe a busca num cartão branco; no modal e no
+  `/acesso` ela já está dentro de um.
+
+## `WardForm.tsx`
+
+**O formulário de ala**, um componente só para o owner criar e para a home pedir
+(regra do dono). `modo="owner"` (`onCriada`, `onCancelar`) ou `modo="pedido"`
+(`onEnviado(email)`).
+
+- Campos da ala, nesta ordem: **"É ala ou ramo?"** (`ChoiceGroup` Ala/Ramo),
+  **Nome da ala/do ramo** (com "Vai aparecer como **Ala São Lourenço**" ao
+  digitar; o owner vê também o link, "· link /pr_curitiba_sao_lourenco"),
+  **Estado** (`SelectField` com as 27 UFs, "Escolha o estado…") e **Cidade**.
+  **Só Brasil: sem país. Sem endereço** (o dono tirou). Tudo com
+  `autoComplete="off"` (é dado da ala).
+- `modo="pedido"` acrescenta **"Líder responsável"** ("Crie a conta de quem vai
+  cuidar do calendário…") com o `AccountFields modo="criar"`: o líder é sempre
+  uma **conta nova**. E o campo-armadilha `website`, fora da tela, e o `tempo`
+  desde que o formulário abriu (ver `/api/alas/pedir` em
+  [routes_api.md](routes_api.md)).
+- Confere tudo antes de enviar: erro embaixo de cada campo, foco no primeiro
+  errado. Erro do servidor (ala repetida, e-mail com conta, teto de pedidos)
+  vai no `ErrorMessage`, com o texto da rota.
+- Botões: pedido → "Enviar pedido" largo ("Enviando…"); owner → "Cancelar" e
+  "Criar e entrar" ("Criando…").
+- `POST /api/alas/pedir` ou `/api/alas/criar`, corpo
+  `{ tipo, nome, estado, cidade }` (+ `lider`, `website`, `tempo` no pedido).
 
 ## `Modal.tsx`
 

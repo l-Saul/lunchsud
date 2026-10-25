@@ -5,14 +5,14 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { criarSupabaseBrowser } from '@/lib/supabase/browser-session';
 import { Spinner } from '@/components/Spinner';
 import { ErrorMessage } from '@/components/ErrorMessage';
 import { botao } from '@/components/button-classes';
+import { WardFilter } from '@/components/WardFilter';
 
-type Ala = { id: number; nome: string };
+type Ala = { id: number; nome: string; estado: string; cidade: string };
 
 export default function RequestAccess({
     nome,
@@ -27,7 +27,7 @@ export default function RequestAccess({
 }) {
     const router = useRouter();
     const [supabase] = useState(() => criarSupabaseBrowser());
-    const [alaId, setAlaId] = useState<number | ''>('');
+    const [alaId, setAlaId] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
     const [erro, setErro] = useState('');
     const [atualizando, iniciarAtualizar] = useTransition();
@@ -101,28 +101,17 @@ export default function RequestAccess({
                         Escolha a sua ala para pedir acesso ao painel.
                     </p>
 
-                    <div className="flex w-full flex-col gap-1.5 text-left">
-                        <label htmlFor="ala" className="text-base font-medium text-text">
-                            Sua ala
-                        </label>
-                        <div className="relative">
-                            <select
-                                id="ala"
-                                value={alaId}
-                                onChange={e => setAlaId(Number(e.target.value) || '')}
-                                className="min-h-13 w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 pr-11 text-lg text-text transition hover:border-secondary/70 focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary cursor-pointer"
-                            >
-                                <option value="">Selecione…</option>
-                                {alas.map(a => (
-                                    <option key={a.id} value={a.id}>{a.nome}</option>
-                                ))}
-                            </select>
-                            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                    <path d="m6 9 6 6 6-6" />
-                                </svg>
-                            </span>
-                        </div>
+                    <div className="w-full text-left">
+                        <WardFilter
+                            alas={alas.map(a => ({ ...a, chave: String(a.id) }))}
+                            instrucao="Toque na sua ala:"
+                            marcada={alaId === null ? null : String(alaId)}
+                            desativado={loading}
+                            onEscolher={a => {
+                                setAlaId(Number(a.chave));
+                                setErro('');
+                            }}
+                        />
                     </div>
 
                     {erro && (
@@ -138,14 +127,6 @@ export default function RequestAccess({
                         {loading && <Spinner />}
                         {loading ? 'Enviando…' : 'Pedir acesso'}
                     </button>
-
-                    <p className="text-base text-muted">
-                        Sua ala não está na lista?{' '}
-                        <Link href="/#nova-ala" className="font-semibold text-secondary underline underline-offset-4">
-                            Peça para usar o calendário
-                        </Link>
-                        , com este mesmo e-mail e senha.
-                    </p>
                 </>
             )}
 

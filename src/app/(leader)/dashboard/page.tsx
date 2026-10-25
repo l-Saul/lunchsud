@@ -89,11 +89,11 @@ export default async function DashboardPage() {
         : { data: [] };
     const perfilPorId = new Map((perfis ?? []).map(p => [p.id, p]));
 
-    let alasParaTroca: { id: number; nome: string; slug: string }[] = [];
+    let alasParaTroca: { id: number; nome: string; slug: string; estado: string; cidade: string }[] = [];
     let pedidos: PedidoAla[] = [];
     if (ctx.isOwner) {
         const [{ data: todasAlas }, { data: pendentes }] = await Promise.all([
-            supabaseServer.from('ala').select('id, nome, slug').eq('status', 'ativa').order('nome'),
+            supabaseServer.from('ala').select('id, nome, slug, estado, cidade').eq('status', 'ativa').order('nome'),
             supabaseServer
                 .from('ala')
                 .select('id, nome, cidade, estado, criado_em, pedido_por, pedido_conta_nova')

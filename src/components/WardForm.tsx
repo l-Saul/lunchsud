@@ -8,21 +8,27 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { gerarSlug, nomeSemTipo, normalizarCidade, normalizarNomeAla, type TipoUnidade } from '@/lib/wards';
 import { UFS } from '@/lib/location';
 import { ChoiceGroup } from '@/components/ChoiceGroup';
+import { SelectField } from '@/components/SelectField';
 import { Spinner } from '@/components/Spinner';
 import { ErrorMessage } from '@/components/ErrorMessage';
 import { botao } from '@/components/button-classes';
+import { campo, rotulo } from '@/components/field-classes';
+import {
+    AccountFields,
+    CONTA_VAZIA,
+    ORDEM_CONTA,
+    conferirConta,
+    idDoCampoConta,
+    type CampoConta,
+    type ErrosConta,
+} from '@/components/AccountFields';
 
 type Props =
     | { modo: 'owner'; onCriada: (novaId: number | undefined) => Promise<void>; onCancelar: () => void }
     | { modo: 'pedido'; onEnviado: (email: string) => void };
 
-type Campo = 'nome' | 'estado' | 'cidade' | 'liderNome' | 'email' | 'senha';
-
-const ORDEM: Campo[] = ['nome', 'estado', 'cidade', 'liderNome', 'email', 'senha'];
-const EMAIL_RE = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
-
-const campoClasse = (erro?: string) =>
-    `min-h-12 w-full rounded-xl border bg-white px-4 text-lg text-text shadow-sm focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary disabled:opacity-60 ${erro ? 'border-accent' : 'border-slate-300'}`;
+type CampoAla = 'nome' | 'estado' | 'cidade';
+const ORDEM_ALA: CampoAla[] = ['nome', 'estado', 'cidade'];
 
 export function WardForm(props: Props) {
     const pedido = props.modo === 'pedido';
@@ -31,12 +37,10 @@ export function WardForm(props: Props) {
     const [nome, setNome] = useState('');
     const [estado, setEstado] = useState('');
     const [cidade, setCidade] = useState('');
-    const [liderNome, setLiderNome] = useState('');
-    const [email, setEmail] = useState('');
-    const [senha, setSenha] = useState('');
-    const [mostrarSenha, setMostrarSenha] = useState(false);
+    const [conta, setConta] = useState(CONTA_VAZIA);
     const [website, setWebsite] = useState('');
-    const [erros, setErros] = useState<Partial<Record<Campo, string>>>({});
+    const [erros, setErros] = useState<Partial<Record<CampoAla, string>>>({});
+    const [errosConta, setErrosConta] = useState<ErrosConta>({});
     const [erro, setErro] = useState('');
     const [salvando, setSalvando] = useState(false);
     const abertoEm = useRef(0);
@@ -51,27 +55,35 @@ export function WardForm(props: Props) {
         ? gerarSlug(estado, normalizarCidade(cidade), nomeFinal)
         : '';
 
-    const campoId = (c: Campo) => `${id}-${c}`;
+    const campoId = (c: CampoAla) => `${id}-${c}`;
+    const prefixoConta = `${id}-lider-`;
 
-    function limpar(c: Campo) {
+    function mudar(c: CampoAla, valor: string, setter: (v: string) => void) {
+        setter(valor);
         setErro('');
         if (erros[c]) setErros(e => ({ ...e, [c]: undefined }));
     }
 
+    function mudarConta(c: CampoConta, valor: string) {
+        setConta(d => ({ ...d, [c]: valor }));
+        setErro('');
+        if (errosConta[c]) setErrosConta(e => ({ ...e, [c]: undefined }));
+    }
+
     function conferir() {
-        const novos: Partial<Record<Campo, string>> = {};
+        const novos: Partial<Record<CampoAla, string>> = {};
         if (!nomeFinal) novos.nome = `Digite o nome ${unidade}.`;
         if (!estado) novos.estado = 'Escolha o estado.';
         if (cidade.trim().length < 2) novos.cidade = 'Digite a cidade.';
-        if (pedido) {
-            if (liderNome.trim().length < 2) novos.liderNome = 'Digite o nome do líder responsável.';
-            if (!EMAIL_RE.test(email.trim())) novos.email = 'Digite um e-mail válido.';
-            if (senha.length < 6) novos.senha = 'A senha precisa ter pelo menos 6 caracteres.';
-        }
+        const novosConta = pedido ? conferirConta(conta) : {};
         setErros(novos);
-        const primeiro = ORDEM.find(c => novos[c]);
-        if (primeiro) document.getElementById(campoId(primeiro))?.focus();
-        return !primeiro;
+        setErrosConta(novosConta);
+
+        const primeiroAla = ORDEM_ALA.find(c => novos[c]);
+        const primeiroConta = ORDEM_CONTA.find(c => novosConta[c]);
+        const alvo = primeiroAla ? campoId(primeiroAla) : primeiroConta ? idDoCampoConta(primeiroConta, prefixoConta) : null;
+        if (alvo) document.getElementById(alvo)?.focus();
+        return !alvo;
     }
 
     async function enviar(e: React.FormEvent) {
@@ -89,7 +101,7 @@ export function WardForm(props: Props) {
                 body: JSON.stringify(pedido
                     ? {
                         ...ala,
-                        lider: { nome: liderNome.trim(), email: email.trim(), senha },
+                        lider: { nome: conta.nome.trim(), email: conta.email.trim(), senha: conta.senha },
                         website,
                         tempo: Date.now() - abertoEm.current,
                     }
@@ -109,17 +121,17 @@ export function WardForm(props: Props) {
         }
 
         if (props.modo === 'pedido') {
-            props.onEnviado(email.trim());
+            props.onEnviado(conta.email.trim().toLowerCase());
         } else {
             await props.onCriada(json?.ala?.id);
             setSalvando(false);
         }
     }
 
-    const erroDe = (c: Campo) => erros[c] && (
+    const erroDe = (c: CampoAla) => erros[c] && (
         <p id={`${campoId(c)}-erro`} className="text-base font-medium text-accent">{erros[c]}</p>
     );
-    const ligacao = (c: Campo, dica?: string) => ({
+    const ligacao = (c: CampoAla, dica?: string) => ({
         'aria-invalid': erros[c] ? true : undefined,
         'aria-describedby': [erros[c] && `${campoId(c)}-erro`, dica].filter(Boolean).join(' ') || undefined,
     });
@@ -127,7 +139,7 @@ export function WardForm(props: Props) {
     return (
         <form onSubmit={enviar} noValidate className="relative flex flex-col gap-5">
             <div className="flex flex-col gap-2">
-                <p id={`${id}-tipo`} className="text-base font-medium text-text">É ala ou ramo?</p>
+                <p id={`${id}-tipo`} className={rotulo}>É ala ou ramo?</p>
                 <ChoiceGroup
                     opcoes={[{ valor: 'ala', rotulo: 'Ala' }, { valor: 'ramo', rotulo: 'Ramo' }]}
                     ativo={tipo}
@@ -137,9 +149,7 @@ export function WardForm(props: Props) {
             </div>
 
             <div className="flex flex-col gap-1.5">
-                <label htmlFor={campoId('nome')} className="text-base font-medium text-text">
-                    Nome {unidade}
-                </label>
+                <label htmlFor={campoId('nome')} className={rotulo}>Nome {unidade}</label>
                 <input
                     id={campoId('nome')}
                     name="nome-ala"
@@ -148,9 +158,9 @@ export function WardForm(props: Props) {
                     autoCapitalize="words"
                     placeholder="Ex.: São Lourenço"
                     value={nome}
-                    onChange={e => { setNome(e.target.value); limpar('nome'); }}
+                    onChange={e => mudar('nome', e.target.value, setNome)}
                     disabled={salvando}
-                    className={campoClasse(erros.nome)}
+                    className={campo(!!erros.nome)}
                     {...ligacao('nome', nomeFinal ? `${id}-previa` : undefined)}
                 />
                 {erroDe('nome')}
@@ -165,31 +175,27 @@ export function WardForm(props: Props) {
             </div>
 
             <div className="flex flex-col gap-1.5">
-                <label htmlFor={campoId('estado')} className="text-base font-medium text-text">
-                    Estado
-                </label>
-                <select
+                <label htmlFor={campoId('estado')} className={rotulo}>Estado</label>
+                <SelectField
                     id={campoId('estado')}
                     name="estado-ala"
                     autoComplete="off"
                     value={estado}
-                    onChange={e => { setEstado(e.target.value); limpar('estado'); }}
+                    onChange={e => mudar('estado', e.target.value, setEstado)}
                     disabled={salvando}
-                    className={`${campoClasse(erros.estado)} cursor-pointer`}
+                    erro={!!erros.estado}
                     {...ligacao('estado')}
                 >
                     <option value="">Escolha o estado…</option>
                     {UFS.map(uf => (
                         <option key={uf.sigla} value={uf.sigla}>{uf.nome}</option>
                     ))}
-                </select>
+                </SelectField>
                 {erroDe('estado')}
             </div>
 
             <div className="flex flex-col gap-1.5">
-                <label htmlFor={campoId('cidade')} className="text-base font-medium text-text">
-                    Cidade
-                </label>
+                <label htmlFor={campoId('cidade')} className={rotulo}>Cidade</label>
                 <input
                     id={campoId('cidade')}
                     name="cidade-ala"
@@ -198,9 +204,9 @@ export function WardForm(props: Props) {
                     autoCapitalize="words"
                     placeholder="Ex.: Curitiba"
                     value={cidade}
-                    onChange={e => { setCidade(e.target.value); limpar('cidade'); }}
+                    onChange={e => mudar('cidade', e.target.value, setCidade)}
                     disabled={salvando}
-                    className={campoClasse(erros.cidade)}
+                    className={campo(!!erros.cidade)}
                     {...ligacao('cidade')}
                 />
                 {erroDe('cidade')}
@@ -211,94 +217,19 @@ export function WardForm(props: Props) {
                     <div className="mt-2 flex flex-col gap-1 border-t border-slate-200 pt-5">
                         <h3 className="text-lg font-semibold text-text">Líder responsável</h3>
                         <p className="text-base text-muted">
-                            Quem vai cuidar do calendário. Com este e-mail e esta senha, a pessoa entra
-                            no painel depois que o pedido for aprovado.
+                            Crie a conta de quem vai cuidar do calendário. Com este e-mail e esta senha, a
+                            pessoa entra no painel depois que o pedido for aprovado.
                         </p>
                     </div>
 
-                    <div className="flex flex-col gap-1.5">
-                        <label htmlFor={campoId('liderNome')} className="text-base font-medium text-text">
-                            Nome
-                        </label>
-                        <input
-                            id={campoId('liderNome')}
-                            name="name"
-                            type="text"
-                            autoComplete="name"
-                            autoCapitalize="words"
-                            value={liderNome}
-                            onChange={e => { setLiderNome(e.target.value); limpar('liderNome'); }}
-                            disabled={salvando}
-                            className={campoClasse(erros.liderNome)}
-                            {...ligacao('liderNome')}
-                        />
-                        {erroDe('liderNome')}
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                        <label htmlFor={campoId('email')} className="text-base font-medium text-text">
-                            E-mail
-                        </label>
-                        <input
-                            id={campoId('email')}
-                            name="email"
-                            type="email"
-                            inputMode="email"
-                            autoComplete="username"
-                            autoCapitalize="none"
-                            autoCorrect="off"
-                            spellCheck={false}
-                            value={email}
-                            onChange={e => { setEmail(e.target.value); limpar('email'); }}
-                            disabled={salvando}
-                            className={campoClasse(erros.email)}
-                            {...ligacao('email')}
-                        />
-                        {erroDe('email')}
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                        <label htmlFor={campoId('senha')} className="text-base font-medium text-text">
-                            Senha
-                        </label>
-                        <div className="relative">
-                            <input
-                                id={campoId('senha')}
-                                name="password"
-                                type={mostrarSenha ? 'text' : 'password'}
-                                autoComplete="new-password"
-                                value={senha}
-                                onChange={e => { setSenha(e.target.value); limpar('senha'); }}
-                                disabled={salvando}
-                                className={`${campoClasse(erros.senha)} pr-12`}
-                                {...ligacao('senha', `${id}-senha-dica`)}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setMostrarSenha(v => !v)}
-                                aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
-                                aria-pressed={mostrarSenha}
-                                className="absolute inset-y-0 right-0 flex items-center px-4 text-muted transition hover:text-secondary cursor-pointer"
-                            >
-                                {mostrarSenha ? (
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                                        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
-                                        <line x1="1" y1="1" x2="23" y2="23" />
-                                    </svg>
-                                ) : (
-                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
-                                        <circle cx="12" cy="12" r="3" />
-                                    </svg>
-                                )}
-                            </button>
-                        </div>
-                        <p id={`${id}-senha-dica`} className="text-base text-muted">
-                            Se já tem conta no painel, use a mesma senha.
-                        </p>
-                        {erroDe('senha')}
-                    </div>
+                    <AccountFields
+                        modo="criar"
+                        dados={conta}
+                        onChange={mudarConta}
+                        erros={errosConta}
+                        disabled={salvando}
+                        prefixo={prefixoConta}
+                    />
 
                     <div aria-hidden="true" className="absolute -left-[9999px] top-0 h-px w-px overflow-hidden">
                         <label htmlFor={`${id}-website`}>Não preencha</label>

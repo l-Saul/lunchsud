@@ -11,13 +11,16 @@ público**, em português: nunca renomeie as pastas.
 | `GET /api/agendamentos/[slug]` | `WardBooking` (ressincronizar) | público | não |
 | `GET /api/agenda/[slug]?data=` | `BookingModal` (confirmação, aparelhos Apple) | público | não |
 | `GET /api/alas` | home (SWR) | público | não |
+| `POST /api/alas/pedir` | `WardForm` (home, "Pedir para usar o calendário") | público (sem conta) | não |
 | `POST /api/agendamentos/update` | `EditBookingModal` | líder, ala em foco | sim |
 | `POST /api/agendamentos/delete` | `EditBookingModal` | líder, ala em foco | sim |
 | `POST /api/acesso/solicitar` | `RequestAccess` | logado | sim |
 | `POST /api/acesso/aprovar` | `UsersCard` | owner ou member aprovado da mesma ala | sim |
 | `POST /api/acesso/remover` | `UsersCard` | owner ou member aprovado da mesma ala | sim |
 | `POST /api/ala-atual` | `WardSwitcher` | owner | sim |
-| `POST /api/alas/criar` | `CreateWardForm` | owner | sim |
+| `POST /api/alas/criar` | `WardForm` (modal do owner) | owner | sim |
+| `POST /api/alas/aprovar` | `WardSwitcher` (pedidos) | owner | sim |
+| `POST /api/alas/recusar` | `WardSwitcher` (pedidos) | owner | sim |
 | `POST /api/avisos/preferencias` | `NotificationsCard` | líder, na ala em foco | sim |
 | `GET /api/cron/avisos` | Vercel Cron (todo dia, 11:00 UTC = 08:00 em São Paulo) | `CRON_SECRET` | não |
 
@@ -35,8 +38,12 @@ precisa entrar no matcher.** As rotas públicas e o cron (sem sessão) ficam for
   autorização é feita **aqui**: `getContexto()` + `podeEditarAla()` e filtro por
   `ala_id` nas escritas.
 - **Nunca ecoar `error.message` do banco** (vaza detalhes). As respostas de erro
-  são textos nossos. Exceção consciente: `/api/alas/criar` devolve a mensagem da
-  `ValidationError`, que é escrita por nós, para o owner.
+  são textos nossos. Exceção consciente: `/api/alas/criar` e `/api/alas/pedir`
+  devolvem a mensagem da `ValidationError`, que é escrita por nós, para a pessoa.
+- **Só alas ativas são públicas.** Ala `pendente` (pedido pela home, ainda não
+  aprovado) não aparece em `/api/alas`, não abre a página `/[slug]`, não aceita
+  agendamento, não pode virar ala em foco (`/api/ala-atual`) nem receber pedido
+  de acesso (`/api/acesso/solicitar`). Ver [database.md](database.md).
 - Códigos do Postgres tratados: `23505` (unique violado) e `23514` (check violado).
 - **Sem limite por IP** (removido em 2026-10-24): no Wi-Fi da igreja muitas
   pessoas saem pelo mesmo IP e eram bloqueadas. Se houver abuso, usar regra de
@@ -124,7 +131,8 @@ navegador costuma não abrir a Agenda no Safari.
 
 ## `GET /api/alas`
 
-Todas as alas, `[{ nome, slug }]` em ordem alfabética, para os botões da home.
+As alas **ativas**, `[{ nome, slug, estado, cidade }]` em ordem alfabética,
+para a busca da home (estado → cidade → ala, no `WardFilter`).
 `dynamic = 'force-dynamic'`: sempre consulta o banco (sem isso o Next poderia
 congelar a lista no build). Erro → 500 `{ error: 'Erro ao buscar alas' }`.
 
@@ -140,8 +148,9 @@ O líder edita **data, nome e telefone** de um almoço da **ala em foco**.
   garante o escopo (member: sua ala; owner: a selecionada).
 - **Sem regra de P-day, passado ou janela:** o líder pode mover para qualquer
   data. O banco ainda impõe um almoço por dia.
-- Erro do banco (inclusive data já ocupada) → 400 "Erro ao atualizar". Nenhuma
-  linha afetada (id inexistente ou de outra ala) → 404 "Nenhuma linha afetada".
+- Data já ocupada nessa ala (`23505`) → 409 "Já há um almoço nesse dia.". Outro
+  erro do banco → 400 "Erro ao atualizar". Nenhuma linha afetada (id inexistente
+  ou de outra ala) → 404 "Nenhuma linha afetada".
 - Sucesso: `{ ok: true }`.
 
 ## `POST /api/agendamentos/delete`
@@ -158,7 +167,7 @@ Usuário **logado** pede acesso a **uma** ala (cria vínculo `pendente`).
 - Sem login → 401. Corpo `{ alaId }` → `parseAlaId`; inválido → 400.
 - **Member = uma ala:** já tem qualquer vínculo (pendente ou aprovado) → 409
   "Você já tem um vínculo de ala.".
-- Ala inexistente → 404. Corrida que esbarra no índice único (`23505`) → 409
+- Ala inexistente **ou pendente** → 404. Corrida que esbarra no índice único (`23505`) → 409
   "Acesso já solicitado.". Outro erro → 500.
 - Sucesso: `{ ok: true }`. Depois da resposta (`after`), manda o e-mail **"\<nome\>
   pediu para entrar no painel"** a quem ligou o aviso "Pedido para entrar no
@@ -173,6 +182,8 @@ Aprova um vínculo pendente: `status = 'aprovado'`, `aprovado_por = quem aprovou
   `parseMembroId`; inválido → 400. Vínculo inexistente → 404.
 - **Quem pode** (`podeEditarAla`): o owner (qualquer ala) ou um member **já
   aprovado da mesma ala** do pedido. Senão 403 "Sem permissão".
+- **A ala precisa estar ativa:** pendente → 409 "Aprove a ala antes de aprovar o
+  líder." (os dois passos do pedido de ala nova: primeiro a ala, depois o líder).
 - Erro → 500 "Erro ao aprovar". Sucesso `{ ok: true }`.
 - Se o vínculo **estava pendente**, depois da resposta (`after`) manda à pessoa
   aprovada o e-mail **"Pedido aprovado"** (sempre, sem preferência). Aprovar de
@@ -189,30 +200,94 @@ aprovar. A pessoa volta a cair em `/acesso` e pode pedir de novo. Erro → 500
 O owner troca a **ala em foco** do painel.
 
 - Sem login → 401; não é owner → 403 (member tem uma ala só).
-- Corpo `{ alaId }` → `parseAlaId`; ala inexistente → 404.
+- Corpo `{ alaId }` → `parseAlaId`; ala inexistente **ou pendente** → 404.
 - Grava o cookie **`ala_atual`** (`httpOnly`, `sameSite: 'lax'`, `path: '/'`,
   1 ano), lido por `getContexto()`.
 - Sucesso `{ ok: true }`.
 
 ## `POST /api/alas/criar`
 
-O owner cria uma ala.
+O owner cria uma ala, que já nasce **ativa** (sem líder; o owner aprova quem
+pedir acesso depois).
 
 - Sem login → 401; não é owner → 403.
-- Corpo `{ nome, endereco, pais, estado, cidade, fuso }` → `parseNovaAla`:
-  - `nome` saneado e normalizado (`normalizarNomeAla`: title case, prefixo "Ala ");
-  - `slug` **sempre gerado do nome** (`gerarSlug`), nunca vem do cliente; se não
-    der um slug válido → "Não foi possível gerar um link válido a partir desse nome";
-  - `pais` da lista `PAISES` ("Escolha o país."); Brasil: `estado` é uma UF
-    ("Escolha o estado.") e o **fuso sai da UF**; outros países: estado em texto
-    livre ("Informe o estado ou província.") e `fuso` validado com
-    `fusoValido` ("Escolha o fuso horário.");
-  - `cidade` 2–80 ("Informe a cidade."); `endereco` opcional até 200 (vazio vira `null`).
-  - Erro de validação → 400 com **a mensagem acima** (para o owner).
-- Slug já usado → 409 `Já existe uma ala no endereço "<slug>".` (checado antes e
-  de novo no `23505`, se houver corrida). Outro erro → 500 "Erro ao criar ala".
+- Corpo `{ tipo, nome, estado, cidade }` → `parseNovaAla` (detalhes em
+  [src_lib.md](src_lib.md)):
+  - **Só Brasil:** não há país. `estado` é uma UF ("Escolha o estado.") e o
+    **fuso sai da UF**;
+  - `tipo` `'ala'` ou `'ramo'` (qualquer outra coisa vira `'ala'`); `nome` sem
+    o tipo, 2–80 ("Digite o nome da ala." / "Digite o nome do ramo."), gravado
+    com o prefixo ("Ala São Lourenço", "Ramo Centro");
+  - `cidade` 2–80, nome próprio ("Digite a cidade.");
+  - `slug` **sempre gerado** (`gerarSlug(uf, cidade, nome)` →
+    `pr_curitiba_sao_lourenco`), nunca vem do cliente. **Sem endereço.**
+  - Erro de validação → 400 com **a mensagem acima**.
+- Slug já usado (ativa ou pendente) → 409 `A <nome>, de <cidade>, já existe (ou
+  já foi pedida).` (checado antes e de novo no `23505`). Outro erro → 500
+  "Erro ao criar ala".
 - Sucesso: `{ ok: true, ala: { id, nome, slug } }`. O formulário usa o `id`
   para já entrar na ala nova.
+
+## `POST /api/alas/pedir`
+
+A presidência de uma ala que ainda não está no site pede para usar o calendário
+(grupo "Sua ala ou ramo ainda não está aqui?" da home). **Público, sem conta**:
+cria a ala **pendente** e a **conta nova** do líder responsável, com vínculo
+pendente. Nada aparece no site até o owner aprovar (dois passos: a ala, depois o
+líder, no cartão Usuários da ala).
+
+- Corpo `{ tipo, nome, estado, cidade, lider: { nome, email, senha }, website,
+  tempo }` → `parsePedidoAla` (as mesmas regras de ala do `criar`; líder: nome
+  2–80, e-mail válido em minúsculas, senha 6–72). Erro → 400 com a mensagem.
+- **Contra robô** (sem limite por IP, que barrava o Wi-Fi da igreja):
+  1. **Campo-armadilha** `website`, escondido fora da tela (`aria-hidden`,
+     `tabIndex -1`): veio preenchido → responde `{ ok: true }` **sem fazer nada**
+     (o robô acha que deu certo);
+  2. **Tempo mínimo:** `tempo` = milissegundos desde que o formulário abriu,
+     medido no celular (sem depender do relógio dele). Menos de 5 s
+     (`TEMPO_MINIMO_PEDIDO_MS`) → 400 "Confira os dados e toque em Enviar pedido
+     de novo.";
+  3. **Teto de pedidos:** com 10 alas pendentes (`LIMITE_PEDIDOS_PENDENTES`) → 429
+     "Há muitos pedidos esperando aprovação agora. Tente de novo daqui a alguns
+     dias." Um robô cria no máximo 10 pedidos (e 10 e-mails) até o owner olhar;
+  4. **Nada fica público** antes da aprovação.
+  Se mesmo assim houver abuso, a saída é uma regra de rate limit no Firewall da
+  Vercel para esta rota.
+- **Ala repetida:** slug já existe → 409 "A \<ala\>, de \<cidade\>, já usa o
+  calendário. Procure por ela na página inicial." (ativa) ou "…já foi pedida e
+  está esperando aprovação." (pendente).
+- **Líder = sempre conta nova:** e-mail que já tem conta → 409 "Este e-mail já
+  tem conta no painel. Use outro e-mail para o líder responsável." A conta é
+  criada pelo service-role (`auth.admin.createUser`, e-mail já confirmado, nome
+  em `user_metadata`), sem mandar e-mail.
+- Grava a ala (`status 'pendente'`, `pedido_por`, `pedido_conta_nova = true`) e o
+  vínculo pendente. Falhou no meio → desfaz o que já gravou (ala e conta) e
+  responde 500 "Não foi possível enviar o pedido. Tente de novo."
+- Sucesso `{ ok: true }`. Depois da resposta (`after`), manda a **todos os
+  owners** o e-mail **"Pedido de nova ala"** (sempre, sem preferência;
+  `avisarPedidoDeAla`).
+
+## `POST /api/alas/aprovar`
+
+O owner aprova uma ala pendente (passo 1 de 2): `status = 'ativa'`.
+
+- Sem login → 401; não é owner → 403. Corpo `{ alaId }` → `parseAlaId`.
+- Só muda se ainda estiver pendente; senão 404 "Pedido não encontrado". Erro →
+  500 "Não foi possível aprovar. Tente de novo."
+- Sucesso `{ ok: true }`. O modal do owner já põe a ala em foco: no cartão
+  Usuários dela aparece o líder esperando (passo 2, `/api/acesso/aprovar`, que
+  manda o "Pedido aprovado" ao líder).
+
+## `POST /api/alas/recusar`
+
+O owner recusa um pedido: apaga a ala pendente (o vínculo vai junto, em
+cascata) e, se a conta foi criada no pedido, **apaga a conta** também (desde que
+ela não tenha outro vínculo nem seja owner). `recusarPedido` em
+`src/lib/server/ward-request.ts`.
+
+- Sem login → 401; não é owner → 403. Corpo `{ alaId }`.
+- Ala não pendente ou inexistente → 404 "Pedido não encontrado".
+- Sucesso `{ ok: true }`. Sem e-mail para quem pediu.
 
 ## `POST /api/avisos/preferencias`
 

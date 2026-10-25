@@ -12,10 +12,7 @@ import { Spinner } from '@/components/Spinner'
 import { Modal } from '@/components/Modal'
 import { ErrorMessage } from '@/components/ErrorMessage'
 import { botao } from '@/components/button-classes'
-
-const campoBase =
-    'w-full min-w-0 box-border appearance-none rounded-xl border px-4 py-3.5 text-lg text-text ' +
-    'focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary'
+import { campo } from '@/components/field-classes'
 
 export type Agendado = { id: number; data: string; nome: string }
 
@@ -181,7 +178,7 @@ export function BookingModal({
                         placeholder="Digite seu nome aqui"
                         aria-invalid={erroNome}
                         aria-describedby={erroNome ? 'nome-erro' : undefined}
-                        className={`${campoBase} ${erroNome ? 'border-accent' : 'border-slate-300'}`}
+                        className={campo(erroNome)}
                         value={nome}
                         onChange={e => {
                             onNomeChange(e.target.value)
@@ -217,7 +214,7 @@ export function BookingModal({
                         maxLength={25}
                         aria-invalid={erroTelefone}
                         aria-describedby={erroTelefone ? 'telefone-erro' : undefined}
-                        className={`${campoBase} ${erroTelefone ? 'border-accent' : 'border-slate-300'}`}
+                        className={campo(erroTelefone)}
                         value={telefone}
                         onChange={e => {
                             onTelefoneChange(e.target.value)

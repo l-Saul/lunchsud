@@ -81,14 +81,17 @@ Sem framer-motion, sem biblioteca de UI: animações só em CSS.
 | `POST /api/agendar` | público | cria agendamento (fonte da verdade das regras do membro) |
 | `GET /api/agendamentos/[slug]` | público | dias ocupados da janela (ressincronizar) |
 | `GET /api/agenda/[slug]?data=` | público | o almoço como arquivo de agenda (`.ics`), para o iPhone |
-| `GET /api/alas` | público | lista de alas da home |
+| `GET /api/alas` | público | alas **ativas** (nome, slug, estado, cidade) para a busca da home |
+| `POST /api/alas/pedir` | público | pede ala nova + conta do líder (fica pendente; anti-robô) |
 | `POST /api/agendamentos/update` | líder | edita data/nome/telefone (ala em foco) |
 | `POST /api/agendamentos/delete` | líder | remove (ala em foco) |
 | `POST /api/acesso/solicitar` | logado | pede acesso a uma ala |
 | `POST /api/acesso/aprovar` | owner / member aprovado da ala | aprova vínculo |
 | `POST /api/acesso/remover` | owner / member aprovado da ala | remove vínculo |
 | `POST /api/ala-atual` | owner | troca a ala em foco (cookie `ala_atual`) |
-| `POST /api/alas/criar` | owner | cria ala (slug gerado do nome) |
+| `POST /api/alas/criar` | owner | cria ala ativa (slug `<uf>_<cidade>_<nome>`) |
+| `POST /api/alas/aprovar` | owner | aprova ala pendente (passo 1; o líder é o passo 2) |
+| `POST /api/alas/recusar` | owner | recusa e apaga o pedido (e a conta criada nele) |
 | `POST /api/avisos/preferencias` | líder (ala em foco) | grava os avisos por e-mail escolhidos para a ala |
 | `GET /api/cron/avisos` | Vercel Cron (`CRON_SECRET`) | lembretes e resumos do dia |
 
@@ -144,11 +147,12 @@ src/
     api/                 route handlers (URLs em português = contrato)
     auth/confirmar/      link dos e-mails do Supabase Auth
     layout.tsx  globals.css  not-found.tsx  manifest.ts  robots.ts
-  components/            usados por 2+ páginas (Spinner, Flower, Footer, LoadingOverlay)
+  components/            usados por 2+ páginas (Spinner, Flower, Footer, LoadingOverlay,
+                         WardFilter, WardForm, AccountFields, campos e botões padrão)
   hooks/                 use-bookings-realtime (WebSocket)
   lib/                   date, phone, location, wards, site-url, email-preferences, calendar-event,
                          last-ward (última ala aberta no aparelho)
-  lib/server/            public-ward, session, validation,       (só servidor)
+  lib/server/            public-ward, session, validation, ward-request, (só servidor)
                          mailer, email-templates, notifications,
                          email/aviso.html (modelo dos avisos por e-mail)
   lib/supabase/          realtime, service-role, browser-session, server-session

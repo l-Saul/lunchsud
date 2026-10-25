@@ -4,9 +4,9 @@
  */
 
 import 'server-only';
-import { createClient } from '@supabase/supabase-js';
 import { supabaseServer } from '@/lib/supabase/service-role';
-import type { PedidoAlaInput } from '@/lib/server/validation';
+import { gerarSlug } from '@/lib/wards';
+import type { NovaAlaInput, PedidoAlaInput } from '@/lib/server/validation';
 
 export const LIMITE_PEDIDOS_PENDENTES = 10;
 
@@ -16,37 +16,23 @@ export type ResultadoPedido =
 
 const falha = (status: number, erro: string): ResultadoPedido => ({ ok: false, status, erro });
 
-async function senhaConfere(email: string, senha: string) {
-    const anon = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-        auth: { persistSession: false, autoRefreshToken: false },
-    });
-    const { data, error } = await anon.auth.signInWithPassword({ email, password: senha });
-    if (error || !data.session) return false;
-    await supabaseServer.auth.admin.signOut(data.session.access_token, 'local').catch(() => null);
-    return true;
+export async function buscarAlaIgual(ala: NovaAlaInput): Promise<{ status: string } | null> {
+    const [{ data: mesmoLink }, { data: doEstado }] = await Promise.all([
+        supabaseServer.from('ala').select('status').eq('slug', ala.slug).maybeSingle(),
+        supabaseServer.from('ala').select('nome, cidade, status').eq('estado', ala.estado),
+    ]);
+    if (mesmoLink) return mesmoLink;
+    return (doEstado ?? []).find(a => gerarSlug(ala.estado, a.cidade, a.nome) === ala.slug) ?? null;
 }
 
-async function contaDoLider(lider: PedidoAlaInput['lider']): Promise<{ userId: string; nova: boolean } | ResultadoPedido> {
+async function contaNova(lider: PedidoAlaInput['lider']): Promise<{ userId: string } | ResultadoPedido> {
     const { data: perfil } = await supabaseServer
         .from('perfil')
         .select('id')
         .eq('email', lider.email)
         .maybeSingle();
-
     if (perfil) {
-        if (!(await senhaConfere(lider.email, lider.senha))) {
-            return falha(401, 'Este e-mail já tem conta no painel, mas a senha não confere. Digite a senha dessa conta ou use outro e-mail.');
-        }
-        const { data: vinculo } = await supabaseServer
-            .from('ala_membro')
-            .select('id')
-            .eq('user_id', perfil.id)
-            .limit(1)
-            .maybeSingle();
-        if (vinculo) {
-            return falha(409, 'Esta conta já está ligada a uma ala. Para pedir outra ala, use outro e-mail.');
-        }
-        return { userId: perfil.id, nova: false };
+        return falha(409, 'Este e-mail já tem conta no painel. Use outro e-mail para o líder responsável.');
     }
 
     const { data, error } = await supabaseServer.auth.admin.createUser({
@@ -57,14 +43,14 @@ async function contaDoLider(lider: PedidoAlaInput['lider']): Promise<{ userId: s
     });
     if (error || !data.user) {
         if (error?.message.toLowerCase().includes('already')) {
-            return falha(409, 'Este e-mail já tem conta no painel. Toque em Enviar pedido de novo.');
+            return falha(409, 'Este e-mail já tem conta no painel. Use outro e-mail para o líder responsável.');
         }
         if (error?.message.toLowerCase().includes('password')) {
             return falha(400, 'Escolha uma senha mais forte (pelo menos 6 caracteres).');
         }
         return falha(500, 'Não foi possível enviar o pedido. Tente de novo.');
     }
-    return { userId: data.user.id, nova: true };
+    return { userId: data.user.id };
 }
 
 export async function pedirAla({ ala, lider }: PedidoAlaInput): Promise<ResultadoPedido> {
@@ -76,23 +62,17 @@ export async function pedirAla({ ala, lider }: PedidoAlaInput): Promise<Resultad
         return falha(429, 'Há muitos pedidos esperando aprovação agora. Tente de novo daqui a alguns dias.');
     }
 
-    const { data: existente } = await supabaseServer
-        .from('ala')
-        .select('status')
-        .eq('slug', ala.slug)
-        .maybeSingle();
+    const existente = await buscarAlaIgual(ala);
     if (existente) {
         return existente.status === 'ativa'
             ? falha(409, `A ${ala.nome}, de ${ala.cidade}, já usa o calendário. Procure por ela na página inicial.`)
             : falha(409, `A ${ala.nome}, de ${ala.cidade}, já foi pedida e está esperando aprovação.`);
     }
 
-    const conta = await contaDoLider(lider);
+    const conta = await contaNova(lider);
     if ('ok' in conta) return conta;
 
-    const desfazerConta = async () => {
-        if (conta.nova) await supabaseServer.auth.admin.deleteUser(conta.userId).catch(() => null);
-    };
+    const desfazerConta = () => supabaseServer.auth.admin.deleteUser(conta.userId).catch(() => null);
 
     const { data: nova, error } = await supabaseServer
         .from('ala')
@@ -104,7 +84,7 @@ export async function pedirAla({ ala, lider }: PedidoAlaInput): Promise<Resultad
             fuso_horario: ala.fuso,
             status: 'pendente',
             pedido_por: conta.userId,
-            pedido_conta_nova: conta.nova,
+            pedido_conta_nova: true,
         })
         .select('id')
         .single();

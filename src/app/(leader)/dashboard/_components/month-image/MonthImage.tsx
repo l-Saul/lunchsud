@@ -26,19 +26,35 @@ const ROSA = '#bd0057';
 const DOURADO = '#ffb81c';
 const CINZA = '#676b6e';
 
+export const LADO_DA_IMAGEM = 1024;
+
 export default function MonthImage({ diasDoMes }: Props) {
     if (diasDoMes.length === 0) return null;
 
     const [y, m] = diasDoMes[0].data.split('-').map(Number);
     const firstDay = new Date(y, m - 1, 1).getDay();
+    const semanas = Math.ceil((firstDay + diasDoMes.length) / 7);
     const mesAno = formatMonthLabel(`${y}-${String(m).padStart(2, '0')}`);
 
     return (
-        <div style={{ backgroundColor: '#faf7f5', padding: 28 }}>
+        <div
+            style={{
+                width: LADO_DA_IMAGEM,
+                height: LADO_DA_IMAGEM,
+                boxSizing: 'border-box',
+                backgroundColor: '#faf7f5',
+                padding: 12,
+                display: 'flex',
+            }}
+        >
             <div
                 style={{
+                    flex: 1,
+                    minHeight: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
                     backgroundColor: '#ffffff',
-                    borderRadius: 28,
+                    borderRadius: 22,
                     border: '1px solid #e0e2e2',
                     overflow: 'hidden',
                 }}
@@ -46,7 +62,7 @@ export default function MonthImage({ diasDoMes }: Props) {
                 <div
                     style={{
                         backgroundColor: AZUL,
-                        padding: '30px 32px 26px',
+                        padding: '20px 24px 16px',
                         textAlign: 'center',
                         color: '#ffffff',
                     }}
@@ -76,7 +92,7 @@ export default function MonthImage({ diasDoMes }: Props) {
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: 10,
-                            marginTop: 14,
+                            marginTop: 10,
                         }}
                     >
                         <span style={{ height: 3, width: 40, backgroundColor: DOURADO, borderRadius: 999 }} />
@@ -85,13 +101,21 @@ export default function MonthImage({ diasDoMes }: Props) {
                     </div>
                 </div>
 
-                <div style={{ padding: 24 }}>
+                <div
+                    style={{
+                        flex: 1,
+                        minHeight: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        padding: '12px 14px 8px',
+                    }}
+                >
                     <div
                         style={{
                             display: 'grid',
                             gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
-                            gap: 8,
-                            marginBottom: 10,
+                            gap: 6,
+                            marginBottom: 8,
                         }}
                     >
                         {SEMANA.map((dia, i) => (
@@ -111,9 +135,12 @@ export default function MonthImage({ diasDoMes }: Props) {
 
                     <div
                         style={{
+                            flex: 1,
+                            minHeight: 0,
                             display: 'grid',
                             gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
-                            gap: 8,
+                            gridTemplateRows: `repeat(${semanas}, minmax(0, 1fr))`,
+                            gap: 6,
                         }}
                     >
                         {Array.from({ length: firstDay }).map((_, i) => (
@@ -128,12 +155,13 @@ export default function MonthImage({ diasDoMes }: Props) {
                                 <div
                                     key={dia.data}
                                     style={{
-                                        minHeight: 128,
-                                        borderRadius: 16,
+                                        minHeight: 0,
+                                        overflow: 'hidden',
+                                        borderRadius: 14,
                                         border: temAlmoco
                                             ? '1px solid #fda1b2'
                                             : '1px solid #e0e2e2',
-                                        padding: 8,
+                                        padding: 6,
                                         display: 'flex',
                                         flexDirection: 'column',
                                         backgroundColor: pday
@@ -148,8 +176,8 @@ export default function MonthImage({ diasDoMes }: Props) {
                                             display: 'inline-flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            width: 28,
-                                            height: 28,
+                                            width: 26,
+                                            height: 26,
                                             borderRadius: 999,
                                             fontSize: 14,
                                             fontWeight: 700,
@@ -210,7 +238,7 @@ export default function MonthImage({ diasDoMes }: Props) {
                                                             maxWidth: '100%',
                                                             overflowWrap: 'anywhere',
                                                             display: '-webkit-box',
-                                                            WebkitLineClamp: 3,
+                                                            WebkitLineClamp: semanas > 5 ? 2 : 3,
                                                             WebkitBoxOrient: 'vertical',
                                                             overflow: 'hidden',
                                                         }}
@@ -239,35 +267,25 @@ export default function MonthImage({ diasDoMes }: Props) {
 
                 <div
                     style={{
-                        padding: '4px 24px 24px',
-                        textAlign: 'center',
-                        color: '#53575b',
+                        padding: '6px 24px 14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 10,
                     }}
                 >
-                    <div
+                    <Flower size={20} />
+                    <span
                         style={{
                             fontFamily: 'var(--font-serif), Georgia, serif',
-                            fontSize: 20,
+                            fontSize: 22,
                             fontWeight: 600,
                             color: AZUL,
                         }}
                     >
                         A caridade nunca falha
-                    </div>
-                    <div
-                        style={{
-                            marginTop: 6,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 8,
-                            fontSize: 14,
-                        }}
-                    >
-                        <Flower size={16} />
-                        <span>Obrigada por servir os missionários</span>
-                        <Flower size={16} />
-                    </div>
+                    </span>
+                    <Flower size={20} />
                 </div>
             </div>
         </div>

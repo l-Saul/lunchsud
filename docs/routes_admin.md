@@ -57,8 +57,14 @@ entrar) ou "Já tem conta?" + **"Entrar com minha conta"** (no modo criar),
 `botao('secundario', 'grande')`, 52px. Antes era um link de texto de ~23px.
 Trocar de modo limpa a confirmação de senha, o erro e o aviso.
 
+- Os campos são o **`AccountFields`** (`modo` igual ao do formulário; ver
+  [src_components.md](src_components.md)), o mesmo do líder responsável no
+  pedido de ala nova da home: mudou um, muda o outro. Campos no padrão
+  `campo()`.
 - Sem a regra "Mínimo de 6 caracteres." embaixo do campo (o dono tirou); ela
   aparece só no erro.
+- O `<form>` tem `noValidate`: os erros são os nossos. Entrar com e-mail ou
+  senha vazios → "Digite o seu e-mail e a sua senha.".
 - **"Esqueci minha senha"** continua com cara de link (sublinhado, cinza), mas
   com área de toque de 48px (`min-h-12`).
 
@@ -149,8 +155,13 @@ Formulário `<form>` real, botão principal `type="submit"` (a tecla "Ir" envia)
 - Entrar com `username` puxa o login salvo no gerenciador de senhas; criar conta
   com `email` puxa o e-mail do próprio celular. E-mail não é frase: sem
   maiúscula automática nem corretor.
-- Cada campo de senha tem botão de olho (`aria-label` "Mostrar senha"/"Ocultar
-  senha", `aria-pressed`).
+- Cada campo de senha é um `PasswordField`, com botão de olho (`aria-label`
+  "Mostrar senha"/"Ocultar senha", `aria-pressed`).
+- **Criar conta** confere antes de enviar (`conferirConta`): "Informe seu
+  nome.", "Digite um e-mail válido.", "A senha precisa ter pelo menos 6
+  caracteres.", "As senhas não conferem." aparecem **embaixo de cada campo**
+  (`aria-describedby`, `aria-invalid`) e o foco vai para o primeiro errado. Os
+  erros do servidor continuam no `ErrorMessage`.
 
 ### Feedback
 

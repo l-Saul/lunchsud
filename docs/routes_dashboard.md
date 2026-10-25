@@ -17,8 +17,7 @@ src/app/(leader)/dashboard/
     HistoryCard.tsx                 card "Histórico de almoços" (3 meses anteriores)
     NotificationsCard.tsx           card "Notificações" (avisos por e-mail)
     UsersCard.tsx                   card "Usuários" (aprovar/remover acesso)
-    WardSwitcher.tsx                botão flutuante do owner + modal: trocar a ala em foco
-    CreateWardForm.tsx              "Criar nova ala" (dentro do modal do WardSwitcher)
+    WardSwitcher.tsx                botão flutuante do owner + modal: pedidos de ala, trocar e criar ala
     OpenCalendarButton.tsx          atalho para o calendário público da ala
     ShareLinkButtons.tsx            copiar e compartilhar o link da ala (ao lado do atalho)
     LogoutButton.tsx                botão Sair
@@ -71,7 +70,8 @@ Sem login → `/admin`; logado sem ala aprovada → `/acesso` (`requireAcesso`).
 | Agendamentos | `agendamento`: `id, data, nome, telefone`, `ala_id = alaId`, `inicio ≤ data < fim`, por data | `[]` |
 | Histórico | `agendamento`: `data`, `histInicio ≤ data < histFim`; contado por mês (`YYYY-MM`), do mais recente ao mais antigo, com `disponiveis` de cada mês | `[]` |
 | Usuários | `ala_membro`: `id, status, user_id` da ala em foco (por status), depois `perfil`: `id, nome, email` desses usuários | `[]` |
-| Alas para troca (só owner) | `ala`: `id, nome, slug`, por nome | — |
+| Alas para troca (só owner) | `ala` **ativas**: `id, nome, slug, estado, cidade`, por nome | — |
+| Pedidos de ala (só owner) | `ala` **pendentes**: `id, nome, cidade, estado, criado_em, pedido_por, pedido_conta_nova`, por `criado_em`; depois `perfil`: `id, nome, email` de quem pediu. `pedidoEm` = `dataPorExtenso(diaNoFuso(criado_em))` | — |
 | E-mail do líder | `perfil`: `email` do usuário logado | não busca |
 | Avisos por e-mail | `buscarPreferenciasEmail(userId, alaId)`: a linha de `email_preferencia` do usuário **nesta ala** (sem linha: tudo desligado) | não busca (card escondido) |
 
@@ -96,7 +96,7 @@ cada um.
    a mesma altura (`items-stretch`, `gap-2`, `sm:gap-3`).
 5. `MonthImageExport` (cartão "Gerar imagem do calendário") → `BookingsCard` →
    `HistoryCard` → `NotificationsCard` (só com ala em foco) → `UsersCard`.
-6. `WardSwitcher` (só owner, e só se houver alas): **fora** da `<section>` dos
+6. `WardSwitcher` (só owner, mesmo sem nenhuma ala: é por ele que se cria a primeira e se aprovam pedidos): **fora** da `<section>` dos
    cartões, no fim do `<main>`. É o botão fixo no canto inferior esquerdo da
    tela (ver a seção dele).
 
@@ -170,8 +170,9 @@ Modal `max-w-lg`; rótulos em texto escuro (`text-base`) e campos em `text-lg`.
 | Nome | `autoComplete="off"`: dado de outra pessoa; senão o celular sugere o nome do próprio líder |
 | Telefone | `type="tel"`, `inputMode="tel"` (tecla `+`), `maxLength=25`, `autoComplete="off"`; **sem máscara** ao digitar, arrumado no `onBlur` com `normalizarTelefone` |
 
-Estilo único dos três campos, para terem a mesma altura e largura no celular.
-`appearance-none` + `min-w-0` corrigem o `<input type="date">` do iOS Safari,
+Os três campos usam o padrão `campo()` do site (`field-classes`, ver
+[src_components.md](src_components.md)), com a mesma altura e largura no celular.
+O `appearance-none` + `min-w-0` dele corrigem o `<input type="date">` do iOS Safari,
 que senão ignora `width: 100%` e fica mais largo que os outros (estoura o container).
 
 ### Salvar
@@ -183,8 +184,10 @@ que senão ignora `width: 100%` e fica mais largo que os outros (estoura o conta
    `aria-describedby`); o foco vai para o primeiro campo errado.
 2. `POST /api/agendamentos/update { id, data, nome, telefone }`.
 3. Sucesso → fecha e `router.refresh()` (atualiza a lista sem recarregar a página).
-   Erro → dentro do modal, no `ErrorMessage`: **"Não foi possível salvar.
-   Confira se já não há almoço nesse dia e tente de novo."** Sem internet →
+   Dia já ocupado (409) → dentro do modal, no `ErrorMessage`: **"Já há um
+   almoço nesse dia. Escolha outro dia e toque em Salvar de novo."** Outro erro →
+   **"Não foi possível salvar. Confira se já não há almoço nesse dia e tente de
+   novo."** Sem internet →
    **"Sem conexão com a internet. Verifique a internet e tente de novo."** (o
    botão não fica preso em "Salvando…"). A mensagem da API ("Erro ao
    atualizar") é técnica e não aparece.
@@ -364,6 +367,10 @@ modal.
   **`opacity-60`** (meio transparente, deixa ver a página atrás; fica inteiro
   no hover e no foco).
   `aria-label` e `title` "Administração geral", `aria-haspopup="dialog"`.
+- **Pedidos esperando:** com ala pedida pela home, o botão fica **inteiro**
+  (sem transparência) e ganha um círculo framboesa com o número no canto
+  (`aria-hidden`); o nome vira "Administração geral: 2 alas esperando
+  aprovação" (1: "1 ala esperando aprovação").
 - **Posição:** **sempre flutuando** (pedido do dono): `fixed bottom-4 left-4`
   (`sm:bottom-6 sm:left-6`, alinhado à margem do `<main>`), por cima de tudo (`z-30`:
   acima do cabeçalho grudado dos meses, abaixo dos modais e do `NoticeBar`).
@@ -374,16 +381,38 @@ modal.
   (`text-xl`; quebra a linha com letra grande: `min-w-0 hyphens-auto
   wrap-break-word`, senão empurrava o X para fora em 320px) e o X "Fechar"
   (44px), como o `EditBookingModal`. Sem o "Acesso a todas as alas" do cartão
-  antigo. Dentro:
-  1. **Trocar de ala**: uma **lista de botões**, uma ala por linha (`<ul>`
-     com `aria-labelledby="trocar-ala"`, `min-h-12`, `text-lg`, nome com
-     `wrap-anywhere`). A ala em foco fica azul (`bg-secondary`, texto branco)
-     com ✓ e `aria-current`; as outras, brancas com contorno. Tocar numa ala
-     troca na hora; tocar na atual não faz nada. **Não volte ao `<select>`:**
-     no computador o menu dele é o do sistema (escuro, letra pequena, solto
-     por cima do modal) e não dá para estilizar; o dono pediu para ajustar.
-     Sem ala em foco, nenhuma fica marcada.
-  2. **Criar nova ala**: o `CreateWardForm`, abaixo de uma linha separadora.
+  antigo. Dentro, de cima para baixo:
+  1. **"Esperando aprovação (N)"** (só com pedidos): um cartão por ala pedida,
+     com o nome, "Curitiba (PR) · pedido em sábado, 25 de outubro" e "Líder:
+     Rita · rita@…" (nome e e-mail quebram a linha). Botões **"Aprovar ala"**
+     (azul) e **"Recusar"** (contorno). Recusar pede confirmação ali mesmo, em
+     rosa-claro: "Recusar e apagar este pedido? A conta criada no pedido também
+     é apagada." com "Voltar" e "Sim, recusar" (framboesa). Embaixo: "Depois de
+     aprovar a ala, aprove o líder na parte Usuários do painel dela." Erro →
+     `ErrorMessage` "Não foi possível aprovar/recusar o pedido. Tente de novo."
+     (ou sem internet).
+  2. **Trocar de ala** (`h3`): o **`WardFilter`** (o mesmo da home e do
+     `/acesso`; ver [src_components.md](src_components.md)): estado e cidade
+     começam vazios; na lista da cidade, a ala em foco aparece marcada (azul
+     com ✓).
+     Tocar numa ala troca na hora; na atual, nada. (O `<select>` de alas de
+     antes saiu: no computador o menu do sistema era escuro e pequeno.)
+  3. **Criar nova ala**: botão tracejado "+ Criar nova ala" que abre o
+     **`WardForm modo="owner"`** (o mesmo formulário do pedido da home, sem a
+     parte do líder) com o título "Nova ala"; "Cancelar" fecha o formulário.
+
+### Pedido de ala (dois passos, decisão do dono)
+
+1. **"Aprovar ala"** → `POST /api/alas/aprovar` (a ala vira ativa) → fecha o
+   modal e **põe a ala em foco** ("Abrindo a ala…"), como ao criar.
+2. Na ala aberta, o líder responsável está em **Usuários → Aguardando
+   aprovação**: "Aprovar" ali (`/api/acesso/aprovar`) libera o painel e manda a
+   ele o "Pedido aprovado". Antes do passo 1 esse botão não funcionaria (a rota
+   recusa ala pendente).
+- **"Recusar"** → `POST /api/alas/recusar` → `router.refresh()`; o cartão some
+  da lista (o modal fica aberto).
+- Um efeito em `[pedidos]` limpa a ação em andamento e a confirmação quando a
+  lista chega de novo do servidor.
 
 ### Trocar
 
@@ -398,46 +427,12 @@ modal.
    os dados novos: um efeito em `[atualId]` limpa a transição quando a ala em
    foco muda (exceção `eslint-disable-next-line react-hooks/set-state-in-effect`).
 
-### Ala criada (`entrarNaNova`, chamado pelo `CreateWardForm`)
+### Ala criada ou aprovada (`entrarNaNova`, chamado pelo `WardForm` e pelo "Aprovar ala")
 
 Fecha o modal e tenta focar a ala nova. Se conseguiu, mostra "Abrindo a ala…" e o efeito de
 `[atualId]` encerra o overlay. Se não conseguiu, **só recarrega**, sem overlay
 (não haveria troca de ala para encerrá-lo e a tela ficaria presa); a ala nova
 aparece na lista.
-
-## `CreateWardForm.tsx` (client, só owner)
-
-Fechado: botão tracejado **"+ Criar nova ala"** (texto azul). Aberto: o
-formulário (com X "Cancelar" no canto, que limpa tudo). Fica dentro do modal
-do `WardSwitcher`: rótulos em texto escuro, campos com borda cinza.
-
-### Campos
-
-| Campo | Detalhes |
-|---|---|
-| Nome (`#nova-ala-nome`) | `autoFocus`, `autoComplete="off"`. Prévia ao digitar: "Será salva como **Ala São Lourenço** · link **/sao_lourenco**" (`normalizarNomeAla` + `gerarSlug`, os mesmos do servidor) |
-| País (`#nova-ala-pais`) | lista `PAISES`; começa em Brasil. Trocar o país zera o estado (Brasil → PR) e sugere o fuso principal do país |
-| Estado (`#nova-ala-estado`) | Brasil: `<select>` das UFs (começa em PR). Outros países: texto livre "Estado ou província" |
-| Cidade (`#nova-ala-cidade`) | texto, 2+ caracteres |
-| Fuso (`#nova-ala-fuso`) | **só fora do Brasil**; fusos `America/*` do navegador (o sugerido entra na lista mesmo se o navegador não listar). No Brasil o fuso sai da UF |
-| Endereço (`#nova-ala-endereco`) | opcional, texto livre (rua/número) |
-
-Todos com `autoComplete="off"` (dado da ala, não do líder). O fuso define o
-"hoje", o dia passado bloqueado e a virada do mês **dessa ala**.
-
-### Criar
-
-1. Valida: "Digite o nome da ala." / "Escolha o estado." (Brasil) ou "Informe o
-   estado ou província." / "Informe a cidade.".
-2. `POST /api/alas/criar { nome, endereco, pais, estado, cidade, fuso }`.
-3. Sem internet → "Sem conexão com a internet. Verifique e tente de novo." (o
-   botão não fica preso). Erro da API → a mensagem dela (ex.: "Já existe uma ala
-   no endereço "x".") ou "Não foi possível criar a ala.". Erros no
-   `ErrorMessage` (caixa rosa com ícone).
-4. Sucesso → `await onCreated(json.ala.id)` (o WardSwitcher entra na ala nova)
-   e só então limpa o formulário. O "Criando…" continua durante a troca.
-
-Botão "Criar e entrar": desativado sem nome; enquanto cria, Spinner e "Criando…".
 
 ## `OpenCalendarButton.tsx` (client)
 
@@ -512,12 +507,17 @@ O cartão **"Gerar imagem do calendário"** (título do dono), logo **antes** de
 Agendamentos. Props: `meses` (`YYYY-MM`[]: o atual e o seguinte),
 `agendamentos`.
 
-- **Prévia:** miniatura da imagem do mês escolhido (o próprio `MonthImage`
-  reduzido com `zoom: 224/1024`, caixa fixa de 224px com cantos e sombra),
-  que muda ao trocar o mês: a pessoa vê o que vai baixar. `role="img"` com
-  `aria-label` "Prévia da imagem de \<mês\>" (o conteúdo é `aria-hidden`).
-  No computador fica à esquerda das abas e dos botões; no celular, em cima.
-  Largura em px de propósito: com letra grande ela não cresce e não estoura.
+- **Prévia:** miniatura **sempre quadrada** (`size-[224px]`, cantos e sombra)
+  da imagem do mês escolhido: o próprio `MonthImage` (1024×1024) reduzido com
+  **`transform: scale(224/1024)`** a partir do canto. Muda ao trocar o mês.
+  `role="img"` com `aria-label` "Prévia da imagem de \<mês\>" (o conteúdo é
+  `aria-hidden`). No computador fica à esquerda das abas e dos botões; no
+  celular, em cima. Não precisa dar para ler: é para reconhecer o mês.
+  **Não use `zoom`:** com `zoom`, o Chrome aplica o "tamanho mínimo de letra" do
+  computador da pessoa, a letra cresce, os dias esticam e a miniatura ficava
+  comprida e estranha (aconteceu no PC do dono). Com `transform`, o desenho é
+  feito em tamanho real e só depois diminuído. Tamanho em px de propósito: com
+  letra grande ela não cresce e não estoura.
 - **Mês:** as abas `MonthTabs` ("Outubro" / "Novembro", as mesmas do calendário
   público; `label` "Mês da imagem"). Começa no mês atual.
 - **"Baixar imagem"** (ícone de download): salva `almocos-<mês>-<ano>.png`
@@ -539,7 +539,8 @@ Como a imagem é feita:
 1. Um container `#export-root` **0×0, fixo e escondido** (`overflow: hidden`,
    `z-index: -1`, `pointer-events: none`) recebe por portal (`createPortal`,
    só depois de montar no navegador) o `#calendar-export`: o `MonthImage` em
-   **1024px** de largura, só para virar imagem.
+   **1024×1024** (`LADO_DA_IMAGEM`), só para virar imagem. O PNG sai com
+   2048×2048 (`pixelRatio: 2`).
 2. `gerarDiasDoMes(mes, agendamentos)` monta `{ data, numero, agendamentos }`
    para cada dia (via `useMemo`).
 3. Espera **2 frames** (`requestAnimationFrame` duplo, para o DOM escondido já
@@ -561,6 +562,12 @@ O calendário **desenhado para a imagem**, separado do calendário público.
   com almoço, sábado e domingo), rosa-claro `#fdecf1` com borda `#fda1b2`
   (fundo do dia com almoço), dourado `#ffb81c` (divisória do cabeçalho), cinza
   `#676b6e` sobre `#eff0f0` (P-day), fundo creme `#faf7f5`.
+- **Quadrada, 1024×1024** (`LADO_DA_IMAGEM`), em qualquer mês (pedido do dono:
+  "sempre naquele quadrado" e "aproveite mais as bordas"): moldura creme fina
+  (12px), cartão branco ocupando o resto, e a grade **estica para preencher a
+  altura** (`gridTemplateRows: repeat(semanas, minmax(0, 1fr))`, `semanas` = 5
+  ou 6). Cada dia tem `minHeight: 0` e `overflow: hidden`: o que não cabe é
+  cortado, nunca empurra a imagem.
 - Cabeçalho azul: "Almoço dos Missionários", mês e ano, divisória com florzinha.
 - Dias da semana ("Dom", "Seg"…) e "P-day" em 16px, **sem maiúsculas**. Os
   tamanhos em px aqui são da imagem (ela tem largura fixa), não da tela.
@@ -572,11 +579,12 @@ O calendário **desenhado para a imagem**, separado do calendário público.
   escrito no centro; com almoço, nome e telefone.
 - **Nome**: quebra até palavra sem espaço (`overflowWrap: anywhere`), fonte
   menor se tiver mais de 16 caracteres (15 em vez de 18) e **no máximo 3 linhas**
-  (o nome completo fica no painel). Telefone também quebra.
-- Rodapé: o lema **"A caridade nunca falha"** (plano de design, 6.3) em serifa,
-  20px, negrito médio, azul-marinho, e embaixo "Obrigada por servir os
-  missionários" entre florzinhas (14px, cinza). Também está embaixo do
-  calendário público (ver [routes_slug.md](routes_slug.md)).
+  (2 nos meses de 6 semanas, em que o dia é mais baixo; o nome completo fica no
+  painel). Telefone também quebra.
+- Rodapé: só o lema **"A caridade nunca falha"** entre duas florzinhas, em
+  serifa, 22px, negrito médio, azul-marinho (o dono trocou o "Obrigada por
+  servir os missionários" pelo lema). Também está embaixo do calendário
+  público (ver [routes_slug.md](routes_slug.md)).
 
 ## Pontos de atenção
 

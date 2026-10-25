@@ -6,7 +6,7 @@
 
 import { toPng } from 'html-to-image';
 import { useMemo, useState, useEffect } from 'react';
-import MonthImage from './MonthImage';
+import MonthImage, { LADO_DA_IMAGEM } from './MonthImage';
 import { MonthTabs } from '@/components/MonthTabs';
 import { Spinner } from '@/components/Spinner';
 import { ErrorMessage } from '@/components/ErrorMessage';
@@ -132,12 +132,14 @@ export default function MonthImageExport({ meses, agendamentos }: Props) {
                 <div
                     role="img"
                     aria-label={`Prévia da imagem de ${nomeDoMes(mes).toLowerCase()}`}
-                    className="mx-auto w-[224px] max-w-full overflow-hidden rounded-2xl shadow-md ring-1 ring-primary/10"
+                    className="relative mx-auto size-[224px] shrink-0 overflow-hidden rounded-2xl shadow-md ring-1 ring-primary/10"
                 >
-                    <div aria-hidden="true" className="pointer-events-none" style={{ zoom: 224 / 1024 }}>
-                        <div style={{ width: 1024 }}>
-                            <MonthImage diasDoMes={diasDoMes} />
-                        </div>
+                    <div
+                        aria-hidden="true"
+                        className="pointer-events-none absolute left-0 top-0 origin-top-left"
+                        style={{ transform: `scale(${224 / LADO_DA_IMAGEM})` }}
+                    >
+                        <MonthImage diasDoMes={diasDoMes} />
                     </div>
                 </div>
 
@@ -206,7 +208,8 @@ export default function MonthImageExport({ meses, agendamentos }: Props) {
                     <div
                         id="calendar-export"
                         style={{
-                            width: '1024px',
+                            width: LADO_DA_IMAGEM,
+                            height: LADO_DA_IMAGEM,
                             backgroundColor: '#ffffff',
                         }}
                     >

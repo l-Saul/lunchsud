@@ -11,6 +11,7 @@ import { Spinner } from '@/components/Spinner';
 import { Modal } from '@/components/Modal';
 import { ErrorMessage } from '@/components/ErrorMessage';
 import { botao } from '@/components/button-classes';
+import { campo } from '@/components/field-classes';
 
 type Props = {
     id: number;
@@ -18,10 +19,6 @@ type Props = {
     nome: string;
     telefone: string;
 };
-
-const campoBase =
-    'w-full min-w-0 min-h-12 box-border appearance-none rounded-lg border px-3 py-3 text-lg text-text ' +
-    'focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary';
 
 export default function EditBookingModal({ id, data, nome, telefone }: Props) {
     const router = useRouter();
@@ -75,6 +72,8 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
             if (res.ok) {
                 fechar();
                 router.refresh();
+            } else if (tipo === 'salvar' && res.status === 409) {
+                setErro('Já há um almoço nesse dia. Escolha outro dia e toque em Salvar de novo.');
             } else {
                 setErro(tipo === 'salvar'
                     ? 'Não foi possível salvar. Confira se já não há almoço nesse dia e tente de novo.'
@@ -139,7 +138,7 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                                     onChange={e =>
                                         setForm({ ...form, data: e.target.value })
                                     }
-                                    className={`${campoBase} border-slate-300`}
+                                    className={campo()}
                                 />
                             </div>
 
@@ -165,7 +164,7 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                                             telefoneRef.current?.focus();
                                         }
                                     }}
-                                    className={`${campoBase} ${erroNome ? 'border-accent' : 'border-slate-300'}`}
+                                    className={campo(erroNome)}
                                 />
                                 {erroNome && (
                                     <p id={`nome-${id}-erro`} className="mt-0.5 text-base text-accent">
@@ -197,7 +196,7 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                                         const lido = normalizarTelefone(form.telefone);
                                         if (lido) setForm({ ...form, telefone: lido.formatado });
                                     }}
-                                    className={`${campoBase} ${erroTelefone ? 'border-accent' : 'border-slate-300'}`}
+                                    className={campo(erroTelefone)}
                                 />
                                 {erroTelefone && (
                                     <p id={`tel-${id}-erro`} className="mt-0.5 text-base text-accent">

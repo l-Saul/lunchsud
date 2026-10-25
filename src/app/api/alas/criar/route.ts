@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 import { getContexto } from '@/lib/server/session';
 import { supabaseServer } from '@/lib/supabase/service-role';
 import { lerJson, parseNovaAla, ValidationError, type NovaAlaInput } from '@/lib/server/validation';
+import { buscarAlaIgual } from '@/lib/server/ward-request';
 
 export async function POST(req: Request) {
     const ctx = await getContexto();
@@ -28,13 +29,7 @@ export async function POST(req: Request) {
     }
     const { nome, slug, estado, cidade, fuso } = entrada;
 
-    const { data: existente } = await supabaseServer
-        .from('ala')
-        .select('id')
-        .eq('slug', slug)
-        .maybeSingle();
-
-    if (existente) {
+    if (await buscarAlaIgual(entrada)) {
         return NextResponse.json(
             { error: `A ${nome}, de ${cidade}, já existe (ou já foi pedida).` },
             { status: 409 }

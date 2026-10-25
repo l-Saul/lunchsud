@@ -41,18 +41,30 @@ schema public from anon, authenticated` como garantia explícita.
 | Coluna | Tipo | Regra |
 |---|---|---|
 | `id` | `integer` identity | PK |
-| `nome` | `varchar(100)` | nome de exibição ("Ala São Lourenço") |
-| `descricao` | `varchar(150)` | opcional |
-| `endereco` | `varchar(200)` | opcional, texto livre (rua/número) |
-| `slug` | `text`, **único** | link público, gerado do nome por `gerarSlug()`. Check `ala_slug_formato`: `^[a-z0-9_-]{1,60}$` |
-| `pais` | `char(2)` | ISO 3166-1 (`BR`, `AR`, `US`…). Check `ala_pais_formato`: `^[A-Z]{2}$` |
-| `estado` | `varchar(60)` | Brasil: UF (`PR`); outros países: texto livre. Check `ala_estado_valido`: 1–60 caracteres, sem `<` `>` nem caracteres de controle, e **se `pais = 'BR'`, uma das 27 UFs** |
-| `cidade` | `varchar(80)` | Check `ala_cidade_valida`: 2–80, sem `<` `>` nem controle |
-| `fuso_horario` | `varchar(64)` | IANA (`America/Sao_Paulo`, `America/Manaus`…). Check `ala_fuso_formato`: `^[A-Za-z]+(/[A-Za-z0-9_+-]+)+$`. Se o nome existe de verdade é checado no app (`fusoValido`, com `Intl`): o check do Postgres não pode consultar tabela |
+| `nome` | `varchar(100)` | nome de exibição, com o tipo na frente ("Ala São Lourenço", "Ramo Centro") |
+| `slug` | `text`, **único** | link público. Check `ala_slug_formato`: `^[a-z0-9_-]{1,100}$`. **Nunca muda depois de criado** (ver abaixo) |
+| `estado` | `varchar(60)` | **UF** (`PR`). Check `ala_estado_valido`: uma das 27 UFs. O site é só do Brasil: não há país |
+| `cidade` | `varchar(80)` | nome próprio ("São José dos Pinhais", `normalizarCidade`). Check `ala_cidade_valida`: 2–80, sem `<` `>` nem controle |
+| `fuso_horario` | `varchar(64)` | IANA, **sai da UF** (`America/Sao_Paulo`, `America/Manaus`…; `UFS` em `src/lib/location.ts`). Check `ala_fuso_formato`: `^[A-Za-z]+(/[A-Za-z0-9_+-]+)+$` |
+| `status` | `text`, padrão `'ativa'` | `'pendente'` (pedida pela home, esperando o owner) ou `'ativa'`. Check `ala_status_valido`. Índice `idx_ala_status` |
+| `criado_em` | `timestamptz`, padrão `now()` | quando a ala foi criada ou pedida (ordem e data dos pedidos no modal do owner) |
+| `pedido_por` | `uuid` → `auth.users`, `on delete set null` | quem pediu a ala pela home (o líder responsável). Índice `idx_ala_pedido_por`. Nulo nas alas criadas pelo owner |
+| `pedido_conta_nova` | `boolean`, padrão `false` | `true` quando a conta do líder foi criada no pedido (sempre, hoje): recusar o pedido apaga essa conta |
 
 O **fuso** define o "hoje" (dia passado bloqueado), a janela de 2 meses e a virada
-do mês **dessa ala** (ver [src_lib.md](src_lib.md)). Constantes de país/UF/fuso:
-`src/lib/location.ts`.
+do mês **dessa ala** (ver [src_lib.md](src_lib.md)).
+
+**Ala pendente não é pública.** Tudo que é do membro ou de escolher ala filtra
+`status = 'ativa'`: `/api/alas`, `buscarAlaPorSlug` (página da ala, agendar,
+ressincronizar, imagem da prévia do link), `/api/acesso/solicitar`, a lista do
+`/acesso`, `/api/ala-atual`, a primeira ala do owner (`getContexto`) e a lista de
+troca do painel. O owner vê as pendentes só no modal "Administração geral".
+
+**Slug: regra de negócio.** Alas novas usam `<uf>_<cidade>_<nome>` sem acento
+(`pr_curitiba_sao_lourenco`; "Ramo" fica no link, "Ala" sai: `gerarSlug` em
+[src_lib.md](src_lib.md)). **O slug de uma ala existente nunca muda**, nem
+quando mudar a regra: o link já foi mandado nos grupos do WhatsApp. Por isso as
+3 primeiras alas continuam com o formato antigo, só o nome.
 
 Hoje há 3 alas (`ecoville`, `pilarzinho`, `sao_lourenco`), todas BR / PR /
 Curitiba / `America/Sao_Paulo`. A ala de teste (`teste`) foi removida em
@@ -212,9 +224,10 @@ Mudou o banco?
 Nunca coloque SMTP ou configuração de e-mail em migration.
 
 Hoje não há migration pendente: a pasta `supabase/migrations/` só existe enquanto
-houver uma para rodar. As últimas, aplicadas em 2026-10-24, foram a localização
-da ala (país, estado, cidade e fuso, sem valor padrão) e os avisos por e-mail
-(`email_preferencia`, `email_envio` e o trigger de troca de e-mail).
+houver uma para rodar. As últimas, aplicadas em 2026-10-25, foram o pedido de
+ala pela home (`status`, `criado_em`, `pedido_por`, `pedido_conta_nova`, slug até
+100 caracteres) e, depois de publicar o código, a retirada de `pais`,
+`endereco` e `descricao` (o site é só do Brasil e não guarda mais endereço).
 
 ## Dados pessoais
 

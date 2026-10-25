@@ -27,7 +27,7 @@ contraste, poucos passos, sem aglomerar informação.
 
 | Código | Doc |
 |---|---|
-| `src/app/(member)/page.tsx` | `docs/routes_home.md` |
+| `src/app/(member)/page.tsx`, `src/app/(member)/_components/**` | `docs/routes_home.md` |
 | `src/app/(member)/[slug]/**` | `docs/routes_slug.md` |
 | `src/app/(leader)/<rota>/**` (`admin`, `acesso`, `redefinir-senha`, `dashboard`) | `docs/routes_<rota>.md` |
 | `src/app/auth/confirmar/**` | `docs/routes_auth-confirmar.md` |
@@ -136,6 +136,17 @@ Regras:
    (`diasDisponiveisNoMes`).
 7. **Histórico = só os 3 meses anteriores** ao atual (`getHistoricoRange(3)`);
    não carregue mais que isso no painel.
+8. **Só Brasil** (regra do dono, 25/10/2026). Não há país: a ala tem UF e
+   cidade, e o **fuso sai da UF** (`UFS` em `src/lib/location.ts`). Sem endereço.
+9. **O link (slug) de uma ala existente nunca muda.** Ele já está nos grupos
+   do WhatsApp. Ala nova usa `<uf>_<cidade>_<nome>` (`gerarSlug`); se a regra
+   mudar, vale só para as próximas. As 3 primeiras alas mantêm o formato
+   antigo (`/ecoville`, `/pilarzinho`, `/sao_lourenco`).
+10. **Ala pendente não é pública.** A presidência pede ala nova pela home (com a
+    conta nova do líder responsável); ela nasce `pendente` e só aparece depois
+    que o owner aprova, **em dois passos**: a ala (modal do owner) e depois o
+    líder (cartão Usuários da ala). Tudo que lista ou abre ala filtra
+    `status = 'ativa'` (ver [`docs/database.md`](docs/database.md)).
 
 `src/lib/date.ts` é o módulo central de datas: reutilize-o, não duplique lógica
 de data/fuso/P-day em componentes. Detalhes: [`docs/src_lib.md`](docs/src_lib.md).
@@ -234,6 +245,11 @@ servidor e no banco (validação, constraints, permissões), não travando a pes
 - **Sem limite por IP** (removido em 2026-10-24): no Wi-Fi da igreja muitas
   pessoas saem pelo mesmo IP e eram bloqueadas. Não reintroduza limite em memória.
   Se houver abuso, use regra de rate limit do Firewall da Vercel na rota.
+- **Pedido de ala nova (`/api/alas/pedir`, público) é difícil para robô, não
+  para a pessoa:** campo-armadilha escondido, tempo mínimo de 5 s no
+  formulário, no máximo 10 alas pendentes ao mesmo tempo e nada público antes
+  da aprovação do owner. Não acrescente captcha nem pergunta à pessoa sem o
+  dono pedir. Detalhes em [`docs/routes_api.md`](docs/routes_api.md).
 - Rotas **nunca** ecoam `error.message` do banco. Em `/api/agendar` as mensagens
   aparecem na tela do membro: escreva para ele.
 - SQL injection: mitigado pelo query builder do Supabase (parametrizado). Não
@@ -261,7 +277,9 @@ servidor e no banco (validação, constraints, permissões), não travando a pes
 - **owner** (`perfil.is_owner`): todas as alas; aprova/remove usuários, cria alas
   e troca a ala em foco (cookie `ala_atual`). **member**: uma ala só (vínculo
   aprovado). Sem ala aprovada → `/acesso`.
-- O **slug** é gerado do nome por `gerarSlug()`: não invente outro formato.
+- O **slug** é gerado por `gerarSlug(uf, cidade, nome)` (`pr_curitiba_sao_lourenco`):
+  não invente outro formato, e **nunca mude o slug de uma ala que já existe**
+  (regra de negócio 9).
 - **Não há ala de teste.** O `.env` local aponta para o banco de **produção**:
   agendar no `npm run dev` grava numa ala real e aparece ao vivo para os líderes.
   Teste fluxos que gravam só com o usuário ciente, numa ala combinada, e entregue
@@ -283,8 +301,11 @@ Regras completas em [`docs/src_lib.md`](docs/src_lib.md) ("Avisos por e-mail").
 - **O que nasce de uma ação sai na hora; o que depende de olhar o calendário sai
   no cron das 8h** (`/api/cron/avisos`, `0 11 * * *` UTC no `vercel.json`).
 - **Os avisos só informam**, como notificação: **sem botão, sem link, sem
-  anexo**; telefone em texto comum. Exceção: os e-mails de pedido para usar o
-  painel (o pedido e o "Pedido aprovado") têm um botão para o painel.
+  anexo**; telefone em texto comum. Exceção: os e-mails de pedido (o pedido
+  para usar o painel, o "Pedido aprovado" e o "Pedido de nova ala") têm um
+  botão para o painel.
+- **"Pedido de nova ala" vai sempre a todos os owners**, sem preferência: é do
+  dono do sistema (a ala ainda não existe para ninguém ligar aviso).
 - **Um aviso por assunto.** "Almoços do mês seguinte" (um dia antes do fim do
   mês) já avisa que o mês seguinte pode ser agendado; não há outro no dia 1.
 - **O modelo (layout) do e-mail fica em `src/lib/server/email/aviso.html`**; o
@@ -353,6 +374,14 @@ o arquivo. Nunca coloque SMTP em migration. Tudo em [`docs/database.md`](docs/da
   perigo framboesa, dourado só no "Sair" e no botão flutuante do owner;
   `normal` 48px no painel, `grande` 52px nas páginas públicas). Quem chama só acrescenta layout. Botão novo
   "do jeito dele" sai do padrão: não faça.
+- **Campo: sempre o padrão** de `src/components/field-classes.ts` (`campo(erro)`
+  e `rotulo`), `SelectField` para lista de escolha e `PasswordField` para senha.
+  Campo novo "do jeito dele" sai do padrão: não faça.
+- **Um componente só para cada coisa de ala e de conta** (regra do dono: "uma
+  mudança ajusta tudo"): **`WardFilter`** para escolher ala (home, troca do
+  owner, `/acesso`; muda só o que o toque final faz), **`WardForm`** para
+  criar ou pedir ala, **`AccountFields`** para os campos de conta (login e
+  líder do pedido). Não duplique esses formulários numa página.
 - **Erro na tela:** o geral de um formulário ou ação vai no `ErrorMessage`
   (caixa rosa-claro com ícone, `role="alert"`) e diz o que fazer ("…e toque em
   Confirmar almoço de novo"). Erro de campo fica embaixo do campo, ligado por
