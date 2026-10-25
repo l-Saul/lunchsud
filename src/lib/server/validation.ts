@@ -68,16 +68,39 @@ export async function lerJson(req: Request, maxBytes = 10_000): Promise<unknown>
         throw new ValidationError('Corpo grande demais');
     }
 
-    const texto = await req.text();
-    if (texto.length > maxBytes) {
-        throw new ValidationError('Corpo grande demais');
-    }
+    const texto = await lerTexto(req, maxBytes);
 
     try {
         return JSON.parse(texto);
     } catch {
         throw new ValidationError('JSON inválido');
     }
+}
+
+async function lerTexto(req: Request, maxBytes: number): Promise<string> {
+    if (!req.body) return '';
+
+    const leitor = req.body.getReader();
+    const pedacos: Uint8Array[] = [];
+    let total = 0;
+    for (;;) {
+        const { done, value } = await leitor.read();
+        if (done) break;
+        total += value.byteLength;
+        if (total > maxBytes) {
+            await leitor.cancel();
+            throw new ValidationError('Corpo grande demais');
+        }
+        pedacos.push(value);
+    }
+
+    const bytes = new Uint8Array(total);
+    let posicao = 0;
+    for (const pedaco of pedacos) {
+        bytes.set(pedaco, posicao);
+        posicao += pedaco.byteLength;
+    }
+    return new TextDecoder().decode(bytes);
 }
 
 export type AgendarInput = {
@@ -165,15 +188,17 @@ export type NovaAlaInput = {
 export function parseNovaAla(raw: unknown): NovaAlaInput {
     const o = (raw ?? {}) as Record<string, unknown>;
     const tipo = o.tipo === 'ramo' ? 'ramo' : 'ala';
+    const erroNome = `Digite o nome ${tipo === 'ramo' ? 'do ramo' : 'da ala'}.`;
 
-    const base = nomeSemTipo(textoSaneado(o.nome, 2, 80, `Digite o nome ${tipo === 'ramo' ? 'do ramo' : 'da ala'}.`));
-    if (base.length < 2) throw new ValidationError(`Digite o nome ${tipo === 'ramo' ? 'do ramo' : 'da ala'}.`);
+    const base = nomeSemTipo(textoSaneado(o.nome, 2, 80, erroNome));
+    if (base.length < 2 || base.length > 80) throw new ValidationError(erroNome);
     const nome = normalizarNomeAla(base, tipo);
 
     const uf = UFS.find(u => u.sigla === asString(o.estado).trim().toUpperCase());
     if (!uf) throw new ValidationError('Escolha o estado.');
 
     const cidade = normalizarCidade(textoSaneado(o.cidade, 2, 80, 'Digite a cidade.'));
+    if (cidade.length > 80) throw new ValidationError('Digite a cidade.');
 
     const slug = gerarSlug(uf.sigla, cidade, nome);
     if (!SLUG_RE.test(slug)) {

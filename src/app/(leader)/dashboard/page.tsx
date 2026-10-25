@@ -19,7 +19,7 @@ import { UsersCard, type Usuario } from './_components/UsersCard';
 import { NotificationsCard } from './_components/NotificationsCard';
 import { supabaseServer } from '@/lib/supabase/service-role';
 import { buscarPreferenciasEmail } from '@/lib/server/notifications';
-import { getDashboardRange, getHistoricoRange, diasDisponiveisNoMes, dataPorExtenso, diaNoFuso } from '@/lib/date';
+import { getDashboardRange, getHistoricoRange, diasDisponiveisNoMes, dataPorExtenso, diaNoFuso, limitesDaEdicao } from '@/lib/date';
 import { FUSO_PADRAO } from '@/lib/location';
 
 export const dynamic = 'force-dynamic';
@@ -34,112 +34,123 @@ export const metadata: Metadata = {
     robots: { index: false, follow: false },
 };
 
-export default async function DashboardPage() {
-    const ctx = await requireAcesso();
-    const alaId = ctx.alaId;
+type AlaParaTroca = { id: number; nome: string; slug: string; estado: string; cidade: string };
 
-    const { data: ala } = alaId !== null
-        ? await supabaseServer.from('ala').select('nome, slug, fuso_horario').eq('id', alaId).single()
-        : { data: null };
+async function buscarAla(alaId: number) {
+    const { data } = await supabaseServer.from('ala').select('nome, slug, fuso_horario').eq('id', alaId).single();
+    return data;
+}
 
-    const fuso = ala?.fuso_horario ?? FUSO_PADRAO;
-    const { inicio, fim, mesAtual, mesSeguinte } = getDashboardRange(fuso);
+async function buscarAgendamentos(alaId: number, inicio: string, fim: string) {
+    const { data } = await supabaseServer
+        .from('agendamento')
+        .select('id, data, nome, telefone')
+        .eq('ala_id', alaId)
+        .gte('data', inicio)
+        .lt('data', fim)
+        .order('data', { ascending: true });
+    return data ?? [];
+}
 
-    const { data: agData } = alaId !== null
-        ? await supabaseServer
-            .from('agendamento')
-            .select('id, data, nome, telefone')
-            .eq('ala_id', alaId)
-            .gte('data', inicio)
-            .lt('data', fim)
-            .order('data', { ascending: true })
-        : { data: [] };
-    const agendamentos = agData ?? [];
-
-    const { inicio: histInicio, fim: histFim } = getHistoricoRange(3, fuso);
-    const { data: historicoRaw } = alaId !== null
-        ? await supabaseServer
-            .from('agendamento')
-            .select('data')
-            .eq('ala_id', alaId)
-            .gte('data', histInicio)
-            .lt('data', histFim)
-            .order('data', { ascending: true })
-        : { data: [] };
+async function buscarHistorico(alaId: number, inicio: string, fim: string): Promise<MesHistorico[]> {
+    const { data } = await supabaseServer
+        .from('agendamento')
+        .select('data')
+        .eq('ala_id', alaId)
+        .gte('data', inicio)
+        .lt('data', fim)
+        .order('data', { ascending: true });
 
     const datasPorMes = new Map<string, string[]>();
-    for (const r of historicoRaw ?? []) {
+    for (const r of data ?? []) {
         const ym = r.data.slice(0, 7);
         datasPorMes.set(ym, [...(datasPorMes.get(ym) ?? []), r.data]);
     }
-    const historico: MesHistorico[] = Array.from(datasPorMes, ([ym, datas]) => ({
+    return Array.from(datasPorMes, ([ym, datas]) => ({
         ym,
         total: datas.length,
         disponiveis: diasDisponiveisNoMes(ym, datas),
     })).sort((a, b) => b.ym.localeCompare(a.ym));
+}
 
-    const { data: membros } = alaId !== null
-        ? await supabaseServer
-            .from('ala_membro')
-            .select('id, status, user_id')
-            .eq('ala_id', alaId)
-            .order('status', { ascending: true })
-        : { data: [] };
+async function buscarUsuarios(alaId: number, euId: string): Promise<Usuario[]> {
+    const { data: membros } = await supabaseServer
+        .from('ala_membro')
+        .select('id, status, user_id')
+        .eq('ala_id', alaId)
+        .order('status', { ascending: true });
 
-    const listaMembros = membros ?? [];
-    const userIds = [...new Set(listaMembros.map(m => m.user_id))];
+    const lista = membros ?? [];
+    const userIds = [...new Set(lista.map(m => m.user_id))];
     const { data: perfis } = userIds.length
         ? await supabaseServer.from('perfil').select('id, nome, email').in('id', userIds)
         : { data: [] };
     const perfilPorId = new Map((perfis ?? []).map(p => [p.id, p]));
 
-    let alasParaTroca: { id: number; nome: string; slug: string; estado: string; cidade: string }[] = [];
-    let pedidos: PedidoAla[] = [];
-    if (ctx.isOwner) {
-        const [{ data: todasAlas }, { data: pendentes }] = await Promise.all([
-            supabaseServer.from('ala').select('id, nome, slug, estado, cidade').eq('status', 'ativa').order('nome'),
-            supabaseServer
-                .from('ala')
-                .select('id, nome, cidade, estado, criado_em, pedido_por, pedido_conta_nova')
-                .eq('status', 'pendente')
-                .order('criado_em'),
-        ]);
-        alasParaTroca = todasAlas ?? [];
-
-        const lideresIds = [...new Set((pendentes ?? []).map(p => p.pedido_por).filter((id): id is string => !!id))];
-        const { data: lideres } = lideresIds.length
-            ? await supabaseServer.from('perfil').select('id, nome, email').in('id', lideresIds)
-            : { data: [] };
-        const liderPorId = new Map((lideres ?? []).map(l => [l.id, l]));
-
-        pedidos = (pendentes ?? []).map(p => {
-            const lider = p.pedido_por ? liderPorId.get(p.pedido_por) : undefined;
-            return {
-                id: p.id,
-                nome: p.nome,
-                cidade: p.cidade,
-                estado: p.estado,
-                pedidoEm: dataPorExtenso(diaNoFuso(p.criado_em)),
-                contaNova: p.pedido_conta_nova,
-                lider: lider ? { nome: lider.nome || lider.email || '', email: lider.email ?? '' } : null,
-            };
-        });
-    }
-
-    const [{ data: meuPerfil }, avisos] = alaId !== null
-        ? await Promise.all([
-            supabaseServer.from('perfil').select('email').eq('id', ctx.userId).maybeSingle(),
-            buscarPreferenciasEmail(ctx.userId, alaId),
-        ])
-        : [{ data: null }, null];
-
-    const usuarios: Usuario[] = listaMembros.map(m => ({
+    return lista.map(m => ({
         id: m.id,
         nome: perfilPorId.get(m.user_id)?.nome ?? '',
         email: perfilPorId.get(m.user_id)?.email ?? '',
         status: m.status,
-        voce: m.user_id === ctx.userId,
+        voce: m.user_id === euId,
     }));
+}
+
+async function buscarDadosDoOwner(): Promise<{ alasParaTroca: AlaParaTroca[]; pedidos: PedidoAla[] }> {
+    const [{ data: todasAlas }, { data: pendentes }] = await Promise.all([
+        supabaseServer.from('ala').select('id, nome, slug, estado, cidade').eq('status', 'ativa').order('nome'),
+        supabaseServer
+            .from('ala')
+            .select('id, nome, cidade, estado, criado_em, pedido_por, pedido_conta_nova')
+            .eq('status', 'pendente')
+            .order('criado_em'),
+    ]);
+
+    const lideresIds = [...new Set((pendentes ?? []).map(p => p.pedido_por).filter((id): id is string => !!id))];
+    const { data: lideres } = lideresIds.length
+        ? await supabaseServer.from('perfil').select('id, nome, email').in('id', lideresIds)
+        : { data: [] };
+    const liderPorId = new Map((lideres ?? []).map(l => [l.id, l]));
+
+    const pedidos = (pendentes ?? []).map(p => {
+        const lider = p.pedido_por ? liderPorId.get(p.pedido_por) : undefined;
+        return {
+            id: p.id,
+            nome: p.nome,
+            cidade: p.cidade,
+            estado: p.estado,
+            pedidoEm: dataPorExtenso(diaNoFuso(p.criado_em)),
+            contaNova: p.pedido_conta_nova,
+            lider: lider ? { nome: lider.nome || lider.email || '', email: lider.email ?? '' } : null,
+        };
+    });
+    return { alasParaTroca: todasAlas ?? [], pedidos };
+}
+
+async function buscarMeuEmail(userId: string) {
+    const { data } = await supabaseServer.from('perfil').select('email').eq('id', userId).maybeSingle();
+    return data?.email ?? null;
+}
+
+export default async function DashboardPage() {
+    const ctx = await requireAcesso();
+    const alaId = ctx.alaId;
+
+    const [ala, usuarios, { alasParaTroca, pedidos }, meuEmail, avisos] = await Promise.all([
+        alaId !== null ? buscarAla(alaId) : null,
+        alaId !== null ? buscarUsuarios(alaId, ctx.userId) : [],
+        ctx.isOwner ? buscarDadosDoOwner() : { alasParaTroca: [], pedidos: [] },
+        alaId !== null ? buscarMeuEmail(ctx.userId) : null,
+        alaId !== null ? buscarPreferenciasEmail(ctx.userId, alaId) : null,
+    ]);
+
+    const fuso = ala?.fuso_horario ?? FUSO_PADRAO;
+    const { inicio, fim, mesAtual, mesSeguinte } = getDashboardRange(fuso);
+    const { inicio: histInicio, fim: histFim } = getHistoricoRange(3, fuso);
+
+    const [agendamentos, historico] = alaId !== null
+        ? await Promise.all([buscarAgendamentos(alaId, inicio, fim), buscarHistorico(alaId, histInicio, histFim)])
+        : [[], []];
 
     return (
         <DashboardClientGuard>
@@ -164,7 +175,7 @@ export default async function DashboardPage() {
 
                     <MonthImageExport meses={[mesAtual, mesSeguinte]} agendamentos={agendamentos} />
 
-                    <BookingsCard mesAtual={mesAtual} mesSeguinte={mesSeguinte} agendamentos={agendamentos} />
+                    <BookingsCard mesAtual={mesAtual} mesSeguinte={mesSeguinte} agendamentos={agendamentos} limites={limitesDaEdicao(fuso)} />
 
                     <HistoryCard historico={historico} />
 
@@ -172,7 +183,7 @@ export default async function DashboardPage() {
                         <NotificationsCard
                             key={alaId}
                             alaId={alaId}
-                            email={meuPerfil?.email ?? null}
+                            email={meuEmail}
                             preferenciasIniciais={avisos}
                         />
                     )}

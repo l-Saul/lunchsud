@@ -6,7 +6,29 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+const METODOS_SEGUROS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
+function vemDeOutroSite(request: NextRequest) {
+    if (METODOS_SEGUROS.has(request.method) || !request.nextUrl.pathname.startsWith('/api/')) return false;
+
+    const site = request.headers.get('sec-fetch-site');
+    if (site && site !== 'same-origin' && site !== 'none') return true;
+
+    const origem = request.headers.get('origin');
+    if (!origem) return false;
+    const hosts = [request.headers.get('host'), request.headers.get('x-forwarded-host')];
+    try {
+        return !hosts.includes(new URL(origem).host);
+    } catch {
+        return true;
+    }
+}
+
 export async function proxy(request: NextRequest) {
+    if (vemDeOutroSite(request)) {
+        return NextResponse.json({ error: 'Pedido recusado.' }, { status: 403 });
+    }
+
     let response = NextResponse.next({ request });
 
     const supabase = createServerClient(

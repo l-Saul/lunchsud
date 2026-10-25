@@ -15,10 +15,11 @@ na pasta dela, em `_components/`.
 | `PasswordField` | `AccountFields`, `ResetPasswordForm` |
 | `AccountFields` | `LoginForm` (entrar e criar conta), `WardForm` (líder responsável do pedido) |
 | `WardFilter` | home (abrir o calendário), modal do owner (trocar de ala), `/acesso` (pedir acesso) |
-| `WardForm` | home (pedir ala nova, `RequestWard`), modal do owner (criar ala) |
+| `WardForm` | `WardRequestModal` (pedir ala nova), modal do owner (criar ala) |
+| `WardRequestModal` | home (`RequestWard`) e `/acesso` (`RequestAccess`): pedir para usar o calendário |
 | `ChoiceGroup` | `MonthTabs`, `WardForm` ("É ala ou ramo?") |
 | `MonthTabs` | calendário da ala (`MonthCalendar`), cartão "Gerar imagem do calendário" (painel) |
-| `Modal` | `BookingModal` (ala), `EditBookingModal`, confirmação de remover acesso, confirmação de desligar aviso (painel) |
+| `Modal` | `BookingModal` (ala), `WardRequestModal`, `EditBookingModal`, confirmação de remover acesso, confirmação de desligar aviso (painel) |
 | `ErrorMessage` | `BookingModal`, `EditBookingModal`, `UsersCard`, `NotificationsCard`, `WardForm`, `WardSwitcher`, `LoginForm`, `RequestAccess`, `ResetPasswordForm` |
 | `NoticeBar` | página da ala (avisos do calendário), painel (`ShareLinkButtons`: "Link copiado!") |
 | `Spinner` | todos os botões de ação, `LoadingOverlay`, home |
@@ -118,7 +119,7 @@ tamanho)`, que devolve as classes; quem chama só acrescenta **layout** (largura
 |---|---|---|
 | `primario` (padrão) | azul `bg-secondary`, texto branco, sombra | a ação principal da tela |
 | `secundario` | branco, contorno cinza, texto escuro | Cancelar, Manter, Voltar |
-| `perigo` | framboesa `bg-accent`, texto branco | remover, desligar (na confirmação) |
+| `perigo` | framboesa `bg-accent`, texto branco | remover, desligar (na confirmação) e o "Fechar" da confirmação do agendamento (pedido do dono: o rosa da paleta, escuro; o rosa-claro foi achado feio) |
 | `dourado` | dourado `bg-gold`, texto marinho (7,8:1) | só o "Sair" do painel, sobre a linha azul (pedido do dono). As mesmas cores (sem `botao()`, por ser redondo e só ícone) estão no botão flutuante do owner, no `WardSwitcher` |
 
 | `tamanho` | Medidas | Uso |
@@ -127,9 +128,16 @@ tamanho)`, que devolve as classes; quem chama só acrescenta **layout** (largura
 | `grande` | `min-h-13` (52px), `px-6`, `text-lg` | páginas públicas e de login (agendar, entrar, nova senha, 404) |
 
 Base comum: `rounded-xl`, `font-semibold`, `inline-flex` centrado com `gap-2`
-(ícone/Spinner + texto), `active:scale-[0.98]`, `disabled:opacity-70`. Fica
-fora do padrão de propósito: botões só de ícone (X, lápis, copiar/compartilhar,
-que têm medidas próprias), as abas do mês, os botões das alas na home, as chaves
+(ícone/Spinner + texto), `active:scale-[0.98]`, `disabled:opacity-70`.
+
+**`BOTAO_FECHAR`**: o X redondo de todo modal (`BookingModal`,
+`EditBookingModal`, `WardSwitcher`, `WardRequestModal`) e do `NoticeBar`.
+**44px fixos** (`size-[44px]`), não em rem: com letra 200% o `h-11 w-11` virava
+88px e espremia o título ao lado em 320px (ficava "Pe-dir par a usa r o…").
+Antes a mesma string estava copiada em cada modal.
+
+Fica fora do `botao()` de propósito: botões só de ícone (X, lápis,
+copiar/compartilhar, que têm medidas próprias), as abas do mês, os botões das alas na home, as chaves
 de notificação e os botões de texto ("Remover" na lista, "Esqueci minha senha").
 
 ## `ChoiceGroup.tsx`
@@ -233,14 +241,24 @@ o `/acesso` (escolhe a ala e depois "Pedir acesso").
 
 ## `WardForm.tsx`
 
-**O formulário de ala**, um componente só para o owner criar e para a home pedir
-(regra do dono). `modo="owner"` (`onCriada`, `onCancelar`) ou `modo="pedido"`
-(`onEnviado(email)`).
+**O formulário de ala**, um componente só para o owner criar e para pedir ala
+nova (regra do dono). `modo="owner"` (`onCriada`, `onCancelar`) ou
+`modo="pedido"` (`onEnviado(email, usouConta)`, `contaLogada?`), este sempre
+dentro do `WardRequestModal`.
 
-- Campos da ala, nesta ordem: **"É ala ou ramo?"** (`ChoiceGroup` Ala/Ramo),
-  **Nome da ala/do ramo** (com "Vai aparecer como **Ala São Lourenço**" ao
-  digitar; o owner vê também o link, "· link /pr_curitiba_sao-lourenco"),
-  **Estado** (`SelectField` com as 27 UFs, "Escolha…") e **Cidade**.
+- Campos da ala **em dois grupos** (pedido do dono: os campos soltos, todos
+  com o mesmo espaço, pareciam "jogados"). Cada grupo é um `Grupo`
+  (`role="group"` ligado ao seu `h3`, `text-lg`):
+  - **"Qual é a ala?"** ("Qual é o ramo?" quando escolhe Ramo): **"É ala ou
+    ramo?"** (`ChoiceGroup` Ala/Ramo) e **Nome da ala/do ramo** (com "Vai
+    aparecer como **Ala São Lourenço**" ao digitar; o owner vê também o link,
+    "· link /pr_curitiba_sao-lourenco");
+  - **"Onde fica?"**: **Estado** (`SelectField` com as 27 UFs, "Escolha…") e
+    **Cidade**.
+- **Espaços: perto dentro do grupo, longe entre grupos.** Rótulo → campo 8px
+  (`gap-2`), título do grupo → primeiro campo 12px (`gap-3`), campo → campo
+  20px (`gap-5`), grupo → grupo (e indicador, resumo, botão) 32px (`gap-8` no
+  `<form>`). Não volte a um espaço igual para tudo.
   **Só Brasil: sem país. Sem endereço** (o dono tirou). Tudo com
   `autoComplete="off"` (é dado da ala).
 - `modo="pedido"` acrescenta **"Líder responsável"**:
@@ -248,7 +266,7 @@ o `/acesso` (escolhe a ala e depois "Pedir acesso").
     `AccountFields modo="criar"` (conta nova);
   - com `contaLogada` (`{ nome, email, ala }`, alguém logado): "Quem vai cuidar
     do calendário. Pode ser a sua conta ou uma conta nova." e um `ChoiceGroup`
-    **"Minha conta"** (padrão) / **"Conta nova"** (rótulos curtos: o rótulo mais longo de antes quebrava a palavra no meio no cartão estreito do `/acesso`). Com a própria
+    **"Minha conta"** (padrão) / **"Conta nova"** (rótulos curtos: um rótulo mais longo quebrava a palavra no meio em tela estreita; em 320px "Minha conta" ainda vai para duas linhas, inteiro). Com a própria
     conta: "Você entrou como **Rita** (rita@…). O pedido vai com esta conta." e,
     **só se ela tiver ala**, o aviso rosa-claro "Atenção: ao enviar, você perde
     o acesso à **Ala X**. Para manter, escolha "Conta nova"." Sem ala, sem
@@ -258,20 +276,28 @@ o `/acesso` (escolhe a ala e depois "Pedir acesso").
   [routes_api.md](routes_api.md)).
 - **`modo="pedido"` em dois passos** (pedido do dono: o formulário inteiro
   parecia enorme e dava a impressão de que tudo era obrigatório de uma vez):
-  passo 1 **"A ala"** (os campos da ala e **"Continuar"**) e passo 2 **"O
-  líder"** (um resumo da ala, "Ala X / Cidade (UF)", com **"Alterar"** para
-  voltar, a parte do líder e **"Enviar pedido"**).
-- **Indicador de etapas** no topo (`<ol aria-label="Etapas do pedido">`): dois
-  círculos de 40px ligados por uma linha, com "A ala" e "O líder" embaixo. O
-  passo atual é azul cheio com o número (e o nome em negrito); o já feito,
-  azul-claro com ✓; o próximo, branco com contorno cinza. A linha fica azul no
-  passo 2. O desenho é `aria-hidden`; o leitor de tela lê o item escondido
-  "Passo 1 de 2: A ala". Ao trocar de passo, o foco vai para o indicador (o
-  leitor anuncia o passo novo). O `modo="owner"`
-  continua num passo só, sem líder.
+  passo 1 **"A ala"** (os dois grupos e **"Continuar"**) e passo 2 **"O
+  líder"** (um resumo da ala numa caixa creme, "Ala X / Cidade (UF)", com
+  **"Alterar"** para voltar; o bloco **"Líder responsável"** com o título, a
+  explicação logo embaixo (4px), a escolha de conta e os campos; e **"Enviar
+  pedido"**).
+- **Indicador de etapas** no topo, centralizado e com no máximo 288px de
+  largura (`max-w-72`): uma grade de 3 colunas (`auto 1fr auto`). **Cada etapa
+  é uma coluna** (`Etapa`, sem largura mínima) com o círculo de 40px e o nome
+  ("A ala", "O líder") **centralizado embaixo dele**; a linha fica na coluna do
+  meio, na altura do centro dos círculos (`mt-4.5`). Sem `min-w` nas colunas:
+  com letra 200% em 320px, um mínimo em rem crescia junto e o modal ganhava
+  rolagem lateral. Antes, os nomes ficavam
+  numa fileira à parte, presos nas pontas, e saíam do eixo dos círculos (o dono
+  reclamou). O passo atual é azul cheio com o número (e o nome em negrito); o
+  já feito, azul-claro com ✓; o próximo, branco com contorno cinza. A linha
+  fica azul no passo 2. O desenho é `aria-hidden`; o leitor de tela lê o texto
+  escondido "Passo 1 de 2: A ala". Ao trocar de passo, o foco vai para o
+  indicador (`tabIndex={-1}`; o leitor anuncia o passo novo). O `modo="owner"`
+  continua num passo só, sem indicador e sem líder.
 - Estado e Cidade ficam **lado a lado** quando o formulário tem espaço
-  (container query `@md`, 28rem: o modal da home); no cartão estreito do
-  `/acesso`, um embaixo do outro.
+  (container query `@md`, 28rem: o modal no computador); no celular, um
+  embaixo do outro.
 - Confere antes de seguir: o passo 1 confere a ala, o passo 2 a conta. Erro
   embaixo de cada campo, foco no primeiro errado. Erro do servidor (ala repetida, e-mail com conta, teto de pedidos)
   vai no `ErrorMessage`, com o texto da rota.
@@ -279,6 +305,29 @@ o `/acesso` (escolhe a ala e depois "Pedir acesso").
   "Criar e entrar" ("Criando…").
 - `POST /api/alas/pedir` ou `/api/alas/criar`, corpo
   `{ tipo, nome, estado, cidade }` (+ `lider`, `website`, `tempo` no pedido).
+
+## `WardRequestModal.tsx`
+
+**O modal "Pedir para usar o calendário"**, um só para a home e o `/acesso`
+(pedido do dono: no `/acesso` havia um formulário dentro do cartão; o modal da
+home ficou melhor). Monte só enquanto estiver aberto (`{aberto && …}`): cada
+abertura começa do zero.
+
+- Props: `onClose`, `conta?` e `onEnviado?(usouConta)`.
+  - **`conta` não passada** (home): ao abrir, pergunta `GET /api/conta` se há
+    alguém logado ("Carregando…" com spinner enquanto isso). Logado, o
+    `WardForm` recebe `contaLogada`; sem login (ou se a pergunta falhar), só a
+    conta nova.
+  - **`conta` passada** (`/acesso`, que já sabe quem é): usa direto, sem
+    perguntar. `null` = ninguém logado.
+- Cabeçalho: **"Pedir para usar o calendário"** (`h2`, `text-xl`) e o X
+  "Fechar" (44px). Corpo: o **`WardForm modo="pedido"`** (dois passos).
+- Enviado: o título vira **"Pedido enviado!"** e aparece (`role="status"`)
+  "Quando a ala e o acesso ao painel forem aprovados, chega um e-mail para
+  **\<e-mail\>**." + "Depois, é só entrar no painel com esse e-mail e a senha
+  que você escolheu." ("…com a sua conta." se usou a própria) e o botão
+  **"Fechar"**. O `onEnviado(usouConta)` avisa quem abriu (o `/acesso`
+  recarrega a página quando a conta da pessoa mudou).
 
 ## `Modal.tsx`
 
@@ -301,23 +350,30 @@ o `/acesso` (escolhe a ala e depois "Pedir acesso").
   ao abrir (`animate-aparecer` + `animate-surgir`) e fechamento na hora; fundo
   rolável (`overflow-y-auto overscroll-contain`) para o teclado do celular não
   esconder os botões; caixa branca `rounded-2xl`, `z-60`.
-- **Teclado do celular:** a camada fica do tamanho da parte visível da tela
-  (`useVisualViewport`: `top` e `height` do `visualViewport`), então com o
-  teclado aberto o modal encolhe e rola, e o último campo e o botão continuam
-  alcançáveis. Ao focar um campo (`onFocus`), depois de 350 ms (o teclado
-  subindo) o campo é rolado para o meio (`scrollIntoView({ block: 'center' })`).
-  No Android, o `interactiveWidget: 'resizes-content'` do viewport já encolhe a
-  tela; no iPhone, que ignora isso, quem resolve é o `visualViewport`. Com zoom
-  de pinça (`scale ≠ 1`) a camada volta a ocupar a tela toda. Margem da caixa `p-5`
-  e em volta dela `p-3` no celular (`sm:p-6` / `sm:p-4` a partir de 640px): em
-  320px com letra grande, as margens maiores apertavam o título até quebrar a
-  palavra no meio.
+- **Teclado do celular:** a camada **fica sempre na tela toda, com o
+  desfoque** (encolher a camada para caber acima do teclado foi testado e o
+  dono não gostou: a borda do desfoque aparecia). Com o teclado aberto
+  (`useKeyboardInset`), o conteúdo ganha um espaço embaixo do tamanho do teclado
+  (`paddingBottom`): a caixa fica centralizada na parte visível e a pessoa pode
+  **deslizar** até os campos que estavam escondidos. A camada também ganha
+  `scroll-padding-bottom` do mesmo tamanho, e ao focar um campo (`onFocus`),
+  depois de 350 ms (o teclado subindo), ele é rolado para o meio da parte
+  visível (`scrollIntoView({ block: 'center' })`). Vale igual no iPhone e no
+  Android. Margem da caixa `p-[min(1.25rem,6vw)]` e em volta dela
+  `p-[min(0.75rem,4vw)]` no celular (`sm:p-6` / `sm:p-4` a partir de 640px): no
+  tamanho normal dá os mesmos 20px e 12px de antes (`p-5`/`p-3`), mas **não
+  cresce com a letra além do que a tela comporta**. Com `p-5`/`p-3` puros, em
+  320px com letra 200% as margens comiam 128px da largura e o título quebrava
+  sílaba por sílaba.
 - Foco, fundo inerte, trava da rolagem e Esc: `useModalLayer`
   ([src_hooks.md](src_hooks.md)). O foco começa na **caixa** (o leitor de tela lê
   o título; o teclado do celular não abre sozinho), ou no elemento marcado com
   `data-foco-inicial` (na confirmação, a opção segura: "Cancelar", "Manter
   ligado").
-- Quem usa decide o conteúdo, inclusive o X e os botões.
+- Quem usa decide o conteúdo, inclusive o X e os botões. **Título ao lado do
+  X sempre com `min-w-0 hyphens-auto wrap-break-word`**: sem isso, em 320px com
+  letra 200%, "agendamento" não quebrava e empurrava o X para fora (o "Editar
+  agendamento" do painel tinha 143px de rolagem lateral).
 
 ## `ErrorMessage.tsx`
 
@@ -373,6 +429,12 @@ visual em todo lugar: cartão branco, borda esquerda colorida, ícone e texto
   (`ResizeObserver`) e grava em `--altura-aviso` no `<html>`, que vira o
   `scroll-padding-top` do `globals.css`. Antes ele ficava no rodapé e
   reservava um espaço no fim da página, que aparecia vazio.
+- **Letra grande em tela estreita** (container query em rem no invólucro fixo:
+  menos de `18rem`, o que vale para 320px a partir de 130% e 390px a partir de
+  150%): o ícone sobe para cima do texto (`flex-col`), o X vai para o canto
+  (`absolute`; é o `BOTAO_FECHAR`, 44px fixos, em `FECHAR_AVISO`) e o espaço
+  interno diminui (`p-3`). O texto ganha a largura toda: em 320px com 200%, de 66px (quebrava
+  sílaba por sílaba) para 220px. No tamanho normal, nada muda.
 
 ## `Spinner.tsx`
 

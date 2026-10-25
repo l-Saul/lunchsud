@@ -7,10 +7,11 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { normalizarTelefone } from '@/lib/phone';
+import { dataCurta } from '@/lib/date';
 import { Spinner } from '@/components/Spinner';
 import { Modal } from '@/components/Modal';
 import { ErrorMessage } from '@/components/ErrorMessage';
-import { botao } from '@/components/button-classes';
+import { BOTAO_FECHAR, botao } from '@/components/button-classes';
 import { campo } from '@/components/field-classes';
 
 type Props = {
@@ -18,13 +19,16 @@ type Props = {
     data: string;
     nome: string;
     telefone: string;
+    limites: { min: string; max: string };
 };
 
-export default function EditBookingModal({ id, data, nome, telefone }: Props) {
+export default function EditBookingModal({ id, data, nome, telefone, limites }: Props) {
     const router = useRouter();
+    const [erroData, setErroData] = useState(false);
     const [erroNome, setErroNome] = useState(false);
     const [erroTelefone, setErroTelefone] = useState(false);
     const [erro, setErro] = useState('');
+    const dataRef = useRef<HTMLInputElement>(null);
     const nomeRef = useRef<HTMLInputElement>(null);
     const telefoneRef = useRef<HTMLInputElement>(null);
 
@@ -41,15 +45,17 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
     }
 
     async function handleSave() {
+        const dataInvalida = !form.data || form.data < limites.min || form.data > limites.max;
         const nomeInvalido = form.nome.trim().length < 2;
         const telefoneInvalido = !normalizarTelefone(form.telefone);
 
+        setErroData(dataInvalida);
         setErroNome(nomeInvalido);
         setErroTelefone(telefoneInvalido);
         setErro('');
 
-        if (nomeInvalido || telefoneInvalido) {
-            (nomeInvalido ? nomeRef : telefoneRef).current?.focus();
+        if (dataInvalida || nomeInvalido || telefoneInvalido) {
+            (dataInvalida ? dataRef : nomeInvalido ? nomeRef : telefoneRef).current?.focus();
             return;
         }
 
@@ -104,14 +110,14 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
             {open && (
                 <Modal onClose={fechar} labelledBy={tituloId} className="max-w-lg">
                     <div className="mb-5 flex items-center justify-between gap-3">
-                        <h3 id={tituloId} className="text-xl font-semibold text-text">
+                        <h3 id={tituloId} className="min-w-0 hyphens-auto wrap-break-word text-xl font-semibold text-text">
                             Editar agendamento
                         </h3>
                         <button
                             type="button"
                             onClick={fechar}
                             aria-label="Fechar"
-                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-slate-100 cursor-pointer"
+                            className={BOTAO_FECHAR}
                         >
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                 <path d="M18 6 6 18M6 6l12 12" />
@@ -132,14 +138,25 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                                     Data
                                 </label>
                                 <input
+                                    ref={dataRef}
                                     id={`data-${id}`}
                                     type="date"
+                                    min={limites.min}
+                                    max={limites.max}
                                     value={form.data}
-                                    onChange={e =>
-                                        setForm({ ...form, data: e.target.value })
-                                    }
-                                    className={campo()}
+                                    aria-invalid={erroData}
+                                    aria-describedby={erroData ? `data-${id}-erro` : undefined}
+                                    onChange={e => {
+                                        setForm({ ...form, data: e.target.value });
+                                        if (erroData) setErroData(false);
+                                    }}
+                                    className={campo(erroData)}
                                 />
+                                {erroData && (
+                                    <p id={`data-${id}-erro`} className="mt-0.5 text-base text-accent">
+                                        Escolha uma data entre {dataCurta(limites.min)} e {dataCurta(limites.max)}.
+                                    </p>
+                                )}
                             </div>
 
                             <div className="flex flex-col gap-1.5">

@@ -19,6 +19,9 @@ const TIPO = {
     dourado: 'bg-gold text-primary shadow-md hover:opacity-90',
 };
 
+export const BOTAO_FECHAR =
+    'flex size-[44px] shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-slate-100 cursor-pointer';
+
 export function botao(tipo: keyof typeof TIPO = 'primario', tamanho: keyof typeof TAMANHO = 'normal') {
     return `${BASE} ${TAMANHO[tamanho]} ${TIPO[tipo]}`;
 }

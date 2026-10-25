@@ -70,6 +70,24 @@ export function somarDias(dateISO: string, dias: number) {
     return data.toISOString().slice(0, 10);
 }
 
+export function somarAnos(dateISO: string, anos: number) {
+    const [ano, mes, dia] = dateISO.split('-').map(Number);
+    const ultimoDia = new Date(Date.UTC(ano + anos, mes, 0)).getUTCDate();
+    return `${ano + anos}-${pad(mes)}-${pad(Math.min(dia, ultimoDia))}`;
+}
+
+export const ANOS_DE_EDICAO = 2;
+
+export function limitesDaEdicao(timeZone = TZ) {
+    const { hoje } = getDashboardRange(timeZone);
+    return { min: somarAnos(hoje, -ANOS_DE_EDICAO), max: somarAnos(hoje, ANOS_DE_EDICAO) };
+}
+
+export function dataCurta(dateISO: string) {
+    const [ano, mes, dia] = dateISO.split('-');
+    return `${dia}/${mes}/${ano}`;
+}
+
 export function diaNoFuso(instante: string, timeZone = TZ) {
     return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' })
         .format(new Date(instante));

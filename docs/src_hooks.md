@@ -33,9 +33,17 @@ type MudancaAgendamento =
   nome`). **O telefone nunca vem.**
 - Em `DELETE`, com RLS ligada, o Realtime manda **só a chave primária**: por
   isso o `DELETE` traz só o `id`.
-- **`null` = reconectou** (queda de rede ou volta para a página). Eventos podem
-  ter se perdido no intervalo, então quem usa deve **recarregar a lista uma vez**.
-  A primeira inscrição não avisa: os dados do servidor acabaram de chegar.
+- **`null` = recarregue a lista uma vez.** Avisa em dois momentos:
+  - **3 s depois de toda inscrição** (`ASSENTAR_MS`), **inclusive a primeira**.
+    Entre o servidor montar a página e o Realtime começar a entregar há uma
+    brecha: o `SUBSCRIBED` chega um pouco antes de os eventos começarem a sair.
+    Medido em 25/10/2026: o almoço que outra pessoa marcava até ~0,3 s depois de
+    a página carregar (num computador rápido; no celular a brecha é maior)
+    **nunca aparecia**. Com a ressincronização, aparece em ~3 s, e o que vem
+    depois chega ao vivo em menos de 1 s;
+  - **na hora, ao reconectar** (queda de rede ou volta para a página), porque
+    eventos podem ter se perdido no intervalo.
+  O temporizador é limpo ao sair do canal (`soltar`) e ao desmontar.
 
 ### Como funciona
 
@@ -74,15 +82,15 @@ de quem está agendando.
 
 Ver [database.md](database.md).
 
-## `use-visual-viewport.ts`
+## `use-keyboard-inset.ts`
 
-`useVisualViewport()` → `{ top, height } | null`: a parte da tela que a pessoa
-vê agora (`window.visualViewport`: `offsetTop` e `height`), que **encolhe
-quando o teclado do celular abre**. Usado pelo `Modal` para a camada caber
-acima do teclado. `null` no servidor, sem `visualViewport` ou com zoom de pinça
-(`scale ≠ 1`). Feito com `useSyncExternalStore` (eventos `resize` e `scroll` do
-`visualViewport`), e o valor vem como texto (`"top|altura"`) para o React
-comparar sem renderizar à toa.
+`useKeyboardInset()` → número em px: **quanto o teclado do celular está cobrindo
+a tela agora** (`innerHeight − visualViewport.height − visualViewport.offsetTop`;
+0 sem teclado, sem `visualViewport`, no servidor ou com zoom de pinça). Usado
+pelo `Modal` para dar espaço para deslizar acima do teclado. Feito com
+`useSyncExternalStore` (eventos `resize`/`scroll` do `visualViewport` e
+`resize` da janela); o valor é um número, que o React compara sem renderizar à
+toa.
 
 ## `use-modal-layer.ts`
 

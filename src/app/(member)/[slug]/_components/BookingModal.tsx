@@ -11,7 +11,7 @@ import { AddToCalendar } from './AddToCalendar'
 import { Spinner } from '@/components/Spinner'
 import { Modal } from '@/components/Modal'
 import { ErrorMessage } from '@/components/ErrorMessage'
-import { botao } from '@/components/button-classes'
+import { BOTAO_FECHAR, botao } from '@/components/button-classes'
 import { campo } from '@/components/field-classes'
 
 export type Agendado = { id: number; data: string; nome: string }
@@ -118,9 +118,9 @@ export function BookingModal({
                     <button
                         type="button"
                         onClick={onClose}
-                        className={`${botao('secundario', 'grande')} w-full`}
+                        className={`${botao('perigo', 'grande')} mt-4 w-full`}
                     >
-                        Voltar ao calendário
+                        Fechar
                     </button>
                     <p className="text-base text-muted">
                         Precisa desmarcar? Fale com a liderança da ala.
@@ -129,13 +129,13 @@ export function BookingModal({
             ) : (
             <>
             <div className="mb-5 flex items-start justify-between gap-3">
-                <h2 id="agendar-titulo" className="text-xl font-semibold text-text">
+                <h2 id="agendar-titulo" className="min-w-0 hyphens-auto wrap-break-word text-xl font-semibold text-text">
                     {titulo}
                 </h2>
                 <button
                     onClick={onClose}
                     aria-label="Fechar"
-                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-slate-100 cursor-pointer"
+                    className={BOTAO_FECHAR}
                 >
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M18 6 6 18M6 6l12 12" />
@@ -239,7 +239,7 @@ export function BookingModal({
                     type="submit"
                     disabled={loading}
                     aria-busy={loading}
-                    className={`${botao('primario', 'grande')} grow basis-40`}
+                    className={`${botao('primario', 'grande')} grow basis-52`}
                 >
                     {loading && <Spinner />}
                     {loading ? 'Confirmando…' : 'Confirmar almoço'}

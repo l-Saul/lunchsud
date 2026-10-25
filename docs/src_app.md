@@ -1,4 +1,4 @@
-# Estrutura global do app
+# `src/app/`: estrutura global e configuração
 
 O que vale para todas as páginas: organização das rotas, layout raiz, tema e CSS
 global, 404, manifest, robots, sitemap, imagem de prévia do site, `proxy.ts` e
@@ -14,7 +14,7 @@ src/app/
   auth/confirmar/    link dos e-mails do Supabase Auth
   layout.tsx · globals.css · not-found.tsx · manifest.ts · robots.ts · sitemap.ts
   opengraph-image.tsx
-src/proxy.ts         renova a sessão nas rotas do líder
+src/proxy.ts         renova a sessão nas rotas do líder e recusa POST de outro site
 ```
 
 - `(member)` e `(leader)` são **grupos de rota**: os parênteses fazem o Next
@@ -44,7 +44,9 @@ src/proxy.ts         renova a sessão nas rotas do líder
   - palavras-chave sem o nome da Igreja (o site não é oficial) e autor/criador
     "Luis Henrique Engel Saul";
   - `robots: index, follow` (a home é a única página para o Google; ver
-    `robots.ts` e `sitemap.ts`);
+    `robots.ts` e `sitemap.ts`). O **canônico** fica só na home
+    (`src/app/(member)/page.tsx`, ver [routes_home.md](routes_home.md)), não
+    aqui: no layout ele seria herdado por todas as páginas;
   - Open Graph (`pt_BR`, `siteName`, título, descrição) e Twitter
     `summary_large_image`. A imagem vem do `opengraph-image.tsx` (abaixo);
   - `verification.google` **só se** houver a variável `GOOGLE_SITE_VERIFICATION`
@@ -55,15 +57,20 @@ src/proxy.ts         renova a sessão nas rotas do líder
     sozinho (o painel mostra telefones e controla isso).
 - **Viewport**: `themeColor #003057` (barra do navegador marinho, emendando na
   faixa azul), `colorScheme: 'only light'` (vira `<meta name="color-scheme">`;
-  ver abaixo), largura do aparelho e **`interactiveWidget: 'resizes-content'`**:
-  no Android, o teclado encolhe a área da página em vez de cobrir o fim dela,
-  e os modais continuam mostrando o último campo e o botão (no iPhone, quem faz
-  isso é o `useVisualViewport` do `Modal`).
+  ver abaixo) e largura do aparelho. **Sem `interactiveWidget`**: o teclado do
+  celular fica por cima da página (o padrão), e quem cuida dos campos dentro de
+  modal é o `Modal` (ver [src_components.md](src_components.md)).
 - `<html lang="pt-BR">`. `<body>` em coluna com `min-h-screen`: o conteúdo fica
   num `flex-1` e o **`Footer`** vai para o fim, em todas as páginas.
 - `body` com **fundo creme** (`bg-cream`) e texto escuro (`text-text`). O azul é
   só a faixa do cabeçalho de cada página (`HeaderBand`, ver
   [src_components.md](src_components.md)).
+- O **`<html>` é azul-marinho** (`background-color: var(--color-primary)` no
+  `globals.css`). Ele só aparece quando a pessoa puxa a tela além do começo ou
+  do fim no celular (o "puxão" do iPhone e do Android): assim o que aparece
+  emenda com a faixa azul do topo e com o rodapé azul, em vez de um branco que
+  destoava (pedido do dono). O conteúdo continua creme, porque o `body` tem
+  `min-h-screen`.
 
 ## `globals.css`: tema e CSS global
 
@@ -117,8 +124,8 @@ Regras completas de animação no `CLAUDE.md`.
   |---|---|---|
   | Título da página (o `h1` da faixa, em toda página) | `text-3xl` (`sm:text-4xl`) | 30px (36px a partir de 640px) |
   | Título de estado dentro de um cartão ("Olá, Rita!", "Link expirado") | `text-xl` | 20px |
-  | Título de cartão do painel e de modal; nome do site na faixa; nome da ala na home | `text-xl` | 20px |
-  | Subtítulo de seção; instrução principal ("Toque em…"); mensagem de resposta; botão principal; campo de formulário; abas do mês; número do dia | `text-lg` | 18px |
+  | Título de cartão do painel e de modal; nome do site na faixa; nome da ala na home; a instrução da página da ala ("Toque em um dia livre…", `h2`) | `text-xl` | 20px |
+  | Subtítulo de seção; instrução ("Toque na sua ala:"); mensagem de resposta; botão principal; campo de formulário; abas do mês; número do dia | `text-lg` | 18px |
   | Texto, rótulo, botão do painel, legenda, dica, erro, rodapé | `text-base` | **16px, o mínimo** |
 
   Histórico (24/10/2026): 18px fixo e a letra que crescia com a tela (até
@@ -255,6 +262,22 @@ função: roda antes da requisição). Aqui ela **renova a sessão do Supabase A
    grava os cookies novos na requisição e na resposta.
 2. Chama `supabase.auth.getUser()`. **É essa chamada que dispara a renovação do token.**
 3. Devolve a resposta com os cookies atualizados.
+
+**Antes disso, recusa POST de outro site** (`vemDeOutroSite`), só em `/api/`
+e só em método que escreve (GET, HEAD e OPTIONS passam):
+
+- `Sec-Fetch-Site` presente e diferente de `same-origin`/`none` (o navegador
+  marca `cross-site` ou `same-site`) → 403 `{ error: 'Pedido recusado.' }`;
+- `Origin` presente e com host diferente do `Host` (ou `X-Forwarded-Host`), ou
+  `Origin: null` → 403;
+- sem `Origin`: passa. Quem não manda origem não é navegador e não carrega o
+  cookie de ninguém.
+
+É a segunda trava contra um site de fora usar a sessão do líder (a primeira é o
+cookie `SameSite=Lax`). O `fetch` das nossas telas manda o próprio endereço e
+passa. Testado na bateria de backend de 25/10/2026 (outro site, `null`,
+subdomínio parecido, `cross-site`, `same-site` → 403; uso real pelo navegador →
+passa).
 
 ### `matcher`: só as rotas do líder
 

@@ -29,9 +29,10 @@ export async function POST(req: Request) {
     }
     const { nome, slug, estado, cidade, fuso } = entrada;
 
-    if (await buscarAlaIgual(entrada)) {
+    const existente = await buscarAlaIgual(entrada);
+    if (existente) {
         return NextResponse.json(
-            { error: jaUsa(entrada) },
+            { error: existente.status === 'ativa' ? jaUsa(entrada) : jaPedida(entrada) },
             { status: 409 }
         );
     }

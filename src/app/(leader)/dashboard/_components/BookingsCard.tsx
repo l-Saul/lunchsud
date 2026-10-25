@@ -18,9 +18,10 @@ type Props = {
     mesAtual: string;
     mesSeguinte: string;
     agendamentos: Agendamento[];
+    limites: { min: string; max: string };
 };
 
-export function BookingsCard({ mesAtual, mesSeguinte, agendamentos }: Props) {
+export function BookingsCard({ mesAtual, mesSeguinte, agendamentos, limites }: Props) {
     return (
         <section className="flex flex-col gap-6 rounded-3xl bg-background p-4 shadow-md ring-1 ring-primary/10 sm:p-8">
             <div className="flex items-center gap-2 border-b border-slate-100 pb-5">
@@ -61,7 +62,7 @@ export function BookingsCard({ mesAtual, mesSeguinte, agendamentos }: Props) {
                                                     <p className="wrap-anywhere font-semibold text-text">{row.nome}</p>
                                                     <p className="text-base text-muted">{row.telefone}</p>
                                                 </div>
-                                                <EditBookingModal {...row} />
+                                                <EditBookingModal {...row} limites={limites} />
                                             </li>
                                         );
                                     })}

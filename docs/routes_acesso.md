@@ -62,21 +62,19 @@ Cartão branco com fitinha e florzinha. Props: `nome` (do perfil), `alas`,
   o calendário?"** (`h3`) e "A presidência pode pedir agora. Quando o pedido for
   aprovado, a ala aparece no site." com o botão `secundario` **"Pedir para usar
   o calendário"**. Para quem criou conta de líder na tela errada.
-- **Um caminho de cada vez** (estado `pedindoAla`): tocar no botão **troca o
-  conteúdo do cartão**, sem modal. Somem a busca e o "Pedir acesso" (e a ala
-  marcada é esquecida); aparecem o botão **"‹ Voltar e procurar a minha ala"**
-  (rosa-claro com texto framboesa e contorno, 48px de altura: parece botão e
-  chama atenção, pedido do dono; antes era um link azul "Voltar para a lista de
-  alas", que passava despercebido e falava em "lista"), **"Pedir uma
-  ala nova"** e o **`WardForm modo="pedido"`** em dois passos, com `contaLogada`
-  = a conta da pessoa (sem ala, então sem aviso) e "Minha conta" já escolhido.
-  Assim **não dá para pedir acesso e criar ala ao mesmo tempo**. No servidor
-  também não: a conta tem um vínculo só (índice único), `/api/acesso/solicitar`
-  recusa quem já tem vínculo, e o pedido de ala com a própria conta troca o
-  vínculo.
-- Enviado com a própria conta: a página recarrega e mostra o "Quase lá" da ala
-  pendente. Com conta nova: "Pedido enviado!" com o e-mail. Enviando: `disabled`,
-  `aria-busy`, Spinner e "Enviando…".
+- O botão abre o **`WardRequestModal`**, **o mesmo modal da home** (pedido do
+  dono: melhor que o formulário dentro do cartão, que existia antes com um botão
+  rosa "Voltar e procurar a minha ala"). Ele recebe `conta = { nome, email, ala:
+  null }` (a pessoa está logada e não tem ala aprovada nem pendente, então não
+  pergunta `/api/conta` e não mostra aviso de perder acesso) e já vem com
+  "Minha conta" escolhida. Detalhes em [src_components.md](src_components.md).
+- **Não dá para pedir acesso e criar ala ao mesmo tempo**: o servidor garante.
+  A conta tem um vínculo só (índice único), `/api/acesso/solicitar` recusa quem
+  já tem vínculo, e o pedido de ala com a própria conta troca o vínculo.
+- Enviado com a **própria conta**: o modal mostra "Pedido enviado!" e a página
+  atrás já recarrega (`router.refresh()`); ao fechar, aparece o "Quase lá" da
+  ala pendente. Com **conta nova**: só o "Pedido enviado!" (a conta logada não
+  muda).
 - `POST /api/acesso/solicitar { alaId }`:
   - sucesso → `router.refresh()` (a página passa a mostrar "aguardando");
   - resposta não ok → "Não foi possível solicitar. Tente novamente.";
@@ -99,7 +97,9 @@ Cartão branco com fitinha e florzinha. Props: `nome` (do perfil), `alas`,
 ### Sair (sempre visível)
 
 Para o caso de conta errada. `supabase.auth.signOut()` → `/admin`. Mostra
-Spinner e "Saindo…" enquanto sai.
+Spinner e "Saindo…" enquanto sai. É um botão de texto sublinhado, com área de
+toque de pelo menos 44×44px (`min-h-11 min-w-11 px-3`: só a palavra "Sair"
+dava 26px de largura).
 
 "Atualizar" e "Sair" mostram que estão trabalhando: sem isso a pessoa toca de
 novo achando que não funcionou.

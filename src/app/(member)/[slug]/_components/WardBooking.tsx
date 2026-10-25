@@ -103,9 +103,9 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
             <main className="flex justify-center text-text">
                 <div className="w-full max-w-2xl">
                     <div className="px-2 sm:px-6 py-6 space-y-6">
-                        <p className="px-2 text-center text-lg leading-relaxed text-text">
+                        <h2 className="px-2 text-center text-xl font-semibold text-balance text-text">
                             Toque em um dia livre para agendar o almoço.
-                        </p>
+                        </h2>
 
                         <div className="relative overflow-hidden bg-background text-secondary rounded-2xl p-1.5 pt-4 sm:p-4 sm:pt-6 shadow-md ring-1 ring-primary/10">
                             <span aria-hidden="true" className="absolute inset-x-0 top-0 h-1.5 bg-linear-to-r from-accent via-gold to-accent" />

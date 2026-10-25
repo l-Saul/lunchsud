@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase/service-role';
 import { getContexto } from '@/lib/server/session';
+import { ANOS_DE_EDICAO, limitesDaEdicao } from '@/lib/date';
 import { lerJson, parseEdicao, ValidationError } from '@/lib/server/validation';
 
 export async function POST(req: Request) {
@@ -22,6 +23,19 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Dados inválidos' }, { status: 400 });
         }
         return NextResponse.json({ error: 'Requisição inválida' }, { status: 400 });
+    }
+
+    const { data: ala } = await supabaseServer
+        .from('ala')
+        .select('fuso_horario')
+        .eq('id', ctx.alaId)
+        .maybeSingle();
+    const { min, max } = limitesDaEdicao(ala?.fuso_horario);
+    if (data < min || data > max) {
+        return NextResponse.json(
+            { error: `Escolha uma data até ${ANOS_DE_EDICAO} anos antes ou depois de hoje.` },
+            { status: 400 }
+        );
     }
 
     const { data: result, error } = await supabaseServer

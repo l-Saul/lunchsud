@@ -151,14 +151,17 @@ hoje` e `fimJanela` = dia 1 do mês após o seguinte (exclusivo).
 - `INSERT`/`UPDATE` → tira da lista o item com o mesmo `id` **ou a mesma data**
   (um almoço por dia) e adiciona o novo **se a data estiver na janela**: o líder
   pode mover um almoço para fora dela.
-- `null` (reconectou: queda de rede ou volta para a aba) → `atualizarOcupados()`,
-  que busca a lista inteira em `GET /api/agendamentos/[slug]` (`cache:
-  'no-store'`). Eventos podem ter se perdido no intervalo.
+- `null` (3 s depois de assinar, inclusive a primeira vez; ou reconectou: queda
+  de rede ou volta para a aba) → `atualizarOcupados()`, que busca a lista
+  inteira em `GET /api/agendamentos/[slug]` (`cache: 'no-store'`). Eventos podem
+  ter se perdido no intervalo. Como a lista nova tira o mesmo `id` e a mesma
+  data, a ressincronização junto com um evento ao vivo nunca duplica um dia.
 
 Por que aplicar direto: com 50 pessoas olhando a mesma ala, cada agendamento
 gerava 50 buscas no servidor; agora, nenhuma.
 
-`atualizarOcupados` só é usado para ressincronizar (reconexão) e depois de um
+`atualizarOcupados` só é usado para ressincronizar (3 s depois de assinar o
+WebSocket, para cobrir a brecha do começo; na reconexão) e depois de um
 conflito (409). Erros de rede são ignorados em silêncio: a lista atual continua
 na tela.
 
@@ -197,8 +200,10 @@ conflito aparecia de novo no modal seguinte).
 
 - `HeaderBand title={nomeAla}`: a faixa padrão (nome da ala e flor). Sem as florzinhas decorativas nos cantos de antes. Altura
   contida: o calendário começa na primeira tela do celular.
-- Abaixo, no `<main>` sobre o creme: "Toque em um dia livre para agendar o
-  almoço." (`text-lg`, texto escuro) e o calendário.
+- Abaixo, no `<main>` sobre o creme: **"Toque em um dia livre para agendar o
+  almoço."** como **`h2`** (pedido do dono: é o que a irmã tem de fazer na
+  página; serifa, `text-xl`, `font-semibold`, centralizado, `text-balance` para
+  não deixar uma palavra sozinha na segunda linha) e o calendário.
 - **Lema** logo abaixo do calendário (plano de design, 6.3, onde o dono pediu),
   **como citação** (pedido do dono): `<figure>` centralizado com aspas grandes
   “ em serifa framboesa (`text-6xl text-accent/70`, `aria-hidden`: o leitor de
@@ -318,8 +323,11 @@ Os campos usam o padrão `campo()` do site (`field-classes`, ver
 ### Botões
 
 - **Cancelar** (`type="button"`) e **Confirmar almoço** (`type="submit"`) ficam em
-  `flex flex-wrap-reverse` com `basis-40` (em rem; "Confirmar almoço" não quebra dentro do botão): **lado a lado quando cabem**,
-  um embaixo do outro em tela estreita ou letra grande. Como o `basis` é em rem,
+  `flex flex-wrap-reverse`, o Cancelar com `basis-40` e o Confirmar com
+  `basis-52` (13rem: é o que "Confirmar almoço", `text-lg`, precisa para não
+  quebrar dentro do botão; com `basis-40` nos dois, em 412–430px eles ficavam
+  lado a lado e o texto quebrava em duas linhas): **lado a lado quando cabem**
+  (no computador), um embaixo do outro no celular ou com letra grande. Como o `basis` é em rem,
   ele cresce com a letra. Antes, com letra 130%, o Confirmar saía da tela.
   `wrap-reverse`: empilhados, o Confirmar fica em cima.
 - **Não fixar a barra de botões no rodapé (sticky).** Testado em 320px com letra
@@ -340,7 +348,10 @@ para o título** (leitor de tela anuncia na hora).
 - **"Adicionar à agenda"** (botão principal, azul): o `AddToCalendar` (abaixo).
   A pessoa **escolhe a agenda que usa**, no celular e no computador (pedido do
   dono: quem tem iPhone e usa Google Agenda, por exemplo).
-- **"Voltar ao calendário"** (contorno) fecha o modal. Esc e toque fora também.
+- **"Fechar"** (`botao('perigo', 'grande')`: framboesa escuro da paleta com
+  texto branco, pedido do dono, no lugar do "Voltar ao calendário" de contorno;
+  o rosa-claro foi testado e o dono achou feio) fecha o modal, com **mais espaço acima** (`mt-4`, 32px das opções de agenda) para não
+  parecer uma das agendas. Esc e toque fora também.
 - "Precisa desmarcar? Fale com a liderança da ala." (a pessoa não desmarca
   sozinha; "liderança" porque o líder pode ser homem ou mulher).
 
@@ -350,18 +361,27 @@ O "Adicionar à agenda" da confirmação. Evento de **dia inteiro**, com lembret
 véspera às 9h quando a agenda aceita ([src_lib.md](src_lib.md), `calendar-event.ts`).
 
 - Fechado: botão principal "Adicionar à agenda" (ícone de calendário).
-- Tocou: no lugar dele aparece **"Em qual agenda?"** e uma lista de botões
-  (contorno, `botao('secundario', 'grande')`), com o foco no primeiro:
+- Tocou: no lugar dele aparece **"Em qual agenda?"** e **uma grade de 2
+  colunas** de botões (contorno, `botao('secundario')`, 48px), com o foco no
+  primeiro. Antes eram 4 botões grandes um embaixo do outro, e o modal
+  passava da altura da tela (a pessoa tinha que deslizar; o dono reclamou).
+  Medido: cabe sem deslizar do 320×568 ao computador. As opções:
   1. **Google Agenda**: link do Google (`linkGoogleAgenda`), em nova aba; no
      celular abre o aplicativo. O link não aceita lembrete (vale o padrão da pessoa);
-  2. **Agenda do iPhone ou do Mac**: `GET /api/agenda/<slug>?data=…`, o `.ics`
+  2. **Agenda da Apple** (nome pedido pelo dono): `GET /api/agenda/<slug>?data=…`, o `.ics`
      servido pelo site (arquivo gerado no navegador não abre a Agenda no Safari);
   3. **Outlook**: link do Outlook na web (`linkOutlook`), em nova aba;
-  4. **Outra agenda (baixar o arquivo)**: o mesmo `.ics` com `download`, para
-     qualquer outro aplicativo (Samsung, Outlook do computador, Thunderbird…).
+  4. **Outra agenda**, com "baixa um arquivo" embaixo (`detalhe`, peso normal,
+     cinza): o mesmo `.ics` com `download`, para qualquer outro aplicativo
+     (Samsung, Outlook do computador, Thunderbird…). Em tela muito estreita
+     (grade com menos de 17rem, o 320px) o "baixa um arquivo" fica só para o
+     leitor de tela (`@max-[17rem]:sr-only`): com ele, o botão ia a 4 linhas e
+     o modal passava da tela.
   Em aparelho Apple (`navigator.userAgent`) a opção da Apple vem primeiro; nos
-  outros, a do Google. Os links externos têm o ícone de "abre em outra aba" e o
-  texto "(abre em outra aba)" para leitor de tela.
+  outros, a do Google. Os links externos levam o texto escondido "(abre em
+  outra aba)" para leitor de tela. **Sem o ícone de "abre em outra aba"**: ele
+  fazia "Google Agenda" quebrar em duas linhas na coluna estreita. Textos com
+  `text-balance` e **sem hifenização** (`hyphens-auto` partia "Ou-tra").
 
 ## `MonthCalendar.tsx` (client)
 

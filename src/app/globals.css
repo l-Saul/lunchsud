@@ -38,6 +38,7 @@
 @layer base {
     html {
         font-size: 100%;
+        background-color: var(--color-primary);
         scroll-behavior: smooth;
         scroll-padding-top: var(--altura-aviso, 0px);
         color-scheme: only light;

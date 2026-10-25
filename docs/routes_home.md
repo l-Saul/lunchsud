@@ -12,16 +12,31 @@ nova e a **busca de ala** (estado → cidade → ala). Tocar numa ala leva a
 
 ```
 src/app/(member)/
-  page.tsx                  a home (client)
+  page.tsx                  a rota (Server Component): só a metadata (canônico) e o <Home />
   _components/
-    RequestWard.tsx         grupo "Sua ala ou ramo ainda não usa o calendário?" + modal do pedido
+    Home.tsx                a home de verdade (client)
+    RequestWard.tsx         grupo "Sua ala ou ramo ainda não usa o calendário?" (abre o WardRequestModal)
 ```
 
-`page.tsx` é um componente client (`'use client'`). Dependências: `swr`,
+## `page.tsx` (Server Component)
+
+Só declara a `metadata` da home e mostra o `<Home />`. Existe para a home ter
+**endereço canônico** (`alternates: { canonical: '/' }` →
+`<link rel="canonical" href="https://lunchsud.vercel.app">`): é a única página
+que vai para o Google, e sem isso um link com sobra no endereço (o
+`?fbclid=…` que o Facebook acrescenta, por exemplo) pode virar página duplicada.
+Componente client não pode exportar `metadata`, por isso a home foi separada em
+dois arquivos. O canônico **não** fica no layout: lá ele seria herdado por todas
+as páginas e apontaria a página da ala para a home. O resto (título, descrição,
+Open Graph, `index`) vem do layout raiz (ver [src_app.md](src_app.md)).
+
+## `Home.tsx` (client)
+
+A home de verdade (`'use client'`). Dependências: `swr`,
 `src/components/{Spinner,HeaderBand,WardFilter}`, `src/lib/last-ward.ts`
 (última ala aberta), `GET /api/alas` (ver [routes_api.md](routes_api.md)).
 
-## Renderização e dados
+### Renderização e dados
 
 - A página é **estática** (`○` no build, pré-renderizada). As alas não vêm no
   HTML: são buscadas no navegador com SWR em `GET /api/alas` (só as **ativas**,
@@ -29,7 +44,7 @@ src/app/(member)/
 - O `fetcher` lança erro se a resposta não for `ok` ou não for um array
   ("Payload inválido"), e o SWR mostra o estado de erro.
 
-### Estados
+#### Estados
 
 | Estado | O que aparece |
 |---|---|
@@ -37,7 +52,7 @@ src/app/(member)/
 | Erro | "Não foi possível carregar as alas." (rosa, `text-accent`) |
 | Pronto | tudo abaixo, **de uma vez**, com `animate-aparecer` (chega depois da página; o fade avisa que algo apareceu) |
 
-## Layout (de cima para baixo)
+### Layout (de cima para baixo)
 
 1. `HeaderBand title="Almoço dos Missionários"` (título e flor). **Sem a imagem
    grande** e **sem escritura** (decisões do dono, 24 e 25/10/2026).
@@ -61,7 +76,7 @@ Tudo no `<main>` sobre o creme, `max-w-xl`. Com letra grande em tela estreita,
 título e nomes **hifenizam** (`hyphens-auto` + `wrap-break-word`) em vez de
 empurrar a página. Testado em 320px com letra a 100%, 150% e 200%.
 
-## A busca (`WardFilter`)
+### A busca (`WardFilter`)
 
 - **Estado** e **Cidade** em lista de escolha (o "dropdown" do aparelho), só com
   os estados e cidades que têm ala. **Os dois começam vazios** e a pessoa
@@ -73,7 +88,7 @@ empurrar a página. Testado em 320px com letra a 100%, 150% e 200%.
   e `<Spinner />` no lugar da seta, e **todos ficam desativados** (um toque só).
   O loading não é desligado de propósito: a navegação desmonta a tela.
 
-## "Continuar na sua ala" (última ala aberta)
+### "Continuar na sua ala" (última ala aberta)
 
 A irmã costuma usar sempre a mesma ala. Quando ela já abriu uma ala **neste
 aparelho**, a home mostra primeiro um atalho para ela (plano de design, 6.2):
@@ -99,22 +114,11 @@ Para a presidência de uma ala ou ramo que ainda não usa o calendário.
   calendário?"** (`h2`, `text-xl`, como todo título de cartão), "Quem faz parte
   da presidência pode pedir. Quando o pedido for aprovado, a ala aparece aqui e
   chega um e-mail." e o botão `secundario` **"Pedir para usar o calendário"**.
-- **Ao abrir**, pergunta `GET /api/conta` se há alguém logado ("Carregando…"
-  com spinner enquanto isso). Logado, o `WardForm` recebe `contaLogada` e
-  oferece **"Minha conta"** (escolhida) ou **"Conta nova"**; com
-  a própria conta e uma ala, avisa que ela perde o acesso a essa ala (ver
-  `WardForm` em [src_components.md](src_components.md)). Sem login (ou se a
-  pergunta falhar), só o "Criar conta".
-- Abre um `Modal` ("Pedir para usar o calendário") com o **`WardForm
-  modo="pedido"`**: a ala (ala ou ramo, nome, estado, cidade) e o **líder
-  responsável** com os mesmos campos do "Criar conta" (`AccountFields`): o líder
-  é sempre uma conta nova. Regras e proteções contra robô em
-  [routes_api.md](routes_api.md) (`/api/alas/pedir`).
-- Enviado: o título vira **"Pedido enviado!"** e aparece (`role="status"`)
-  "Quando a ala e o acesso ao painel forem aprovados, chega um e-mail para
-  **\<e-mail\>**." + "Depois, é só entrar no painel com esse e-mail e a senha
-  que você escolheu." ("…com a sua conta." se usou a própria) e o botão
-  "Fechar".
+- O botão abre o **`WardRequestModal`** (o mesmo do `/acesso`; ver
+  [src_components.md](src_components.md)) sem `conta`: ao abrir, ele pergunta
+  `GET /api/conta` se há alguém logado e mostra o `WardForm modo="pedido"` em
+  dois passos. Textos, conta logada e "Pedido enviado!" estão lá. Regras e
+  proteções contra robô em [routes_api.md](routes_api.md) (`/api/alas/pedir`).
 - **`/#nova-ala`** abre o modal direto (efeito ao montar, com a exceção
   `react-hooks/set-state-in-effect`).
 - Nada aparece no site até o owner aprovar a ala; depois ele aprova o líder no

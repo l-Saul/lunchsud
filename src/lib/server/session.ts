@@ -28,11 +28,16 @@ export async function getContexto(): Promise<Contexto | null> {
     const user = await getUsuario();
     if (!user) return null;
 
-    const { data: perfil } = await supabaseServer
-        .from('perfil')
-        .select('nome, is_owner')
-        .eq('id', user.id)
-        .single();
+    const [{ data: perfil }, { data: vinculo }] = await Promise.all([
+        supabaseServer.from('perfil').select('nome, is_owner').eq('id', user.id).single(),
+        supabaseServer
+            .from('ala_membro')
+            .select('ala_id')
+            .eq('user_id', user.id)
+            .eq('status', 'aprovado')
+            .limit(1)
+            .maybeSingle(),
+    ]);
 
     const isOwner = perfil?.is_owner ?? false;
     let alaId: number | null = null;
@@ -54,13 +59,6 @@ export async function getContexto(): Promise<Contexto | null> {
             alaId = primeira?.id ?? null;
         }
     } else {
-        const { data: vinculo } = await supabaseServer
-            .from('ala_membro')
-            .select('ala_id')
-            .eq('user_id', user.id)
-            .eq('status', 'aprovado')
-            .limit(1)
-            .single();
         alaId = vinculo?.ala_id ?? null;
     }
 

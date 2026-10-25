@@ -1,8 +1,10 @@
-# Banco (Supabase / Postgres)
+# `supabase/`: banco (Supabase / Postgres)
 
 `supabase/schema.sql` é a **fonte da verdade da estrutura**. Ele reflete a
 produção (projeto `kbbsiikqoehwnflxjnfi`, região `sa-east-1`, São Paulo) depois
-da migration de segurança e integridade de 2026-10-24.
+das migrations de 2026-10-24 (segurança e integridade) e 2026-10-25 (pedido de
+ala pela home e retirada de país, endereço e descrição). Conferido contra a
+produção em 25/10/2026: constraints, índices e gatilhos iguais.
 
 - **Projeto novo:** rode o arquivo inteiro no SQL Editor (passo de setup do README).
 - **Projeto existente:** não rode por cima (os `create table` falham). Use como
@@ -89,6 +91,8 @@ Curitiba / `America/Sao_Paulo`, e a **ala de teste** "Ala Teste Aprovação"
 - Os checks espelham `src/lib/server/validation.ts`.
 - **P-day (segunda) e dia passado NÃO são barrados aqui**: o líder pode mover um
   almoço para segunda ou para o passado. Só o `/api/agendar` (membro) recusa.
+  O limite de 2 anos da edição do líder também é só da API
+  (`/api/agendamentos/update`).
 
 ### `perfil`
 
@@ -210,6 +214,43 @@ alter table public.agendamento replica identity full;
   PK, e as **remoções não chegavam ao vivo**.
 - O Realtime aplica a permissão por coluna: o `telefone` nunca vai no payload. Com
   RLS ligada, o `DELETE` chega ao navegador só com a PK. Ver [src_hooks.md](src_hooks.md).
+
+## Desempenho
+
+Diagnóstico de 25/10/2026 (`pg_stat_statements` desde dez/2025, `pg_stat_user_*`,
+advisors do Supabase e tempos medidos no site no ar). **O banco não é o gargalo.**
+
+- **Tamanho:** 13 MB, ~250 agendamentos; cache de tabelas e índices ≈ 100%.
+- **Toda consulta do site tem índice:** ala pelo link (`ala_slug_key`),
+  almoços de uma ala numa janela de datas (`agendamento_ala_data_unique`, que
+  serve também à ordem por data), perfil (`perfil_pkey`), vínculo por pessoa
+  (`ala_membro_user_unico`) e por ala (`idx_ala_membro_ala_status`),
+  preferências (`email_preferencia_pkey`). Leituras levam **0,2 a 1,4 ms**; o
+  insert de um agendamento, **~12 ms** (gravação em disco do plano Free). As
+  leituras sequenciais que aparecem nas estatísticas são das tabelas pequenas
+  (4 a 250 linhas): lá o Postgres prefere ler tudo, e está certo.
+- **Índices "sem uso" do advisor** (`idx_ala_status`, `idx_ala_pedido_por`,
+  `idx_ala_membro_aprovado_por`, 16 kB cada): os dois de `pedido_por` e
+  `aprovado_por` servem às chaves estrangeiras (apagar uma conta procura por
+  eles). `idx_ala_status` só passa a ser usado com muitas alas. Ficam.
+- **O que pesa no banco não é consulta nossa:** a leitura de mudanças do
+  Realtime (`realtime.list_changes`, ~4,6 ms, roda sem parar enquanto há página
+  aberta) e as recargas do "mapa" do PostgREST (~14 por dia, cada uma com
+  `pg_timezone_names` de ~250 ms, até 6,5 s), que vêm da infraestrutura do
+  Supabase (reinícios, projeto acordando no plano Free).
+- **Tempo de resposta no ar** (Vercel `gru1`, banco `sa-east-1`): quente,
+  0,15–0,27 s por rota; **frio, 1,1–1,7 s** (a função da Vercel acordando). O
+  que mais ajudaria é do lado da Vercel ("Fluid compute", que reaproveita
+  instâncias), não do banco.
+- **No código:** o painel busca em paralelo (ver
+  [routes_dashboard.md](routes_dashboard.md)) e o `getContexto` busca perfil e
+  vínculo juntos (ver [src_lib.md](src_lib.md)). Validar a sessão sem ir ao
+  Supabase Auth (`getClaims`) exigiria migrar para chaves de assinatura
+  assimétricas no painel do Supabase: hoje o projeto usa a chave simétrica
+  antiga (o JWKS vem vazio).
+
+Quando crescer: refaça este diagnóstico (consultas acima no SQL Editor), olhe
+`mean_exec_time` das consultas em `public` e só então crie índice.
 
 ## Migrations
 

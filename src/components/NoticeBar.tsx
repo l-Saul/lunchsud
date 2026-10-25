@@ -5,12 +5,16 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { BOTAO_FECHAR } from '@/components/button-classes'
 
 export type Aviso = { tipo: 'info' | 'sucesso' | 'erro'; conteudo: React.ReactNode }
 
 const CAIXA =
-    'pointer-events-auto mx-auto flex max-w-xl animate-aparecer items-start gap-3 rounded-2xl border-l-4 ' +
-    'bg-background p-4 shadow-2xl ring-1 ring-primary/10'
+    'pointer-events-auto relative mx-auto flex max-w-xl animate-aparecer items-start gap-3 rounded-2xl border-l-4 ' +
+    'bg-background p-4 shadow-2xl ring-1 ring-primary/10 @max-[18rem]:p-3'
+
+const FECHAR_AVISO =
+    `${BOTAO_FECHAR} -m-1.5 @max-[18rem]:absolute @max-[18rem]:right-1 @max-[18rem]:top-1 @max-[18rem]:m-0`
 
 const ICONE = {
     info: <path d="M12 16v-5M12 8h.01" />,
@@ -38,12 +42,12 @@ export function NoticeBar({ aviso, onClose }: { aviso: Aviso | null; onClose?: (
     const erro = aviso?.tipo === 'erro'
 
     return (
-        <div className="pointer-events-none fixed inset-x-0 top-0 z-70 px-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <div className="@container pointer-events-none fixed inset-x-0 top-0 z-70 px-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
             <div
                 ref={caixa}
                 className={aviso ? `${CAIXA} ${erro ? 'border-accent' : 'border-secondary'}` : ''}
             >
-                <div role="status" aria-live="polite" className="flex min-w-0 flex-1 items-start gap-3">
+                <div role="status" aria-live="polite" className="flex min-w-0 flex-1 items-start gap-3 @max-[18rem]:flex-col">
                     {aviso && (
                         <>
                             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`mt-0.5 shrink-0 ${erro ? 'text-accent' : 'text-secondary'}`}>
@@ -59,7 +63,7 @@ export function NoticeBar({ aviso, onClose }: { aviso: Aviso | null; onClose?: (
                         type="button"
                         onClick={onClose}
                         aria-label="Fechar aviso"
-                        className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-slate-100 cursor-pointer"
+                        className={FECHAR_AVISO}
                     >
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <path d="M18 6 6 18M6 6l12 12" />

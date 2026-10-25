@@ -21,14 +21,21 @@ type Props = {
 export function CollapsibleMonth({ label, total, disponiveis, defaultOpen = true, children }: Props) {
     const [open, setOpen] = useState(defaultOpen);
     const [fixado, setFixado] = useState(false);
+    const [alto, setAlto] = useState(false);
     const marco = useRef<HTMLDivElement>(null);
     const cabecalho = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         const medir = () => setFixado((marco.current?.getBoundingClientRect().top ?? 0) < 0);
+        const medirAltura = () => setAlto((cabecalho.current?.parentElement?.offsetHeight ?? 0) > window.innerHeight / 4);
         medir();
+        medirAltura();
         window.addEventListener('scroll', medir, { passive: true });
-        return () => window.removeEventListener('scroll', medir);
+        window.addEventListener('resize', medirAltura);
+        return () => {
+            window.removeEventListener('scroll', medir);
+            window.removeEventListener('resize', medirAltura);
+        };
     }, []);
 
     function alternar() {
@@ -41,7 +48,7 @@ export function CollapsibleMonth({ label, total, disponiveis, defaultOpen = true
         <section className="py-5 first:pt-0 last:pb-0">
             <div ref={marco} aria-hidden="true" />
             <div
-                className={`sticky top-0 z-10 -mx-4 -my-2 bg-background px-4 py-2 transition-shadow sm:-mx-8 sm:px-8 ${open && fixado ? 'shadow-md' : ''}`}
+                className={`${alto ? 'relative' : 'sticky top-0 z-10'} -mx-4 -my-2 bg-background px-4 py-2 transition-shadow sm:-mx-8 sm:px-8 ${open && fixado && !alto ? 'shadow-md' : ''}`}
             >
                 <button
                     ref={cabecalho}

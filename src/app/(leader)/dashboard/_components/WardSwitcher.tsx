@@ -12,7 +12,7 @@ import { WardForm } from '@/components/WardForm';
 import { WardFilter } from '@/components/WardFilter';
 import { ErrorMessage } from '@/components/ErrorMessage';
 import { Spinner } from '@/components/Spinner';
-import { botao } from '@/components/button-classes';
+import { BOTAO_FECHAR, botao } from '@/components/button-classes';
 
 const BOTAO_FLUTUANTE =
     'relative flex size-15 items-center justify-center rounded-full bg-gold text-primary shadow-md transition ' +
@@ -157,7 +157,7 @@ export function WardSwitcher({ alas, atualId, pedidos }: { alas: Ala[]; atualId:
                             type="button"
                             onClick={fechar}
                             aria-label="Fechar"
-                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted transition hover:bg-slate-100 cursor-pointer"
+                            className={BOTAO_FECHAR}
                         >
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                 <path d="M18 6 6 18M6 6l12 12" />

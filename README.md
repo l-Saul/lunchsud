@@ -37,7 +37,7 @@ Sem framer-motion, sem biblioteca de UI: animações só em CSS.
                 ──POST /api/agendar────────▶ route handler    ──service-role────▶   (RLS, checks,
                 ◀─────── WebSocket (anon, só id/ala_id/data/nome) ──────────────── Realtime  unique)
  painel líder   ──GET /dashboard (SSR)─────▶ proxy.ts (renova sessão) → Server Component
-                ──POST /api/... ───────────▶ route handler (getContexto + escopo por ala)
+                ──POST /api/... ───────────▶ proxy.ts (só o próprio site) → route handler (getContexto + escopo por ala)
                                                 │ after(): novo almoço, pedido para entrar no painel
  Vercel Cron 11:00 UTC ──GET /api/cron/avisos─▶ lembretes e resumos ──SMTP──▶ Gmail ──▶ e-mail do líder
 ```
@@ -125,8 +125,11 @@ completo, checks, permissões, Realtime, migrations e templates de e-mail:
 
 ## Segurança
 
-- Entrada de toda rota validada em `src/lib/server/validation.ts` (teto de 10 KB,
-  `Content-Type`, formato e charset); erros do banco nunca ecoados.
+- Entrada de toda rota validada em `src/lib/server/validation.ts` (teto de 10 KB
+  contado em bytes, `Content-Type`, formato e charset); erros do banco nunca
+  ecoados.
+- POST de outro site recusado (403) nas rotas com sessão, no `src/proxy.ts`,
+  além do cookie `SameSite=Lax`.
 - Service-role só no servidor (`import 'server-only'` quebra o build se o
   navegador importar).
 - Telefone nunca chega ao navegador do membro (permissão por coluna no Postgres).
@@ -150,9 +153,10 @@ src/
     auth/confirmar/      link dos e-mails do Supabase Auth
     layout.tsx  globals.css  not-found.tsx  manifest.ts  robots.ts  sitemap.ts
     opengraph-image.tsx  (imagem de prévia do site)
-  components/            usados por 2+ páginas (Spinner, Flower, Footer, LoadingOverlay,
-                         WardFilter, WardForm, AccountFields, campos e botões padrão)
-  hooks/                 use-bookings-realtime (WebSocket)
+  components/            usados por 2+ páginas (Modal, Spinner, Flower, Footer, LoadingOverlay,
+                         WardFilter, WardForm, WardRequestModal, AccountFields, campos e botões padrão)
+  hooks/                 use-bookings-realtime (WebSocket), use-modal-layer, use-scroll-lock,
+                         use-keyboard-inset (altura do teclado do celular)
   lib/                   date, phone, location, wards, site-url, email-preferences, calendar-event,
                          last-ward (última ala aberta no aparelho), share-texts (textos do link)
   lib/server/            public-ward, session, validation, ward-request, (só servidor)
@@ -160,7 +164,7 @@ src/
                          email/aviso.html (modelo dos avisos por e-mail),
                          og/ (fontes das imagens de prévia, com a licença OFL)
   lib/supabase/          realtime, service-role, browser-session, server-session
-  proxy.ts               renova a sessão nas rotas do líder
+  proxy.ts               renova a sessão nas rotas do líder e recusa POST de outro site
 supabase/
   schema.sql             estrutura completa do banco
   migrations/            só quando há mudança pendente (o usuário roda e apaga)

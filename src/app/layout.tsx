@@ -84,7 +84,6 @@ export const viewport: Viewport = {
     colorScheme: "only light",
     width: "device-width",
     initialScale: 1,
-    interactiveWidget: "resizes-content",
 }
 
 export default function RootLayout({

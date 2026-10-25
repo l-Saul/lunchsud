@@ -131,8 +131,10 @@ Regras:
    líderes fazem login.
 5. **Dia que já passou não é agendável pelo membro** (hoje em diante, no fuso da
    ala). Igual ao P-day: o calendário esmaece e, ao tocar, só mostra a mensagem;
-   `/api/agendar` recusa. O líder edita qualquer data.
-6. Painel mostra "X de Y dias agendados", `Y = dias do mês − segundas sem
+   `/api/agendar` recusa. O líder edita qualquer data **até 2 anos antes ou
+   depois de hoje** (no fuso da ala; `limitesDaEdicao`, conferido em
+   `/api/agendamentos/update` e no campo de data do painel).
+6. Painel mostra "X de Y dias" em cada mês, `Y = dias do mês − segundas sem
    almoço` (`diasDisponiveisNoMes(ym, datasComAlmoco)`): uma segunda para onde o
    líder moveu um almoço vira dia de almoço, e o X nunca passa do Y.
 7. **Histórico = só os 3 meses anteriores** ao atual (`getHistoricoRange(3)`);
@@ -200,8 +202,8 @@ de data/fuso/P-day em componentes. Detalhes: [`docs/src_lib.md`](docs/src_lib.md
   |---|---|---|
   | Título da página (o `h1` da faixa, em toda página) | `text-3xl` (`sm:text-4xl`) | 30px (36px a partir de 640px) |
   | Título de estado dentro de um cartão ("Olá, Rita!", "Link expirado") | `text-xl` | 20px |
-  | Título de cartão do painel e de modal; nome do site na faixa; nome da ala na home | `text-xl` | 20px |
-  | Subtítulo de seção; instrução principal ("Toque em…"); mensagem de resposta; botão principal; campo de formulário; abas do mês; número do dia | `text-lg` | 18px |
+  | Título de cartão do painel e de modal; nome do site na faixa; nome da ala na home; a instrução da página da ala ("Toque em um dia livre…", `h2`) | `text-xl` | 20px |
+  | Subtítulo de seção; instrução ("Toque na sua ala:"); mensagem de resposta; botão principal; campo de formulário; abas do mês; número do dia | `text-lg` | 18px |
   | Texto, rótulo, botão do painel, legenda, dica, erro, rodapé | `text-base` | **16px, o mínimo** |
 
   **Só três pesos** (padronizado em 25/10/2026, o dono via "muita mudança"):
@@ -235,8 +237,8 @@ de data/fuso/P-day em componentes. Detalhes: [`docs/src_lib.md`](docs/src_lib.md
 Cada parte do site tem um público, e os robôs seguem isso (detalhes em
 [`docs/src_app.md`](docs/src_app.md)):
 
-- **Home (`/`)**: para quem quer achar ou pedir uma ala. **Indexada**; é a única
-  página do `sitemap.xml`.
+- **Home (`/`)**: para quem quer achar ou pedir uma ala. **Indexada**, com endereço
+  canônico; é a única página do `sitemap.xml`.
 - **Página da ala (`/<slug>`)**: para as irmãs que agendam, pelo link do
   WhatsApp. **Nunca no Google** (`noindex, nofollow`): mostra quem recebe os
   missionários e em que dia. Os robôs **podem ler**, senão a prévia do link no
@@ -288,6 +290,12 @@ servidor e no banco (validação, constraints, permissões), não travando a pes
   service-role. O cadastro de líder é aberto: nunca dê a `authenticated` mais que
   a `anon`. **Tabela nova** nasce sem acesso para o navegador; **função nova** em
   `public` precisa de `revoke execute … from public, anon, authenticated`.
+- **POST de outro site é recusado** nas rotas que leem sessão (as do `matcher`
+  do `src/proxy.ts`): `Sec-Fetch-Site` diferente de `same-origin` ou `Origin`
+  que não é o próprio endereço → 403. É a segunda trava, além do cookie
+  `SameSite=Lax`. Sem `Origin` passa (não é navegador, não leva cookie de
+  ninguém). As rotas públicas sem sessão (`/api/agendar`) ficam fora: lá não
+  há o que proteger e o risco seria barrar a senhora.
 - `target="_blank"` sempre com `rel="noopener noreferrer"`.
 
 ## Autenticação e papéis
@@ -406,7 +414,8 @@ o arquivo. Nunca coloque SMTP em migration. Tudo em [`docs/database.md`](docs/da
   vermelho.
 - **Botão de ação: sempre `botao(tipo, tamanho)`** de
   `src/components/button-classes.ts` (primário azul, secundário com contorno,
-  perigo framboesa, dourado só no "Sair" e no botão flutuante do owner;
+  perigo framboesa (também no "Fechar" da confirmação do agendamento),
+  dourado só no "Sair" e no botão flutuante do owner;
   `normal` 48px no painel, `grande` 52px nas páginas públicas). Quem chama só acrescenta layout. Botão novo
   "do jeito dele" sai do padrão: não faça.
 - **Campo: sempre o padrão** de `src/components/field-classes.ts` (`campo(erro)`

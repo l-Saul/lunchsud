@@ -33,47 +33,50 @@ type CampoAla = 'nome' | 'estado' | 'cidade';
 const ETAPAS = ['A ala', 'O líder'];
 const ORDEM_ALA: CampoAla[] = ['nome', 'estado', 'cidade'];
 
-function IndicadorDePassos({ passo, lista }: { passo: 1 | 2; lista: React.Ref<HTMLOListElement> }) {
+function Etapa({ n, passo }: { n: 1 | 2; passo: 1 | 2 }) {
+    const atual = n === passo;
+    const feito = n < passo;
     return (
-        <ol ref={lista} tabIndex={-1} aria-label="Etapas do pedido" className="flex flex-col gap-2 focus:outline-none">
-            <li className="sr-only">Passo {passo} de 2: {ETAPAS[passo - 1]}</li>
-            <li aria-hidden="true" className="flex items-center gap-2 px-1">
-                {ETAPAS.map((_, i) => {
-                    const n = i + 1;
-                    const feito = n < passo;
-                    const atual = n === passo;
-                    return (
-                        <span key={n} className="contents">
-                            {i > 0 && (
-                                <span className={`h-1 flex-1 rounded-full transition-colors ${passo > 1 ? 'bg-secondary' : 'bg-slate-200'}`} />
-                            )}
-                            <span
-                                className={`flex size-10 shrink-0 items-center justify-center rounded-full text-lg font-bold transition-colors ${
-                                    atual
-                                        ? 'bg-secondary text-white shadow-md'
-                                        : feito
-                                            ? 'bg-secondary/15 text-secondary'
-                                            : 'bg-white text-muted ring-2 ring-inset ring-slate-300'
-                                }`}
-                            >
-                                {feito ? (
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M20 6 9 17l-5-5" />
-                                    </svg>
-                                ) : n}
-                            </span>
-                        </span>
-                    );
-                })}
-            </li>
-            <li aria-hidden="true" className="flex justify-between gap-3 text-base">
-                {ETAPAS.map((rotulo, i) => (
-                    <span key={rotulo} className={i + 1 === passo ? 'font-semibold text-text' : 'text-muted'}>
-                        {rotulo}
-                    </span>
-                ))}
-            </li>
-        </ol>
+        <li className="flex flex-col items-center gap-1.5">
+            <span
+                className={`flex size-10 items-center justify-center rounded-full text-lg font-bold transition-colors ${
+                    atual
+                        ? 'bg-secondary text-white shadow-md'
+                        : feito
+                            ? 'bg-secondary/15 text-secondary'
+                            : 'bg-white text-muted ring-2 ring-inset ring-slate-300'
+                }`}
+            >
+                {feito ? (
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                ) : n}
+            </span>
+            <span className={`text-center text-base ${atual ? 'font-semibold text-text' : 'text-muted'}`}>{ETAPAS[n - 1]}</span>
+        </li>
+    );
+}
+
+function IndicadorDePassos({ passo, foco }: { passo: 1 | 2; foco: React.Ref<HTMLDivElement> }) {
+    return (
+        <div ref={foco} tabIndex={-1} className="focus:outline-none">
+            <p className="sr-only">Passo {passo} de 2: {ETAPAS[passo - 1]}</p>
+            <ol aria-hidden="true" className="mx-auto grid w-full max-w-72 grid-cols-[auto_1fr_auto] items-start">
+                <Etapa n={1} passo={passo} />
+                <li className={`-mx-1.5 mt-4.5 h-1 rounded-full transition-colors ${passo > 1 ? 'bg-secondary' : 'bg-slate-200'}`} />
+                <Etapa n={2} passo={passo} />
+            </ol>
+        </div>
+    );
+}
+
+function Grupo({ id, titulo, children }: { id: string; titulo: string; children: React.ReactNode }) {
+    return (
+        <div role="group" aria-labelledby={id} className="flex flex-col gap-3">
+            <h3 id={id} className="text-lg font-semibold text-text">{titulo}</h3>
+            <div className="flex flex-col gap-5">{children}</div>
+        </div>
     );
 }
 
@@ -94,7 +97,7 @@ export function WardForm(props: Props) {
     const [salvando, setSalvando] = useState(false);
     const [passo, setPasso] = useState<1 | 2>(1);
     const abertoEm = useRef(0);
-    const tituloPasso = useRef<HTMLOListElement>(null);
+    const tituloPasso = useRef<HTMLDivElement>(null);
     const mudouPasso = useRef(false);
 
     useEffect(() => {
@@ -205,87 +208,91 @@ export function WardForm(props: Props) {
 
     const camposDaAla = (
         <>
-            <div className="flex flex-col gap-2">
-                <p id={`${id}-tipo`} className={rotulo}>É ala ou ramo?</p>
-                <ChoiceGroup
-                    opcoes={[{ valor: 'ala', rotulo: 'Ala' }, { valor: 'ramo', rotulo: 'Ramo' }]}
-                    ativo={tipo}
-                    onChange={v => setTipo(v as TipoUnidade)}
-                    labelledBy={`${id}-tipo`}
-                />
-            </div>
-
-            <div className="flex flex-col gap-2">
-                <label htmlFor={campoId('nome')} className={rotulo}>Nome {unidade}</label>
-                <input
-                    id={campoId('nome')}
-                    name="nome-ala"
-                    type="text"
-                    autoComplete="off"
-                    autoCapitalize="words"
-                    placeholder="Ex.: São Lourenço"
-                    value={nome}
-                    onChange={e => mudar('nome', e.target.value, setNome)}
-                    disabled={salvando}
-                    className={campo(!!erros.nome)}
-                    {...ligacao('nome', nomeFinal ? `${id}-previa` : undefined)}
-                />
-                {erroDe('nome')}
-                {nomeFinal && (
-                    <p id={`${id}-previa`} className="text-base text-muted wrap-anywhere">
-                        Vai aparecer como <span className="font-semibold text-text">{nomeFinal}</span>
-                        {!pedido && link && (
-                            <> · link <span className="font-mono text-secondary">/{link}</span></>
-                        )}
-                    </p>
-                )}
-            </div>
-
-            <div className="grid gap-7 @md:grid-cols-2 @md:gap-4">
-                <div className="flex min-w-0 flex-col gap-2">
-                    <label htmlFor={campoId('estado')} className={rotulo}>Estado</label>
-                    <SelectField
-                        id={campoId('estado')}
-                        name="estado-ala"
-                        autoComplete="off"
-                        value={estado}
-                        onChange={e => mudar('estado', e.target.value, setEstado)}
-                        disabled={salvando}
-                        erro={!!erros.estado}
-                        {...ligacao('estado')}
-                    >
-                        <option value="">Escolha…</option>
-                        {UFS.map(uf => (
-                            <option key={uf.sigla} value={uf.sigla}>{uf.nome}</option>
-                        ))}
-                    </SelectField>
-                    {erroDe('estado')}
+            <Grupo id={`${id}-qual`} titulo={tipo === 'ramo' ? 'Qual é o ramo?' : 'Qual é a ala?'}>
+                <div className="flex flex-col gap-2">
+                    <p id={`${id}-tipo`} className={rotulo}>É ala ou ramo?</p>
+                    <ChoiceGroup
+                        opcoes={[{ valor: 'ala', rotulo: 'Ala' }, { valor: 'ramo', rotulo: 'Ramo' }]}
+                        ativo={tipo}
+                        onChange={v => setTipo(v as TipoUnidade)}
+                        labelledBy={`${id}-tipo`}
+                    />
                 </div>
 
-                <div className="flex min-w-0 flex-col gap-2">
-                    <label htmlFor={campoId('cidade')} className={rotulo}>Cidade</label>
+                <div className="flex flex-col gap-2">
+                    <label htmlFor={campoId('nome')} className={rotulo}>Nome {unidade}</label>
                     <input
-                        id={campoId('cidade')}
-                        name="cidade-ala"
+                        id={campoId('nome')}
+                        name="nome-ala"
                         type="text"
                         autoComplete="off"
                         autoCapitalize="words"
-                        placeholder="Ex.: Curitiba"
-                        value={cidade}
-                        onChange={e => mudar('cidade', e.target.value, setCidade)}
+                        placeholder="Ex.: São Lourenço"
+                        value={nome}
+                        onChange={e => mudar('nome', e.target.value, setNome)}
                         disabled={salvando}
-                        className={campo(!!erros.cidade)}
-                        {...ligacao('cidade')}
+                        className={campo(!!erros.nome)}
+                        {...ligacao('nome', nomeFinal ? `${id}-previa` : undefined)}
                     />
-                    {erroDe('cidade')}
+                    {erroDe('nome')}
+                    {nomeFinal && (
+                        <p id={`${id}-previa`} className="text-base text-muted wrap-anywhere">
+                            Vai aparecer como <span className="font-semibold text-text">{nomeFinal}</span>
+                            {!pedido && link && (
+                                <> · link <span className="font-mono text-secondary">/{link}</span></>
+                            )}
+                        </p>
+                    )}
                 </div>
-            </div>
+            </Grupo>
+
+            <Grupo id={`${id}-onde`} titulo="Onde fica?">
+                <div className="grid gap-5 @md:grid-cols-2 @md:gap-4">
+                    <div className="flex min-w-0 flex-col gap-2">
+                        <label htmlFor={campoId('estado')} className={rotulo}>Estado</label>
+                        <SelectField
+                            id={campoId('estado')}
+                            name="estado-ala"
+                            autoComplete="off"
+                            value={estado}
+                            onChange={e => mudar('estado', e.target.value, setEstado)}
+                            disabled={salvando}
+                            erro={!!erros.estado}
+                            {...ligacao('estado')}
+                        >
+                            <option value="">Escolha…</option>
+                            {UFS.map(uf => (
+                                <option key={uf.sigla} value={uf.sigla}>{uf.nome}</option>
+                            ))}
+                        </SelectField>
+                        {erroDe('estado')}
+                    </div>
+
+                    <div className="flex min-w-0 flex-col gap-2">
+                        <label htmlFor={campoId('cidade')} className={rotulo}>Cidade</label>
+                        <input
+                            id={campoId('cidade')}
+                            name="cidade-ala"
+                            type="text"
+                            autoComplete="off"
+                            autoCapitalize="words"
+                            placeholder="Ex.: Curitiba"
+                            value={cidade}
+                            onChange={e => mudar('cidade', e.target.value, setCidade)}
+                            disabled={salvando}
+                            className={campo(!!erros.cidade)}
+                            {...ligacao('cidade')}
+                        />
+                        {erroDe('cidade')}
+                    </div>
+                </div>
+            </Grupo>
         </>
     );
 
     if (!pedido) {
         return (
-            <form onSubmit={enviar} noValidate className="@container flex flex-col gap-6">
+            <form onSubmit={enviar} noValidate className="@container flex flex-col gap-8">
                 {camposDaAla}
                 {erro && <ErrorMessage key={erro}>{erro}</ErrorMessage>}
                 <div className="flex flex-wrap gap-3">
@@ -312,13 +319,13 @@ export function WardForm(props: Props) {
     }
 
     return (
-        <form onSubmit={enviar} noValidate className="@container relative flex flex-col gap-7">
-            <IndicadorDePassos passo={passo} lista={tituloPasso} />
+        <form onSubmit={enviar} noValidate className="@container relative flex flex-col gap-8">
+            <IndicadorDePassos passo={passo} foco={tituloPasso} />
 
             {passo === 1 ? (
                 <>
                     {camposDaAla}
-                    <button type="submit" className={`${botao('primario', 'grande')} mt-1 w-full`}>
+                    <button type="submit" className={`${botao('primario', 'grande')} w-full`}>
                         Continuar
                     </button>
                 </>
@@ -339,47 +346,51 @@ export function WardForm(props: Props) {
                         </button>
                     </div>
 
-                    <div className="mt-2 flex flex-col gap-1.5">
-                        <h3 id={`${id}-lider`} className="text-lg font-semibold text-text">Líder responsável</h3>
-                        <p className="text-base text-muted">
-                            {contaLogada
-                                ? 'Pode ser a sua conta ou uma conta nova.'
-                                : 'Crie a conta de quem vai cuidar do calendário. Com este e-mail e esta senha, a pessoa entra no painel depois que o pedido for aprovado.'}
-                        </p>
-                    </div>
-
-                    {contaLogada && (
-                        <ChoiceGroup
-                            opcoes={[{ valor: 'minha', rotulo: 'Minha conta' }, { valor: 'nova', rotulo: 'Conta nova' }]}
-                            ativo={usarConta ? 'minha' : 'nova'}
-                            onChange={v => { setUsarConta(v === 'minha'); setErro(''); }}
-                            labelledBy={`${id}-lider`}
-                        />
-                    )}
-
-                    {contaLogada && usarConta ? (
-                        <div className="flex flex-col gap-3">
-                            <p className="text-base text-text wrap-anywhere">
-                                Você entrou como <strong>{contaLogada.nome || contaLogada.email}</strong>
-                                {contaLogada.nome && <> ({contaLogada.email})</>}. O pedido vai com esta conta.
+                    <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-1">
+                            <h3 id={`${id}-lider`} className="text-lg font-semibold text-text">Líder responsável</h3>
+                            <p className="text-base text-muted">
+                                {contaLogada
+                                    ? 'Pode ser a sua conta ou uma conta nova.'
+                                    : 'Crie a conta de quem vai cuidar do calendário. Com este e-mail e esta senha, a pessoa entra no painel depois que o pedido for aprovado.'}
                             </p>
-                            {contaLogada.ala && (
-                                <p className="rounded-xl bg-accent-soft px-3 py-2.5 text-base font-semibold text-accent">
-                                    Atenção: ao enviar, você perde o acesso {artigo(contaLogada.ala, 'a')} <strong>{contaLogada.ala}</strong>. Para
-                                    manter, escolha &quot;Conta nova&quot;.
-                                </p>
+                        </div>
+
+                        <div className="flex flex-col gap-5">
+                            {contaLogada && (
+                                <ChoiceGroup
+                                    opcoes={[{ valor: 'minha', rotulo: 'Minha conta' }, { valor: 'nova', rotulo: 'Conta nova' }]}
+                                    ativo={usarConta ? 'minha' : 'nova'}
+                                    onChange={v => { setUsarConta(v === 'minha'); setErro(''); }}
+                                    labelledBy={`${id}-lider`}
+                                />
+                            )}
+
+                            {contaLogada && usarConta ? (
+                                <div className="flex flex-col gap-3">
+                                    <p className="text-base text-text wrap-anywhere">
+                                        Você entrou como <strong>{contaLogada.nome || contaLogada.email}</strong>
+                                        {contaLogada.nome && <> ({contaLogada.email})</>}. O pedido vai com esta conta.
+                                    </p>
+                                    {contaLogada.ala && (
+                                        <p className="rounded-xl bg-accent-soft px-3 py-2.5 text-base font-semibold text-accent">
+                                            Atenção: ao enviar, você perde o acesso {artigo(contaLogada.ala, 'a')} <strong>{contaLogada.ala}</strong>. Para
+                                            manter, escolha &quot;Conta nova&quot;.
+                                        </p>
+                                    )}
+                                </div>
+                            ) : (
+                                <AccountFields
+                                    modo="criar"
+                                    dados={conta}
+                                    onChange={mudarConta}
+                                    erros={errosConta}
+                                    disabled={salvando}
+                                    prefixo={prefixoConta}
+                                />
                             )}
                         </div>
-                    ) : (
-                        <AccountFields
-                            modo="criar"
-                            dados={conta}
-                            onChange={mudarConta}
-                            erros={errosConta}
-                            disabled={salvando}
-                            prefixo={prefixoConta}
-                        />
-                    )}
+                    </div>
 
                     <div aria-hidden="true" className="absolute -left-[9999px] top-0 h-px w-px overflow-hidden">
                         <label htmlFor={`${id}-website`}>Não preencha</label>
@@ -400,7 +411,7 @@ export function WardForm(props: Props) {
                         type="submit"
                         disabled={salvando}
                         aria-busy={salvando}
-                        className={`${botao('primario', 'grande')} mt-1 w-full`}
+                        className={`${botao('primario', 'grande')} w-full`}
                     >
                         {salvando && <Spinner />}
                         {salvando ? 'Enviando…' : 'Enviar pedido'}

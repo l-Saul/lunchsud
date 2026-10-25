@@ -82,6 +82,18 @@ Os usuários são **sempre os da ala em foco** (member: a sua; owner: a
 selecionada). Como todos são da mesma ala, o card não mostra o nome da ala em
 cada um.
 
+**Em paralelo, em duas levas** (cada consulta é uma função pequena no próprio
+`page.tsx`: `buscarAla`, `buscarUsuarios`, `buscarDadosDoOwner`,
+`buscarMeuEmail`, `buscarAgendamentos`, `buscarHistorico`):
+
+1. ala em foco, usuários (vínculos → perfis), dados do owner (alas e pedidos →
+   perfis de quem pediu), e-mail e avisos, tudo junto;
+2. com o fuso da ala: agendamentos e histórico, juntos.
+
+Antes eram até ~10 idas ao banco uma depois da outra. Medido em 25/10/2026 (build
+local, cada ida ao banco ≈ 50 ms): o painel caiu de 634 ms para ~350 ms de
+mediana. Consulta nova no painel: ponha na leva certa, não num `await` solto.
+
 ### Layout (de cima para baixo)
 
 1. `DashboardClientGuard` envolvendo tudo; `DashboardRealtime` se houver ala em foco.
@@ -117,7 +129,9 @@ Nome da ala na faixa, nomes e e-mails nos cartões quebram a linha
 
 ## `BookingsCard.tsx` (Server Component)
 
-Props: `mesAtual`, `mesSeguinte` (`YYYY-MM`), `agendamentos` (`{ id, data, nome, telefone }[]`).
+Props: `mesAtual`, `mesSeguinte` (`YYYY-MM`), `agendamentos` (`{ id, data, nome, telefone }[]`)
+e `limites` (`{ min, max }`, de `limitesDaEdicao(fuso)` calculado na página, no
+fuso da ala), repassados a cada `EditBookingModal`.
 
 - Cabeçalho "Agendamentos" (barrinha rosa). A imagem do mês tem cartão próprio,
   logo antes (`MonthImageExport`).
@@ -151,6 +165,13 @@ mês tem ~30 dias: recolher o de cima evita rolar tudo para editar o de baixo.
   parado. Grudado, ganha `shadow-md` (estado `fixado`, medido no `scroll` pelo
   `<div>` marcador antes do cabeçalho; `IntersectionObserver` não serve: num
   pulo de rolagem o marcador vai de "abaixo da tela" para "acima" sem disparar).
+- **Não gruda quando fica alto demais** (estado `alto`): se a faixa do
+  cabeçalho passa de **1/4 da altura da tela** (medido ao abrir e no `resize`),
+  ela vira `relative` e fica no lugar. Com letra grande em tela estreita o
+  cabeçalho quebra em várias linhas: medido, 96px em 320px (17% da tela, gruda),
+  186px em 320px com letra 150% (33%) e 296px com 200% (52%, metade da tela
+  coberta). Em 390px até 150% e no computador, sempre gruda. O foco por Tab não
+  fica escondido atrás do cabeçalho grudado (conferido para frente e para trás).
 - **Fechar grudado não larga a pessoa no fim:** antes de fechar, se o cabeçalho
   está grudado, a página sobe na hora (`scrollBy` com `behavior: 'instant'`; o
   `html` tem `scroll-behavior: smooth`) a distância entre o marcador e o
@@ -161,7 +182,8 @@ mês tem ~30 dias: recolher o de cima evita rolar tudo para editar o de baixo.
 ## `EditBookingModal.tsx` (client)
 
 Botão de **lápis** (`aria-label="Editar agendamento"`, 44px, SVG inline) que
-abre o modal de editar ou remover um almoço. Props: `id`, `data`, `nome`, `telefone`.
+abre o modal de editar ou remover um almoço. Props: `id`, `data`, `nome`, `telefone`
+e `limites` (`{ min, max }`).
 Modal `max-w-lg`; rótulos em texto escuro (`text-base`) e campos em `text-lg`.
 
 ### Campos
@@ -170,7 +192,7 @@ Modal `max-w-lg`; rótulos em texto escuro (`text-base`) e campos em `text-lg`.
 
 | Campo | Detalhes |
 |---|---|
-| Data (`type="date"`) | qualquer data: o líder pode mover para segunda ou para o passado |
+| Data (`type="date"`) | o líder pode mover para segunda ou para o passado, **até 2 anos antes ou depois de hoje**: `min`/`max` do campo = `limites` (o seletor do celular nem oferece outras datas) |
 | Nome | `autoComplete="off"`: dado de outra pessoa; senão o celular sugere o nome do próprio líder |
 | Telefone | `type="tel"`, `inputMode="tel"` (tecla `+`), `maxLength=25`, `autoComplete="off"`; **sem máscara** ao digitar, arrumado no `onBlur` com `normalizarTelefone` |
 
@@ -181,11 +203,13 @@ que senão ignora `width: 100%` e fica mais largo que os outros (estoura o conta
 
 ### Salvar
 
-1. Valida com as **mesmas regras do servidor** (`parseEdicao`): nome com 2+
-   caracteres e telefone que `normalizarTelefone` entende. Senão o líder via só
-   "Erro ao atualizar". Mensagens: "Informe o nome." / "Confira o telefone, com
-   DDD (ou + e o código do país)." (embaixo do campo, ligadas por
-   `aria-describedby`); o foco vai para o primeiro campo errado.
+1. Valida com as **mesmas regras do servidor** (`parseEdicao` + limite de 2
+   anos): data dentro de `limites`, nome com 2+ caracteres e telefone que
+   `normalizarTelefone` entende. Senão o líder via só "Erro ao atualizar".
+   Mensagens: "Escolha uma data entre 25/10/2024 e 25/10/2028." (`dataCurta`
+   dos limites) / "Informe o nome." / "Confira o telefone, com DDD (ou + e o
+   código do país)." (embaixo do campo, ligadas por `aria-describedby`); o foco
+   vai para o primeiro campo errado, e nada é enviado.
 2. `POST /api/agendamentos/update { id, data, nome, telefone }`.
 3. Sucesso → fecha e `router.refresh()` (atualiza a lista sem recarregar a página).
    Dia já ocupado (409) → dentro do modal, no `ErrorMessage`: **"Já há um

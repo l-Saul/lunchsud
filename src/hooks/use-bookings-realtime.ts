@@ -16,6 +16,7 @@ export type MudancaAgendamento =
     | null;
 
 const LIBERAR_APOS_MS = 30_000;
+const ASSENTAR_MS = 3_000;
 
 export function useBookingsRealtime(
     alaId: number,
@@ -31,6 +32,7 @@ export function useBookingsRealtime(
         let jaInscrito = false;
         let escondidaDesde = 0;
         let timer: ReturnType<typeof setTimeout> | undefined;
+        let assentou: ReturnType<typeof setTimeout> | undefined;
 
         function assinar() {
             if (canal) return;
@@ -60,10 +62,13 @@ export function useBookingsRealtime(
                     if (status !== 'SUBSCRIBED') return;
                     if (jaInscrito) onMudancaRef.current(null);
                     jaInscrito = true;
+                    clearTimeout(assentou);
+                    assentou = setTimeout(() => onMudancaRef.current(null), ASSENTAR_MS);
                 });
         }
 
         function soltar() {
+            clearTimeout(assentou);
             if (!canal) return;
             realtimeClient.removeChannel(canal);
             canal = null;

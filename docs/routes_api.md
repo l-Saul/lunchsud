@@ -33,7 +33,8 @@ precisa entrar no matcher.** As rotas públicas e o cron (sem sessão) ficam for
 
 - **Entrada sempre validada** por `src/lib/server/validation.ts`: `lerJson(req)`
   (exige `Content-Type: application/json`, teto de 10.000 bytes pelo
-  `Content-Length` e pelo corpo lido, JSON válido) e um `parse*` por rota. Nunca
+  `Content-Length` e pelo corpo, lido em pedaços e contado em bytes, JSON
+  válido) e um `parse*` por rota. Nunca
   ler `req.json()` cru nem gravar campo sem sanear. Detalhes em [src_lib.md](src_lib.md).
 - **Banco pelo service-role** (`supabaseServer`), que ignora a RLS. A
   autorização é feita **aqui**: `getContexto()` + `podeEditarAla()` e filtro por
@@ -46,6 +47,10 @@ precisa entrar no matcher.** As rotas públicas e o cron (sem sessão) ficam for
   agendamento, não pode virar ala em foco (`/api/ala-atual`) nem receber pedido
   de acesso (`/api/acesso/solicitar`). Ver [database.md](database.md).
 - Códigos do Postgres tratados: `23505` (unique violado) e `23514` (check violado).
+- **POST de outro site → 403 "Pedido recusado."** nas rotas com "Proxy = sim"
+  na tabela acima (as que leem sessão), feito no `src/proxy.ts` (ver
+  [src_app.md](src_app.md)). O `fetch` das nossas telas sempre passa; um site
+  de fora não consegue usar a sessão do líder.
 - **Sem limite por IP** (removido em 2026-10-24): no Wi-Fi da igreja muitas
   pessoas saem pelo mesmo IP e eram bloqueadas. Se houver abuso, usar regra de
   rate limit do Firewall da Vercel na rota, não limite em memória.
@@ -100,8 +105,10 @@ outros erros aparecem no modal. Ver [routes_slug.md](routes_slug.md).
 Dias ocupados de uma ala, **só na janela agendável** (de hoje até o fim do mês
 seguinte, no fuso da ala): `[{ id, data, nome }]`, por data. **Nunca o telefone.**
 
-A página pública chama esta rota **só para ressincronizar**: quando o WebSocket
-reconecta (inclusive ao voltar para a aba) e depois de um conflito 409. As
+A página pública chama esta rota **só para ressincronizar**: 3 s depois de
+assinar o WebSocket (fecha a brecha do começo, ver `use-bookings-realtime` em
+[src_hooks.md](src_hooks.md)), quando ele reconecta (inclusive ao voltar para a
+aba) e depois de um conflito 409. As
 mudanças do dia a dia chegam prontas pelo WebSocket.
 
 | Situação | Resposta |
@@ -147,8 +154,11 @@ O líder edita **data, nome e telefone** de um almoço da **ala em foco**.
   inválidos" (ou "Requisição inválida").
 - `update ... where id = :id and ala_id = :alaEmFoco`. O filtro por `ala_id`
   garante o escopo (member: sua ala; owner: a selecionada).
-- **Sem regra de P-day, passado ou janela:** o líder pode mover para qualquer
-  data. O banco ainda impõe um almoço por dia.
+- **Sem regra de P-day, passado ou janela:** o líder pode mover para segunda e
+  para o passado. **Limite: 2 anos antes ou depois de hoje**, no fuso da ala
+  (`limitesDaEdicao`, `ANOS_DE_EDICAO`; o fuso vem da ala em foco) → fora disso
+  400 "Escolha uma data até 2 anos antes ou depois de hoje." (pedido do dono:
+  antes aceitava até 31/12/9999). O banco ainda impõe um almoço por dia.
 - Data já ocupada nessa ala (`23505`) → 409 "Já há um almoço nesse dia.". Outro
   erro do banco → 400 "Erro ao atualizar". Nenhuma linha afetada (id inexistente
   ou de outra ala) → 404 "Nenhuma linha afetada".
@@ -226,8 +236,12 @@ pedir acesso depois).
     vem do cliente. Nome ou cidade sem letra nem número → "Escreva o nome e a
     cidade com letras ou números.". **Sem endereço.**
   - Erro de validação → 400 com **a mensagem acima**.
-- Slug já usado (ativa ou pendente) → 409 `A <nome>, de <cidade>, já existe (ou
-  já foi pedida).` (checado antes e de novo no `23505`). Outro erro → 500
+- Ala igual já existe (`buscarAlaIgual`: mesmo slug ou mesmo nome, cidade e UF
+  escritos de outro jeito) → 409, com a mesma frase do pedido pela home:
+  **ativa** → "A \<ala\>, de \<cidade\>, já usa o calendário. Procure por ela
+  na página inicial."; **pendente** → "…já foi pedida e está esperando
+  aprovação." (antes a pendente recebia a frase da ativa, errada: ela não
+  aparece na home). Corrida no `23505` → a frase da pendente. Outro erro → 500
   "Erro ao criar ala".
 - Sucesso: `{ ok: true, ala: { id, nome, slug } }`. O formulário usa o `id`
   para já entrar na ala nova.

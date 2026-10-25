@@ -2,8 +2,8 @@
 
 | Pasta | Roda onde | Conteúdo |
 |---|---|---|
-| `src/lib/` | servidor **e** navegador | `date`, `phone`, `location`, `wards`, `site-url`, `email-preferences`, `calendar-event` |
-| `src/lib/server/` | **só servidor** | `public-ward`, `session`, `validation`, `mailer`, `email-templates`, `notifications` |
+| `src/lib/` | servidor **e** navegador | `date`, `calendar-event`, `phone`, `location`, `wards`, `last-ward`, `site-url`, `share-texts`, `email-preferences` |
+| `src/lib/server/` | **só servidor** | `public-ward`, `og-image`, `ward-request`, `session`, `validation`, `mailer`, `email-templates`, `notifications` |
 | `src/lib/supabase/` | depende do cliente | `realtime`, `service-role`, `browser-session`, `server-session` |
 
 Os arquivos de `src/lib/server/` (e o `service-role.ts`) importam
@@ -34,6 +34,9 @@ mês "viraria" perto da meia-noite, e Manaus vira o dia 1 h depois de São Paulo
 | `diasDisponiveisNoMes('2026-06', datasComAlmoco?)` | `26` | dias do mês menos as segundas **sem almoço** (o "Y" do "X de Y dias"). Segunda com almoço (o líder pode mover um para lá) conta como dia de almoço: sem isso o painel mostrava "28 de 27 dias" e a barra do histórico passava do fim |
 | `nomeDoMes('2026-12')` | `'Dezembro'` | só o nome do mês |
 | `somarDias('2026-10-30', 3)` | `'2026-11-02'` | soma dias em texto `YYYY-MM-DD` (conta em UTC, ao meio-dia, sem efeito de fuso) |
+| `somarAnos('2028-02-29', 1)` | `'2029-02-28'` | soma anos; 29 de fevereiro vira 28 no ano que não é bissexto |
+| `limitesDaEdicao(fuso?)` | `{ min, max }` | o que o líder pode escolher ao editar um almoço: hoje (no fuso da ala) menos e mais `ANOS_DE_EDICAO` (2) anos. Usado no `/api/agendamentos/update` e no campo de data do painel |
+| `dataCurta('2026-10-05')` | `'05/10/2026'` | data curta, para a mensagem do limite de edição |
 | `dataPorExtenso('2026-04-16')` | `'quinta-feira, 16 de abril'` | data por extenso dos e-mails |
 | `diaNoFuso('2026-10-25T02:30:00Z', fuso?)` | `'2026-10-24'` | o dia (`YYYY-MM-DD`) de um instante (`timestamptz`) no fuso dado; usado para mostrar quando um pedido de ala foi feito |
 | `diaDaSemanaEDia('2026-10-27')` | `'terça-feira, 27'` | linha do e-mail da semana |
@@ -250,6 +253,19 @@ e-mails (`urlDoSite`).
 
 ---
 
+## `share-texts.ts`: textos do link da ala
+
+Os textos de quando o link de uma ala é compartilhado, num lugar só: a prévia
+do link (metadata da página da ala) e o botão "Compartilhar" do painel usam os
+mesmos.
+
+- `tituloDaAla(nome)`: "Calendário de almoços da Ala X" (com `comArtigo`: "do
+  Ramo X").
+- `DESCRICAO_DA_ALA`: "Escolha um dia livre e agende o almoço dos
+  missionários. Não precisa criar conta." (escrito para as irmãs; sem emoji).
+
+---
+
 ## `server/public-ward.ts`: dados da página pública
 
 Usado pela página `/[slug]` e por `GET /api/agendamentos/[slug]`. Pelo
@@ -278,19 +294,6 @@ service-role, no servidor.
   sem esse filtro a lista crescia com todo o histórico.
 - Seleciona `data::text` para manter `YYYY-MM-DD` sem fuso. Ordenado por data.
 - **Nunca o telefone.** `null` = erro no banco.
-
----
-
-## `share-texts.ts`: textos do link da ala
-
-Os textos de quando o link de uma ala é compartilhado, num lugar só: a prévia
-do link (metadata da página da ala) e o botão "Compartilhar" do painel usam os
-mesmos.
-
-- `tituloDaAla(nome)`: "Calendário de almoços da Ala X" (com `comArtigo`: "do
-  Ramo X").
-- `DESCRICAO_DA_ALA`: "Escolha um dia livre e agende o almoço dos
-  missionários. Não precisa criar conta." (escrito para as irmãs; sem emoji).
 
 ---
 
@@ -367,6 +370,10 @@ type Contexto = { userId: string; nome: string; isOwner: boolean; alaId: number 
   cookie **`ala_atual`** (gravado por `/api/ala-atual`, que só aceita ala ativa)
   ou, sem cookie, é a primeira ala **ativa** por nome.
 - **member**: a ala do vínculo `aprovado` (uma só). Sem vínculo aprovado → `null`.
+- O `perfil` e o vínculo aprovado são buscados **juntos** (`Promise.all`), logo
+  depois do `getUsuario()`: os dois só precisam do id. Toda tela e rota da
+  liderança passa por aqui, então cada ida ao banco a menos conta. O owner sem
+  cookie faz mais uma, a da primeira ala ativa.
 
 ---
 
@@ -382,7 +389,12 @@ nossa, sem ecoar detalhes que ajudem a sondar a API.
 
 1. `Content-Type` precisa conter `application/json`.
 2. Recusa cedo pelo `Content-Length` declarado, antes de ler o corpo.
-3. Lê o texto e confere o tamanho de novo (o cabeçalho pode mentir).
+3. Lê o corpo **em pedaços, contando bytes** (`lerTexto`), e para no primeiro
+   pedaço que passa do limite (`cancel()`), sem ler o resto: o cabeçalho pode
+   mentir ou faltar (envio em partes). Antes lia tudo com `req.text()` e só
+   depois conferia, e contava **caracteres**: um corpo enviado em partes (sem
+   `Content-Length`) com 9.000 "é" (18 KB, 9 mil caracteres) passava pelo teto
+   de 10.000 (achado na bateria de backend de 25/10/2026).
 4. `JSON.parse`; inválido → `ValidationError('JSON inválido')`.
 
 Evita payloads gigantes e corpos malformados.
@@ -421,7 +433,10 @@ verdade (nada de `"true"`). A ala vem à parte, por `parseAlaId`.
 `parseNovaAla` (**só Brasil**): `tipo` `'ala'`/`'ramo'` (outro valor vira
 `'ala'`); nome sem o tipo, 2–80, normalizado com o tipo na frente
 (`nomeSemTipo` + `normalizarNomeAla`); `estado` precisa ser uma das `UFS` e o
-**fuso sai dela**; cidade 2–80 em nome próprio; **slug sempre gerado**
+**fuso sai dela**; cidade 2–80 em nome próprio. **Os tamanhos são conferidos
+de novo depois de normalizar**: algumas letras viram duas ou mais ao passar
+para maiúscula ("ß" → "SS", "ﬁ" → "FI"), e uma cidade de 80 caracteres podia
+virar 82 ou mais e esbarrar no check do banco (erro 500 em vez da mensagem); **slug sempre gerado**
 (`gerarSlug(uf, cidade, nome)`), nunca vem do cliente. Sem país e sem endereço.
 As mensagens ("Digite o nome da ala." / "Digite o nome do ramo.", "Escolha o
 estado.", "Digite a cidade.", "Escreva o nome e a cidade com letras ou
