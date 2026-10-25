@@ -28,6 +28,7 @@ export const buscarAlaPorSlug = cache(async (slugCru: string) => {
         .from('ala')
         .select('id, nome, slug, fuso_horario')
         .eq('slug', slug)
+        .eq('status', 'ativa')
         .maybeSingle();
 
     return data as AlaPublica | null;

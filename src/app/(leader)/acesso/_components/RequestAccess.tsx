@@ -5,6 +5,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { criarSupabaseBrowser } from '@/lib/supabase/browser-session';
 import { Spinner } from '@/components/Spinner';
@@ -17,10 +18,12 @@ export default function RequestAccess({
     nome,
     alas,
     pendenteEm,
+    alaEsperando,
 }: {
     nome: string;
     alas: Ala[];
     pendenteEm: string | null;
+    alaEsperando: boolean;
 }) {
     const router = useRouter();
     const [supabase] = useState(() => criarSupabaseBrowser());
@@ -68,11 +71,19 @@ export default function RequestAccess({
             {pendenteEm ? (
                 <>
                     <h2 className="text-xl font-semibold text-text">Quase lá, {nome}!</h2>
-                    <p className="text-base text-muted">
-                        Seu acesso à <strong className="text-text">{pendenteEm}</strong> está
-                        aguardando a aprovação de um responsável da ala. Você recebe um e-mail
-                        quando for aprovado.
-                    </p>
+                    {alaEsperando ? (
+                        <p className="text-base text-muted">
+                            O pedido da <strong className="text-text">{pendenteEm}</strong> ainda está
+                            esperando aprovação. Depois que a ala for aprovada, o seu acesso ao painel
+                            também é aprovado. Você recebe um e-mail quando tudo estiver pronto.
+                        </p>
+                    ) : (
+                        <p className="text-base text-muted">
+                            Seu acesso à <strong className="text-text">{pendenteEm}</strong> está
+                            aguardando a aprovação de um responsável da ala. Você recebe um e-mail
+                            quando for aprovado.
+                        </p>
+                    )}
                     <button
                         onClick={() => iniciarAtualizar(() => router.refresh())}
                         disabled={atualizando}
@@ -127,6 +138,14 @@ export default function RequestAccess({
                         {loading && <Spinner />}
                         {loading ? 'Enviando…' : 'Pedir acesso'}
                     </button>
+
+                    <p className="text-base text-muted">
+                        Sua ala não está na lista?{' '}
+                        <Link href="/#nova-ala" className="font-semibold text-secondary underline underline-offset-4">
+                            Peça para usar o calendário
+                        </Link>
+                        , com este mesmo e-mail e senha.
+                    </p>
                 </>
             )}
 

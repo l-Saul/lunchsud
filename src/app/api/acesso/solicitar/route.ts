@@ -37,6 +37,7 @@ export async function POST(req: Request) {
         .from('ala')
         .select('id')
         .eq('id', alaId)
+        .eq('status', 'ativa')
         .maybeSingle();
 
     if (!ala) {

@@ -12,6 +12,7 @@ import {
     emailDiaSemAlmoco,
     emailNovoAlmoco,
     emailPedidoAcesso,
+    emailPedidoDeAla,
     emailProximoMes,
     emailSemana,
     type Almoco,
@@ -259,5 +260,32 @@ export async function avisarAcessoAprovado(alaId: number, userId: string) {
         await enviarEmail(emailAcessoAprovado({ para: perfil.email, ala }));
     } catch (erro) {
         console.error('[avisos] acesso aprovado:', erro instanceof Error ? erro.message : erro);
+    }
+}
+
+export async function avisarPedidoDeAla(alaId: number) {
+    if (!emailsLigados()) return;
+    try {
+        const { data: ala } = await supabaseServer
+            .from('ala')
+            .select('nome, cidade, estado, pedido_por')
+            .eq('id', alaId)
+            .maybeSingle();
+        if (!ala) return;
+        const [{ data: donos }, { data: solicitante }] = await Promise.all([
+            supabaseServer.from('perfil').select('email').eq('is_owner', true),
+            ala.pedido_por
+                ? supabaseServer.from('perfil').select('nome, email').eq('id', ala.pedido_por).maybeSingle()
+                : Promise.resolve({ data: null }),
+        ]);
+        await enviarEmails((donos ?? [])
+            .filter(d => d.email)
+            .map(d => emailPedidoDeAla({
+                para: d.email!,
+                ala,
+                solicitante: { nome: solicitante?.nome ?? '', email: solicitante?.email ?? '' },
+            })));
+    } catch (erro) {
+        console.error('[avisos] pedido de nova ala:', erro instanceof Error ? erro.message : erro);
     }
 }

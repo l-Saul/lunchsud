@@ -47,6 +47,7 @@ export async function getContexto(): Promise<Contexto | null> {
             const { data: primeira } = await supabaseServer
                 .from('ala')
                 .select('id')
+                .eq('status', 'ativa')
                 .order('nome')
                 .limit(1)
                 .single();

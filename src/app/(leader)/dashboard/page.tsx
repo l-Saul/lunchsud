@@ -11,7 +11,7 @@ import { DashboardRealtime } from './_components/DashboardRealtime';
 import { LogoutButton } from './_components/LogoutButton';
 import { OpenCalendarButton } from './_components/OpenCalendarButton';
 import { ShareLinkButtons } from './_components/ShareLinkButtons';
-import { WardSwitcher } from './_components/WardSwitcher';
+import { WardSwitcher, type PedidoAla } from './_components/WardSwitcher';
 import { BookingsCard } from './_components/BookingsCard';
 import MonthImageExport from './_components/month-image/MonthImageExport';
 import { HistoryCard, type MesHistorico } from './_components/HistoryCard';
@@ -19,7 +19,7 @@ import { UsersCard, type Usuario } from './_components/UsersCard';
 import { NotificationsCard } from './_components/NotificationsCard';
 import { supabaseServer } from '@/lib/supabase/service-role';
 import { buscarPreferenciasEmail } from '@/lib/server/notifications';
-import { getDashboardRange, getHistoricoRange, diasDisponiveisNoMes } from '@/lib/date';
+import { getDashboardRange, getHistoricoRange, diasDisponiveisNoMes, dataPorExtenso, diaNoFuso } from '@/lib/date';
 import { FUSO_PADRAO } from '@/lib/location';
 
 export const dynamic = 'force-dynamic';
@@ -90,9 +90,36 @@ export default async function DashboardPage() {
     const perfilPorId = new Map((perfis ?? []).map(p => [p.id, p]));
 
     let alasParaTroca: { id: number; nome: string; slug: string }[] = [];
+    let pedidos: PedidoAla[] = [];
     if (ctx.isOwner) {
-        const { data: todasAlas } = await supabaseServer.from('ala').select('id, nome, slug').order('nome');
+        const [{ data: todasAlas }, { data: pendentes }] = await Promise.all([
+            supabaseServer.from('ala').select('id, nome, slug').eq('status', 'ativa').order('nome'),
+            supabaseServer
+                .from('ala')
+                .select('id, nome, cidade, estado, criado_em, pedido_por, pedido_conta_nova')
+                .eq('status', 'pendente')
+                .order('criado_em'),
+        ]);
         alasParaTroca = todasAlas ?? [];
+
+        const lideresIds = [...new Set((pendentes ?? []).map(p => p.pedido_por).filter((id): id is string => !!id))];
+        const { data: lideres } = lideresIds.length
+            ? await supabaseServer.from('perfil').select('id, nome, email').in('id', lideresIds)
+            : { data: [] };
+        const liderPorId = new Map((lideres ?? []).map(l => [l.id, l]));
+
+        pedidos = (pendentes ?? []).map(p => {
+            const lider = p.pedido_por ? liderPorId.get(p.pedido_por) : undefined;
+            return {
+                id: p.id,
+                nome: p.nome,
+                cidade: p.cidade,
+                estado: p.estado,
+                pedidoEm: dataPorExtenso(diaNoFuso(p.criado_em)),
+                contaNova: p.pedido_conta_nova,
+                lider: lider ? { nome: lider.nome || lider.email || '', email: lider.email ?? '' } : null,
+            };
+        });
     }
 
     const [{ data: meuPerfil }, avisos] = alaId !== null
@@ -148,8 +175,8 @@ export default async function DashboardPage() {
                     <UsersCard usuarios={usuarios} />
                 </section>
 
-                {ctx.isOwner && alasParaTroca.length > 0 && (
-                    <WardSwitcher alas={alasParaTroca} atualId={alaId} />
+                {ctx.isOwner && (
+                    <WardSwitcher alas={alasParaTroca} atualId={alaId} pedidos={pedidos} />
                 )}
             </main>
         </DashboardClientGuard>

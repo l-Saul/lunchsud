@@ -36,6 +36,15 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
 
+    const { data: ala } = await supabaseServer
+        .from('ala')
+        .select('status')
+        .eq('id', membro.ala_id)
+        .maybeSingle();
+    if (ala?.status !== 'ativa') {
+        return NextResponse.json({ error: 'Aprove a ala antes de aprovar o líder.' }, { status: 409 });
+    }
+
     const { error } = await supabaseServer
         .from('ala_membro')
         .update({ status: 'aprovado', aprovado_por: ctx.userId })

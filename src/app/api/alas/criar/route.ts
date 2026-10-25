@@ -26,7 +26,7 @@ export async function POST(req: Request) {
         }
         return NextResponse.json({ error: 'Requisição inválida' }, { status: 400 });
     }
-    const { nome, slug, endereco, pais, estado, cidade, fuso } = entrada;
+    const { nome, slug, estado, cidade, fuso } = entrada;
 
     const { data: existente } = await supabaseServer
         .from('ala')
@@ -36,21 +36,21 @@ export async function POST(req: Request) {
 
     if (existente) {
         return NextResponse.json(
-            { error: `Já existe uma ala no endereço "${slug}".` },
+            { error: `A ${nome}, de ${cidade}, já existe (ou já foi pedida).` },
             { status: 409 }
         );
     }
 
     const { data: nova, error } = await supabaseServer
         .from('ala')
-        .insert({ nome, slug, endereco, pais, estado, cidade, fuso_horario: fuso })
+        .insert({ nome, slug, estado, cidade, fuso_horario: fuso, status: 'ativa' })
         .select('id, nome, slug')
         .single();
 
     if (error || !nova) {
         if (error?.code === '23505') {
             return NextResponse.json(
-                { error: `Já existe uma ala no endereço "${slug}".` },
+                { error: `A ${nome}, de ${cidade}, já existe (ou já foi pedida).` },
                 { status: 409 }
             );
         }

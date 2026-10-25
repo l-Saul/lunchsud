@@ -11,7 +11,8 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
     const { data, error } = await supabaseServer
         .from('ala')
-        .select('nome, slug')
+        .select('nome, slug, estado, cidade')
+        .eq('status', 'ativa')
         .order('nome')
 
     if (error) {

@@ -70,6 +70,11 @@ export function somarDias(dateISO: string, dias: number) {
     return data.toISOString().slice(0, 10);
 }
 
+export function diaNoFuso(instante: string, timeZone = TZ) {
+    return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' })
+        .format(new Date(instante));
+}
+
 export function dataPorExtenso(dateISO: string) {
     return new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long' })
         .format(new Date(`${dateISO}T12:00:00Z`));

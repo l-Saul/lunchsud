@@ -5,14 +5,15 @@
 
 import 'server-only';
 
-import { gerarSlug, normalizarNomeAla } from '@/lib/wards';
+import { gerarSlug, nomeSemTipo, normalizarCidade, normalizarNomeAla } from '@/lib/wards';
 import { normalizarTelefone } from '@/lib/phone';
-import { PAISES, UFS, fusoValido } from '@/lib/location';
+import { UFS } from '@/lib/location';
 import { TIPOS_AVISO, type PreferenciasEmail } from '@/lib/email-preferences';
 
 export class ValidationError extends Error {}
 
-const SLUG_RE = /^[a-z0-9_-]{1,60}$/;
+const SLUG_RE = /^[a-z0-9_-]{1,100}$/;
+const EMAIL_RE = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/;
 const DATA_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function asString(v: unknown): string {
@@ -25,15 +26,6 @@ function nomeSaneado(v: unknown): string {
         throw new ValidationError('Nome inválido');
     }
     return nome;
-}
-
-function enderecoSaneado(v: unknown): string | null {
-    const s = asString(v).replace(/\s+/g, ' ').trim();
-    if (!s) return null;
-    if (s.length > 200 || /[<>]/.test(s) || /\p{Cc}/u.test(s)) {
-        throw new ValidationError('Endereço inválido');
-    }
-    return s;
 }
 
 function textoSaneado(v: unknown, min: number, max: number, erro: string): string {
@@ -164,8 +156,6 @@ export function parseSlug(slug: string): string {
 export type NovaAlaInput = {
     nome: string;
     slug: string;
-    endereco: string | null;
-    pais: string;
     estado: string;
     cidade: string;
     fuso: string;
@@ -173,30 +163,54 @@ export type NovaAlaInput = {
 
 export function parseNovaAla(raw: unknown): NovaAlaInput {
     const o = (raw ?? {}) as Record<string, unknown>;
-    const nome = normalizarNomeAla(nomeSaneado(o.nome));
+    const tipo = o.tipo === 'ramo' ? 'ramo' : 'ala';
 
-    const slug = gerarSlug(nome);
+    const base = nomeSemTipo(textoSaneado(o.nome, 2, 80, `Digite o nome ${tipo === 'ramo' ? 'do ramo' : 'da ala'}.`));
+    if (base.length < 2) throw new ValidationError(`Digite o nome ${tipo === 'ramo' ? 'do ramo' : 'da ala'}.`);
+    const nome = normalizarNomeAla(base, tipo);
+
+    const uf = UFS.find(u => u.sigla === asString(o.estado).trim().toUpperCase());
+    if (!uf) throw new ValidationError('Escolha o estado.');
+
+    const cidade = normalizarCidade(textoSaneado(o.cidade, 2, 80, 'Digite a cidade.'));
+
+    const slug = gerarSlug(uf.sigla, cidade, nome);
     if (!SLUG_RE.test(slug)) {
         throw new ValidationError('Não foi possível gerar um link válido a partir desse nome');
     }
 
-    const pais = asString(o.pais).trim().toUpperCase();
-    if (!PAISES.some(p => p.codigo === pais)) throw new ValidationError('Escolha o país.');
+    return { nome, slug, estado: uf.sigla, cidade, fuso: uf.fuso };
+}
 
-    let estado: string;
-    let fuso: string;
-    if (pais === 'BR') {
-        const uf = UFS.find(u => u.sigla === asString(o.estado).trim().toUpperCase());
-        if (!uf) throw new ValidationError('Escolha o estado.');
-        estado = uf.sigla;
-        fuso = uf.fuso;
-    } else {
-        estado = textoSaneado(o.estado, 1, 60, 'Informe o estado ou província.');
-        fuso = asString(o.fuso).trim();
-        if (!fusoValido(fuso)) throw new ValidationError('Escolha o fuso horário.');
+export type PedidoAlaInput = {
+    ala: NovaAlaInput;
+    lider: { nome: string; email: string; senha: string };
+    pareceRobo: boolean;
+    rapidoDemais: boolean;
+};
+
+export const TEMPO_MINIMO_PEDIDO_MS = 5000;
+
+export function parsePedidoAla(raw: unknown): PedidoAlaInput {
+    const o = (raw ?? {}) as Record<string, unknown>;
+    const ala = parseNovaAla(o);
+
+    const l = (o.lider ?? {}) as Record<string, unknown>;
+    const nome = textoSaneado(l.nome, 2, 80, 'Digite o nome do líder responsável.');
+    const email = asString(l.email).trim().toLowerCase();
+    if (email.length > 254 || !EMAIL_RE.test(email)) {
+        throw new ValidationError('Digite um e-mail válido.');
+    }
+    const senha = asString(l.senha);
+    if (senha.length < 6 || senha.length > 72) {
+        throw new ValidationError('A senha precisa ter pelo menos 6 caracteres.');
     }
 
-    const cidade = textoSaneado(o.cidade, 2, 80, 'Informe a cidade.');
-
-    return { nome, slug, endereco: enderecoSaneado(o.endereco), pais, estado, cidade, fuso };
+    const tempo = Number(o.tempo);
+    return {
+        ala,
+        lider: { nome, email, senha },
+        pareceRobo: asString(o.website).trim() !== '',
+        rapidoDemais: !Number.isFinite(tempo) || tempo < TEMPO_MINIMO_PEDIDO_MS,
+    };
 }

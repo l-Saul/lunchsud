@@ -29,22 +29,23 @@ export default async function AcessoPage() {
         .eq('user_id', ctx.userId)
         .maybeSingle();
 
-    const { data: alas } = await supabaseServer
-        .from('ala')
-        .select('id, nome, slug')
-        .order('nome');
+    const [{ data: alas }, { data: alaDoVinculo }] = await Promise.all([
+        supabaseServer.from('ala').select('id, nome, slug').eq('status', 'ativa').order('nome'),
+        vinculo
+            ? supabaseServer.from('ala').select('nome, status').eq('id', vinculo.ala_id).maybeSingle()
+            : Promise.resolve({ data: null }),
+    ]);
 
     const lista = alas ?? [];
-    const pendenteEm = vinculo
-        ? (lista.find(a => a.id === vinculo.ala_id)?.nome ?? 'sua ala')
-        : null;
+    const pendenteEm = vinculo ? (alaDoVinculo?.nome ?? 'sua ala') : null;
+    const alaEsperando = alaDoVinculo?.status === 'pendente';
 
     return (
         <>
             <HeaderBand title="Acesso ao painel" />
             <main className="flex justify-center px-4 py-10">
                 <section className="w-full max-w-md">
-                    <RequestAccess nome={ctx.nome} alas={lista} pendenteEm={pendenteEm} />
+                    <RequestAccess nome={ctx.nome} alas={lista} pendenteEm={pendenteEm} alaEsperando={alaEsperando} />
                 </section>
             </main>
         </>

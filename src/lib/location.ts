@@ -35,41 +35,6 @@ export const UFS = [
     { sigla: 'TO', nome: 'Tocantins', fuso: 'America/Araguaina' },
 ] as const;
 
-export const PAISES = [
-    { codigo: 'BR', nome: 'Brasil', fuso: 'America/Sao_Paulo' },
-    { codigo: 'AR', nome: 'Argentina', fuso: 'America/Argentina/Buenos_Aires' },
-    { codigo: 'BO', nome: 'Bolívia', fuso: 'America/La_Paz' },
-    { codigo: 'CA', nome: 'Canadá', fuso: 'America/Toronto' },
-    { codigo: 'CL', nome: 'Chile', fuso: 'America/Santiago' },
-    { codigo: 'CO', nome: 'Colômbia', fuso: 'America/Bogota' },
-    { codigo: 'CR', nome: 'Costa Rica', fuso: 'America/Costa_Rica' },
-    { codigo: 'EC', nome: 'Equador', fuso: 'America/Guayaquil' },
-    { codigo: 'SV', nome: 'El Salvador', fuso: 'America/El_Salvador' },
-    { codigo: 'US', nome: 'Estados Unidos', fuso: 'America/New_York' },
-    { codigo: 'GT', nome: 'Guatemala', fuso: 'America/Guatemala' },
-    { codigo: 'HN', nome: 'Honduras', fuso: 'America/Tegucigalpa' },
-    { codigo: 'MX', nome: 'México', fuso: 'America/Mexico_City' },
-    { codigo: 'NI', nome: 'Nicarágua', fuso: 'America/Managua' },
-    { codigo: 'PA', nome: 'Panamá', fuso: 'America/Panama' },
-    { codigo: 'PY', nome: 'Paraguai', fuso: 'America/Asuncion' },
-    { codigo: 'PE', nome: 'Peru', fuso: 'America/Lima' },
-    { codigo: 'PR', nome: 'Porto Rico', fuso: 'America/Puerto_Rico' },
-    { codigo: 'DO', nome: 'República Dominicana', fuso: 'America/Santo_Domingo' },
-    { codigo: 'UY', nome: 'Uruguai', fuso: 'America/Montevideo' },
-    { codigo: 'VE', nome: 'Venezuela', fuso: 'America/Caracas' },
-] as const;
-
-export function fusoValido(fuso: string) {
-    if (!/^[A-Za-z]+(\/[A-Za-z0-9_+-]+)+$/.test(fuso)) return false;
-    try {
-        new Intl.DateTimeFormat('en-US', { timeZone: fuso });
-        return true;
-    } catch {
-        return false;
-    }
-}
-
-export function fusosDasAmericas(): string[] {
-    const todos = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : [];
-    return todos.filter(f => f.startsWith('America/'));
+export function nomeDaUf(sigla: string): string {
+    return UFS.find(u => u.sigla === sigla)?.nome ?? sigla;
 }

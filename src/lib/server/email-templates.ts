@@ -205,6 +205,27 @@ export function emailPedidoAcesso(p: { para: string; ala: AlaEmail; solicitante:
     });
 }
 
+export function emailPedidoDeAla(p: {
+    para: string;
+    ala: { nome: string; cidade: string; estado: string };
+    solicitante: { nome: string; email: string };
+}) {
+    const quem = p.solicitante.nome || p.solicitante.email;
+    const comEmail = p.solicitante.nome ? `${p.solicitante.nome} (${p.solicitante.email})` : p.solicitante.email;
+    return montar({
+        para: p.para,
+        assunto: `Pedido de nova ala — ${p.ala.nome}`,
+        previa: `${quem} pediu para usar o calendário com a ${p.ala.nome}.`,
+        titulo: 'Pedido de nova ala',
+        paragrafos: [
+            `${comEmail} pediu para usar o calendário com a ${p.ala.nome}, de ${p.ala.cidade} (${p.ala.estado}).`,
+            'A ala só aparece no site depois que for aprovada. Para ver o pedido, abra o painel e toque no botão dourado, no canto da tela.',
+        ],
+        botao: { texto: 'Abrir o painel', url: urlDoSite('/dashboard') },
+        pararDeReceber: false,
+    });
+}
+
 export function emailAcessoAprovado(p: { para: string; ala: AlaEmail }) {
     return montar({
         para: p.para,

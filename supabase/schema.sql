@@ -7,27 +7,27 @@ alter default privileges for role postgres in schema public
     revoke all on sequences from anon, authenticated;
 
 create table public.ala (
-    id           integer generated always as identity primary key,
-    nome         varchar(100) not null,
-    descricao    varchar(150),
-    endereco     varchar(200),
-    slug         text not null unique,
-    pais         char(2) not null,
-    estado       varchar(60) not null,
-    cidade       varchar(80) not null,
-    fuso_horario varchar(64) not null,
-    constraint ala_slug_formato check (slug ~ '^[a-z0-9_-]{1,60}$'),
-    constraint ala_pais_formato check (pais ~ '^[A-Z]{2}$'),
-    constraint ala_estado_valido check (
-        length(btrim(estado)) between 1 and 60
-        and estado !~ '[<>]' and estado !~ '[[:cntrl:]]'
-        and (pais <> 'BR' or estado in (
-            'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA',
-            'PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'))
-    ),
+    id                integer generated always as identity primary key,
+    nome              varchar(100) not null,
+    slug              text not null unique,
+    estado            varchar(60) not null,
+    cidade            varchar(80) not null,
+    fuso_horario      varchar(64) not null,
+    status            text not null default 'ativa',
+    criado_em         timestamptz not null default now(),
+    pedido_por        uuid references auth.users (id) on delete set null,
+    pedido_conta_nova boolean not null default false,
+    constraint ala_slug_formato check (slug ~ '^[a-z0-9_-]{1,100}$'),
+    constraint ala_status_valido check (status in ('pendente', 'ativa')),
+    constraint ala_estado_valido check (estado in (
+        'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA',
+        'PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO')),
     constraint ala_cidade_valida check (length(btrim(cidade)) between 2 and 80 and cidade !~ '[<>]' and cidade !~ '[[:cntrl:]]'),
     constraint ala_fuso_formato check (fuso_horario ~ '^[A-Za-z]+(/[A-Za-z0-9_+-]+)+$')
 );
+
+create index idx_ala_status on public.ala using btree (status);
+create index idx_ala_pedido_por on public.ala using btree (pedido_por);
 
 create table public.agendamento (
     id        integer generated always as identity primary key,
