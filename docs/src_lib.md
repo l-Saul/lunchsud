@@ -45,11 +45,11 @@ nos avisos do cron.
 
 ---
 
-## `calendar-event.ts`: o almoço na agenda do celular
+## `calendar-event.ts`: o almoço na agenda
 
-Monta o evento do botão "Adicionar à agenda do celular" (confirmação do
-`BookingModal`). Sem dependência de servidor: o link do Google é usado no
-navegador e o `.ics` na rota.
+Monta o evento das opções do "Adicionar à agenda" (`AddToCalendar`, na
+confirmação do `BookingModal`). Sem dependência de servidor: os links do Google e
+do Outlook são usados no navegador e o `.ics` na rota.
 
 - Evento de **dia inteiro** ("Almoço dos missionários"), com a descrição
   "Almoço dos missionários da \<ala\>. Precisa desmarcar? Fale com a liderança
@@ -57,12 +57,17 @@ navegador e o `.ics` na rota.
 - `linkGoogleAgenda(dateISO, nomeAla)`: URL do Google Agenda
   (`action=TEMPLATE`, `dates=AAAAMMDD/AAAAMMDD` com o fim **exclusivo**, o dia
   seguinte). O link não aceita lembrete: vale o padrão da pessoa.
+- `linkOutlook(dateISO, nomeAla)`: URL do Outlook na web
+  (`outlook.live.com/calendar/0/deeplink/compose`, `allday=true`, `startdt` e
+  `enddt` com o dia seguinte). Também sem lembrete.
 - `arquivoIcs({ dateISO, nomeAla, slug, agora })`: texto `.ics` (RFC 5545)
   com `DTSTART;VALUE=DATE` / `DTEND` (dia seguinte), `UID` estável por ala e
   dia (adicionar duas vezes não duplica em quem respeita o UID) e um
   **`VALARM` às 9h da véspera** (`TRIGGER:-PT15H`, contado da meia-noite do
   dia). Texto escapado (`\`, `;`, `,`, quebra de linha), linhas dobradas em
-  75 bytes e `CRLF`, como a norma pede.
+  75 bytes e `CRLF`, como a norma pede. Cuidado no código: no arquivo o `;` vira `\;`, e a string em JavaScript
+  é `'\\;'` (escrever `'\;'` dá só `';'`; esse erro deixava nome de ala com
+  `;` estragar o evento).
 
 ## `phone.ts`: telefone
 

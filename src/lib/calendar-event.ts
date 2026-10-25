@@ -26,10 +26,23 @@ export function linkGoogleAgenda(dateISO: string, nomeAla: string) {
     return `https://calendar.google.com/calendar/render?${params}`;
 }
 
+export function linkOutlook(dateISO: string, nomeAla: string) {
+    const params = new URLSearchParams({
+        path: '/calendar/action/compose',
+        rru: 'addevent',
+        subject: TITULO,
+        startdt: dateISO,
+        enddt: somarDias(dateISO, 1),
+        allday: 'true',
+        body: descricao(nomeAla),
+    });
+    return `https://outlook.live.com/calendar/0/deeplink/compose?${params}`;
+}
+
 function escaparIcs(texto: string) {
     return texto
         .replace(/\\/g, '\\\\')
-        .replace(/;/g, '\;')
+        .replace(/;/g, '\\;')
         .replace(/,/g, '\\,')
         .replace(/\r?\n/g, '\\n');
 }

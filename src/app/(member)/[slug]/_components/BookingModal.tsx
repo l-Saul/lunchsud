@@ -7,7 +7,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { normalizarTelefone } from '@/lib/phone'
 import { tituloDoDia } from '@/lib/date'
-import { linkGoogleAgenda } from '@/lib/calendar-event'
+import { AddToCalendar } from './AddToCalendar'
 import { Spinner } from '@/components/Spinner'
 import { Modal } from '@/components/Modal'
 import { ErrorMessage } from '@/components/ErrorMessage'
@@ -38,7 +38,6 @@ export function BookingModal({
     const [erro, setErro] = useState('')
     const [loading, setLoading] = useState(false)
     const [confirmado, setConfirmado] = useState(false)
-    const [apple] = useState(() => /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent))
     const nomeRef = useRef<HTMLInputElement>(null)
     const telefoneRef = useRef<HTMLInputElement>(null)
     const confirmadoRef = useRef<HTMLHeadingElement>(null)
@@ -109,23 +108,13 @@ export function BookingModal({
                         </svg>
                     </span>
                     <div className="flex flex-col gap-1">
-                        <h2 id="agendado-titulo" ref={confirmadoRef} tabIndex={-1} className="text-2xl font-semibold text-text focus:outline-none">
+                        <h2 id="agendado-titulo" ref={confirmadoRef} tabIndex={-1} className="text-xl font-semibold text-text focus:outline-none">
                             Almoço agendado!
                         </h2>
                         <p className="text-lg text-text">{titulo}</p>
                         <p className="wrap-anywhere text-base text-muted">{nomeAla}</p>
                     </div>
-                    <a
-                        href={apple ? `/api/agenda/${slug}?data=${data}` : linkGoogleAgenda(data, nomeAla)}
-                        {...(apple ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
-                        className={`${botao('primario', 'grande')} mt-2 w-full`}
-                    >
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
-                            <rect x="3" y="4" width="18" height="18" rx="2" />
-                            <path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4" />
-                        </svg>
-                        Adicionar à agenda do celular
-                    </a>
+                    <AddToCalendar slug={slug} data={data} nomeAla={nomeAla} />
                     <button
                         type="button"
                         onClick={onClose}

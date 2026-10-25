@@ -61,12 +61,21 @@ Cartão branco com fitinha e florzinha. Props: `nome` (do perfil), `alas`,
   generoso, para não confundir com o pedido de acesso): **"Sua ala ainda não usa
   o calendário?"** (`h3`) e "A presidência pode pedir agora. Quando o pedido for
   aprovado, a ala aparece no site." com o botão `secundario` **"Pedir para usar
-  o calendário"**. Para quem criou conta de líder na tela errada. Tocar **não
-  abre modal**: os campos do **`WardForm modo="pedido"`** aparecem ali mesmo,
-  com `contaLogada` = a conta da pessoa (sem ala, então sem aviso) e "Minha
-  conta" já escolhido. Com a própria conta, depois de enviar a página
-  recarrega e mostra o "Quase lá" da ala pendente; com conta nova, aparece
-  "Pedido enviado!" com o e-mail. Enviando: `disabled`,
+  o calendário"**. Para quem criou conta de líder na tela errada.
+- **Um caminho de cada vez** (estado `pedindoAla`): tocar no botão **troca o
+  conteúdo do cartão**, sem modal. Somem a busca e o "Pedir acesso" (e a ala
+  marcada é esquecida); aparecem o botão **"‹ Voltar e procurar a minha ala"**
+  (rosa-claro com texto framboesa e contorno, 48px de altura: parece botão e
+  chama atenção, pedido do dono; antes era um link azul "Voltar para a lista de
+  alas", que passava despercebido e falava em "lista"), **"Pedir uma
+  ala nova"** e o **`WardForm modo="pedido"`** em dois passos, com `contaLogada`
+  = a conta da pessoa (sem ala, então sem aviso) e "Minha conta" já escolhido.
+  Assim **não dá para pedir acesso e criar ala ao mesmo tempo**. No servidor
+  também não: a conta tem um vínculo só (índice único), `/api/acesso/solicitar`
+  recusa quem já tem vínculo, e o pedido de ala com a própria conta troca o
+  vínculo.
+- Enviado com a própria conta: a página recarrega e mostra o "Quase lá" da ala
+  pendente. Com conta nova: "Pedido enviado!" com o e-mail. Enviando: `disabled`,
   `aria-busy`, Spinner e "Enviando…".
 - `POST /api/acesso/solicitar { alaId }`:
   - sucesso → `router.refresh()` (a página passa a mostrar "aguardando");

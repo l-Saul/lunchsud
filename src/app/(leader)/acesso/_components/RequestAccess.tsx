@@ -102,73 +102,95 @@ export default function RequestAccess({
             ) : (
                 <>
                     <h2 className="text-xl font-semibold text-text">Olá, {nome}!</h2>
-                    <p className="text-base text-muted">
-                        Escolha a sua ala para pedir acesso ao painel.
-                    </p>
 
-                    <div className="w-full text-left">
-                        <WardFilter
-                            alas={alas.map(a => ({ ...a, chave: String(a.id) }))}
-                            instrucao="Toque na sua ala:"
-                            marcada={alaId === null ? null : String(alaId)}
-                            desativado={loading}
-                            onEscolher={a => {
-                                setAlaId(Number(a.chave));
-                                setErro('');
-                            }}
-                        />
-                    </div>
-
-                    {erro && (
-                        <ErrorMessage key={erro}>{erro}</ErrorMessage>
-                    )}
-
-                    <button
-                        onClick={pedirAcesso}
-                        disabled={!alaId || loading}
-                        aria-busy={loading}
-                        className={`${botao('primario', 'grande')} w-full`}
-                    >
-                        {loading && <Spinner />}
-                        {loading ? 'Enviando…' : 'Pedir acesso'}
-                    </button>
-
-                    <div className="mt-6 flex w-full flex-col gap-4 border-t border-primary/10 pt-8 text-left">
-                        {enviadoPara ? (
-                            <div role="status" className="flex animate-aparecer flex-col gap-2">
-                                <h3 className="text-lg font-semibold text-text">Pedido enviado!</h3>
-                                <p className="text-base text-muted">
-                                    Quando a ala e o acesso ao painel forem aprovados, chega um e-mail para{' '}
-                                    <strong className="wrap-anywhere text-text">{enviadoPara}</strong>.
+                    {pedindoAla ? (
+                        <div className="flex w-full animate-aparecer flex-col gap-5 text-left">
+                            <button
+                                type="button"
+                                onClick={() => { setPedindoAla(false); setEnviadoPara(null); }}
+                                className="inline-flex min-h-12 items-center gap-2 self-start rounded-xl bg-accent-soft px-4 py-2 text-left text-base font-semibold text-accent ring-1 ring-accent/25 transition duration-100 hover:bg-accent/15 active:scale-[0.98] cursor-pointer"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+                                    <path d="m15 18-6-6 6-6" />
+                                </svg>
+                                Voltar e procurar a minha ala
+                            </button>
+                            <div>
+                                <h3 className="text-lg font-semibold text-text">Pedir uma ala nova</h3>
+                                <p className="mt-1 text-base text-muted">
+                                    Quando o pedido for aprovado, a ala aparece no site e chega um e-mail.
                                 </p>
                             </div>
-                        ) : (
-                            <>
+                            {enviadoPara ? (
+                                <div role="status" className="flex animate-aparecer flex-col gap-2">
+                                    <p className="text-lg font-semibold text-text">Pedido enviado!</p>
+                                    <p className="text-base text-muted">
+                                        Quando a ala e o acesso ao painel forem aprovados, chega um e-mail para{' '}
+                                        <strong className="wrap-anywhere text-text">{enviadoPara}</strong>.
+                                    </p>
+                                </div>
+                            ) : (
+                                <WardForm
+                                    modo="pedido"
+                                    contaLogada={{ nome, email, ala: null }}
+                                    onEnviado={(para, usouConta) => {
+                                        if (usouConta) router.refresh();
+                                        else setEnviadoPara(para);
+                                    }}
+                                />
+                            )}
+                        </div>
+                    ) : (
+                        <>
+                            <p className="text-base text-muted">
+                                Escolha a sua ala para pedir acesso ao painel.
+                            </p>
+
+                            <div className="w-full text-left">
+                                <WardFilter
+                                    alas={alas.map(a => ({ ...a, chave: String(a.id) }))}
+                                    instrucao="Toque na sua ala:"
+                                    marcada={alaId === null ? null : String(alaId)}
+                                    desativado={loading}
+                                    onEscolher={a => {
+                                        setAlaId(Number(a.chave));
+                                        setErro('');
+                                    }}
+                                />
+                            </div>
+
+                            {erro && (
+                                <ErrorMessage key={erro}>{erro}</ErrorMessage>
+                            )}
+
+                            <button
+                                onClick={pedirAcesso}
+                                disabled={!alaId || loading}
+                                aria-busy={loading}
+                                className={`${botao('primario', 'grande')} w-full`}
+                            >
+                                {loading && <Spinner />}
+                                {loading ? 'Enviando…' : 'Pedir acesso'}
+                            </button>
+
+                            <div className="mt-6 flex w-full flex-col gap-4 border-t border-primary/10 pt-8 text-left">
                                 <div>
                                     <h3 className="text-lg font-semibold text-text">Sua ala ainda não usa o calendário?</h3>
                                     <p className="mt-1 text-base text-muted">
                                         A presidência pode pedir agora. Quando o pedido for aprovado, a ala aparece no site.
                                     </p>
                                 </div>
-                                {pedindoAla ? (
-                                    <div className="animate-aparecer">
-                                        <WardForm
-                                            modo="pedido"
-                                            contaLogada={{ nome, email, ala: null }}
-                                            onEnviado={(para, usouConta) => {
-                                                if (usouConta) router.refresh();
-                                                else setEnviadoPara(para);
-                                            }}
-                                        />
-                                    </div>
-                                ) : (
-                                    <button type="button" onClick={() => setPedindoAla(true)} className={`${botao('secundario', 'grande')} w-full`}>
-                                        Pedir para usar o calendário
-                                    </button>
-                                )}
-                            </>
-                        )}
-                    </div>
+                                <button
+                                    type="button"
+                                    onClick={() => { setPedindoAla(true); setAlaId(null); setErro(''); }}
+                                    disabled={loading}
+                                    className={`${botao('secundario', 'grande')} w-full`}
+                                >
+                                    Pedir para usar o calendário
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </>
             )}
 

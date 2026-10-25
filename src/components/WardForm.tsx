@@ -47,11 +47,19 @@ export function WardForm(props: Props) {
     const [errosConta, setErrosConta] = useState<ErrosConta>({});
     const [erro, setErro] = useState('');
     const [salvando, setSalvando] = useState(false);
+    const [passo, setPasso] = useState<1 | 2>(1);
     const abertoEm = useRef(0);
+    const tituloPasso = useRef<HTMLParagraphElement>(null);
+    const mudouPasso = useRef(false);
 
     useEffect(() => {
         abertoEm.current = Date.now();
     }, []);
+
+    useEffect(() => {
+        if (mudouPasso.current) tituloPasso.current?.focus();
+        mudouPasso.current = true;
+    }, [passo]);
 
     const unidade = tipo === 'ramo' ? 'do ramo' : 'da ala';
     const nomeFinal = nomeSemTipo(nome).length >= 2 ? normalizarNomeAla(nome, tipo) : '';
@@ -74,25 +82,33 @@ export function WardForm(props: Props) {
         if (errosConta[c]) setErrosConta(e => ({ ...e, [c]: undefined }));
     }
 
-    function conferir() {
+    function conferirAla() {
         const novos: Partial<Record<CampoAla, string>> = {};
         if (!nomeFinal) novos.nome = `Digite o nome ${unidade}.`;
         if (!estado) novos.estado = 'Escolha o estado.';
         if (cidade.trim().length < 2) novos.cidade = 'Digite a cidade.';
-        const novosConta = pedido && !usarConta ? conferirConta(conta) : {};
         setErros(novos);
-        setErrosConta(novosConta);
+        const primeiro = ORDEM_ALA.find(c => novos[c]);
+        if (primeiro) document.getElementById(campoId(primeiro))?.focus();
+        return !primeiro;
+    }
 
-        const primeiroAla = ORDEM_ALA.find(c => novos[c]);
-        const primeiroConta = ORDEM_CONTA.find(c => novosConta[c]);
-        const alvo = primeiroAla ? campoId(primeiroAla) : primeiroConta ? idDoCampoConta(primeiroConta, prefixoConta) : null;
-        if (alvo) document.getElementById(alvo)?.focus();
-        return !alvo;
+    function conferirLider() {
+        const novos = usarConta ? {} : conferirConta(conta);
+        setErrosConta(novos);
+        const primeiro = ORDEM_CONTA.find(c => novos[c]);
+        if (primeiro) document.getElementById(idDoCampoConta(primeiro, prefixoConta))?.focus();
+        return !primeiro;
     }
 
     async function enviar(e: React.FormEvent) {
         e.preventDefault();
-        if (salvando || !conferir()) return;
+        if (salvando) return;
+        if (pedido && passo === 1) {
+            if (conferirAla()) setPasso(2);
+            return;
+        }
+        if (pedido ? !conferirLider() : !conferirAla()) return;
 
         setErro('');
         setSalvando(true);
@@ -142,8 +158,8 @@ export function WardForm(props: Props) {
         'aria-describedby': [erros[c] && `${campoId(c)}-erro`, dica].filter(Boolean).join(' ') || undefined,
     });
 
-    return (
-        <form onSubmit={enviar} noValidate className="relative flex flex-col gap-5">
+    const camposDaAla = (
+        <>
             <div className="flex flex-col gap-2">
                 <p id={`${id}-tipo`} className={rotulo}>É ala ou ramo?</p>
                 <ChoiceGroup
@@ -180,51 +196,111 @@ export function WardForm(props: Props) {
                 )}
             </div>
 
-            <div className="flex flex-col gap-1.5">
-                <label htmlFor={campoId('estado')} className={rotulo}>Estado</label>
-                <SelectField
-                    id={campoId('estado')}
-                    name="estado-ala"
-                    autoComplete="off"
-                    value={estado}
-                    onChange={e => mudar('estado', e.target.value, setEstado)}
-                    disabled={salvando}
-                    erro={!!erros.estado}
-                    {...ligacao('estado')}
-                >
-                    <option value="">Escolha…</option>
-                    {UFS.map(uf => (
-                        <option key={uf.sigla} value={uf.sigla}>{uf.nome}</option>
-                    ))}
-                </SelectField>
-                {erroDe('estado')}
-            </div>
+            <div className="grid gap-5 @md:grid-cols-2 @md:gap-4">
+                <div className="flex min-w-0 flex-col gap-1.5">
+                    <label htmlFor={campoId('estado')} className={rotulo}>Estado</label>
+                    <SelectField
+                        id={campoId('estado')}
+                        name="estado-ala"
+                        autoComplete="off"
+                        value={estado}
+                        onChange={e => mudar('estado', e.target.value, setEstado)}
+                        disabled={salvando}
+                        erro={!!erros.estado}
+                        {...ligacao('estado')}
+                    >
+                        <option value="">Escolha…</option>
+                        {UFS.map(uf => (
+                            <option key={uf.sigla} value={uf.sigla}>{uf.nome}</option>
+                        ))}
+                    </SelectField>
+                    {erroDe('estado')}
+                </div>
 
-            <div className="flex flex-col gap-1.5">
-                <label htmlFor={campoId('cidade')} className={rotulo}>Cidade</label>
-                <input
-                    id={campoId('cidade')}
-                    name="cidade-ala"
-                    type="text"
-                    autoComplete="off"
-                    autoCapitalize="words"
-                    placeholder="Ex.: Curitiba"
-                    value={cidade}
-                    onChange={e => mudar('cidade', e.target.value, setCidade)}
-                    disabled={salvando}
-                    className={campo(!!erros.cidade)}
-                    {...ligacao('cidade')}
-                />
-                {erroDe('cidade')}
+                <div className="flex min-w-0 flex-col gap-1.5">
+                    <label htmlFor={campoId('cidade')} className={rotulo}>Cidade</label>
+                    <input
+                        id={campoId('cidade')}
+                        name="cidade-ala"
+                        type="text"
+                        autoComplete="off"
+                        autoCapitalize="words"
+                        placeholder="Ex.: Curitiba"
+                        value={cidade}
+                        onChange={e => mudar('cidade', e.target.value, setCidade)}
+                        disabled={salvando}
+                        className={campo(!!erros.cidade)}
+                        {...ligacao('cidade')}
+                    />
+                    {erroDe('cidade')}
+                </div>
             </div>
+        </>
+    );
 
-            {pedido && (
+    if (!pedido) {
+        return (
+            <form onSubmit={enviar} noValidate className="@container flex flex-col gap-5">
+                {camposDaAla}
+                {erro && <ErrorMessage key={erro}>{erro}</ErrorMessage>}
+                <div className="flex flex-wrap gap-3">
+                    <button
+                        type="button"
+                        onClick={props.modo === 'owner' ? props.onCancelar : undefined}
+                        disabled={salvando}
+                        className={`${botao('secundario')} grow basis-32`}
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={salvando}
+                        aria-busy={salvando}
+                        className={`${botao('primario')} grow basis-40`}
+                    >
+                        {salvando && <Spinner className="h-4 w-4" />}
+                        {salvando ? 'Criando…' : 'Criar e entrar'}
+                    </button>
+                </div>
+            </form>
+        );
+    }
+
+    return (
+        <form onSubmit={enviar} noValidate className="@container relative flex flex-col gap-5">
+            <p ref={tituloPasso} tabIndex={-1} className="text-base font-semibold text-secondary focus:outline-none">
+                Passo {passo} de 2 · {passo === 1 ? 'A ala' : 'Quem vai cuidar do calendário'}
+            </p>
+
+            {passo === 1 ? (
                 <>
-                    <div className="mt-2 flex flex-col gap-1 border-t border-slate-200 pt-5">
+                    {camposDaAla}
+                    <button type="submit" className={`${botao('primario', 'grande')} w-full`}>
+                        Continuar
+                    </button>
+                </>
+            ) : (
+                <>
+                    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl bg-cream px-4 py-3 ring-1 ring-primary/10">
+                        <div className="min-w-0">
+                            <p className="wrap-anywhere text-base font-semibold text-text">{nomeFinal}</p>
+                            <p className="wrap-anywhere text-base text-muted">{normalizarCidade(cidade)} ({estado})</p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => { setPasso(1); setErro(''); }}
+                            disabled={salvando}
+                            className="min-h-11 rounded-xl px-3 text-base font-semibold text-secondary underline underline-offset-4 transition hover:bg-secondary/10 disabled:opacity-60 cursor-pointer"
+                        >
+                            Alterar
+                        </button>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
                         <h3 id={`${id}-lider`} className="text-lg font-semibold text-text">Líder responsável</h3>
                         <p className="text-base text-muted">
                             {contaLogada
-                                ? 'Quem vai cuidar do calendário. Pode ser a sua conta ou uma conta nova.'
+                                ? 'Pode ser a sua conta ou uma conta nova.'
                                 : 'Crie a conta de quem vai cuidar do calendário. Com este e-mail e esta senha, a pessoa entra no painel depois que o pedido for aprovado.'}
                         </p>
                     </div>
@@ -274,41 +350,19 @@ export function WardForm(props: Props) {
                             onChange={e => setWebsite(e.target.value)}
                         />
                     </div>
-                </>
-            )}
 
-            {erro && <ErrorMessage key={erro}>{erro}</ErrorMessage>}
+                    {erro && <ErrorMessage key={erro}>{erro}</ErrorMessage>}
 
-            {pedido ? (
-                <button
-                    type="submit"
-                    disabled={salvando}
-                    aria-busy={salvando}
-                    className={`${botao('primario', 'grande')} w-full`}
-                >
-                    {salvando && <Spinner />}
-                    {salvando ? 'Enviando…' : 'Enviar pedido'}
-                </button>
-            ) : (
-                <div className="flex flex-wrap gap-3">
-                    <button
-                        type="button"
-                        onClick={props.modo === 'owner' ? props.onCancelar : undefined}
-                        disabled={salvando}
-                        className={`${botao('secundario')} grow basis-32`}
-                    >
-                        Cancelar
-                    </button>
                     <button
                         type="submit"
                         disabled={salvando}
                         aria-busy={salvando}
-                        className={`${botao('primario')} grow basis-40`}
+                        className={`${botao('primario', 'grande')} w-full`}
                     >
-                        {salvando && <Spinner className="h-4 w-4" />}
-                        {salvando ? 'Criando…' : 'Criar e entrar'}
+                        {salvando && <Spinner />}
+                        {salvando ? 'Enviando…' : 'Enviar pedido'}
                     </button>
-                </div>
+                </>
             )}
         </form>
     );

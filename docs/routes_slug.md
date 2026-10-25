@@ -20,6 +20,7 @@ src/app/(member)/[slug]/
   _components/
     WardBooking.tsx           estado da página, ao vivo, avisos; abre o modal
     BookingModal.tsx          modal de agendar (nome + telefone → /api/agendar) e confirmação
+    AddToCalendar.tsx         "Adicionar à agenda": a pessoa escolhe Google, Apple, Outlook ou arquivo
     MonthCalendar.tsx         abas de mês + grade do mês (só apresentação)
 ```
 
@@ -334,20 +335,33 @@ Os campos usam o padrão `campo()` do site (`field-classes`, ver
 O modal não fecha: troca o conteúdo pelo cartão de confirmação, e o **foco vai
 para o título** (leitor de tela anuncia na hora).
 
-- Círculo azul com ✓, **"Almoço agendado!"** (`h2` `text-2xl`), a data por
-  extenso ("Quinta-feira, 12 de novembro") e o nome da ala.
-- **"Adicionar à agenda do celular"** (botão principal, azul). Evento de **dia
-  inteiro**, com lembrete na véspera às 9h ([src_lib.md](src_lib.md),
-  `calendar-event.ts`). O destino depende do aparelho:
-  - **Apple** (iPhone, iPad, Mac; `navigator.userAgent`): link para
-    `GET /api/agenda/<slug>?data=…`, que devolve um `.ics`. Arquivo gerado no
-    navegador (blob) costuma não abrir a Agenda no Safari; servido pelo site, abre.
-  - **Outros** (Android, Windows): link do **Google Agenda**
-    (`calendar.google.com/calendar/render?action=TEMPLATE…`), em nova aba, que
-    abre o app direto. O lembrete fica o padrão da pessoa (o link não aceita).
+- Círculo azul com ✓, **"Almoço agendado!"** (`h2` `text-xl`, como todo título
+  de estado), a data por extenso ("Quinta-feira, 12 de novembro") e o nome da ala.
+- **"Adicionar à agenda"** (botão principal, azul): o `AddToCalendar` (abaixo).
+  A pessoa **escolhe a agenda que usa**, no celular e no computador (pedido do
+  dono: quem tem iPhone e usa Google Agenda, por exemplo).
 - **"Voltar ao calendário"** (contorno) fecha o modal. Esc e toque fora também.
 - "Precisa desmarcar? Fale com a liderança da ala." (a pessoa não desmarca
   sozinha; "liderança" porque o líder pode ser homem ou mulher).
+
+## `AddToCalendar.tsx` (client)
+
+O "Adicionar à agenda" da confirmação. Evento de **dia inteiro**, com lembrete na
+véspera às 9h quando a agenda aceita ([src_lib.md](src_lib.md), `calendar-event.ts`).
+
+- Fechado: botão principal "Adicionar à agenda" (ícone de calendário).
+- Tocou: no lugar dele aparece **"Em qual agenda?"** e uma lista de botões
+  (contorno, `botao('secundario', 'grande')`), com o foco no primeiro:
+  1. **Google Agenda**: link do Google (`linkGoogleAgenda`), em nova aba; no
+     celular abre o aplicativo. O link não aceita lembrete (vale o padrão da pessoa);
+  2. **Agenda do iPhone ou do Mac**: `GET /api/agenda/<slug>?data=…`, o `.ics`
+     servido pelo site (arquivo gerado no navegador não abre a Agenda no Safari);
+  3. **Outlook**: link do Outlook na web (`linkOutlook`), em nova aba;
+  4. **Outra agenda (baixar o arquivo)**: o mesmo `.ics` com `download`, para
+     qualquer outro aplicativo (Samsung, Outlook do computador, Thunderbird…).
+  Em aparelho Apple (`navigator.userAgent`) a opção da Apple vem primeiro; nos
+  outros, a do Google. Os links externos têm o ícone de "abre em outra aba" e o
+  texto "(abre em outra aba)" para leitor de tela.
 
 ## `MonthCalendar.tsx` (client)
 

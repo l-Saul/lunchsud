@@ -256,8 +256,18 @@ o `/acesso` (escolhe a ala e depois "Pedir acesso").
   - `onEnviado(email, usouConta)`. E o campo-armadilha `website`, fora da tela, e o `tempo`
   desde que o formulário abriu (ver `/api/alas/pedir` em
   [routes_api.md](routes_api.md)).
-- Confere tudo antes de enviar: erro embaixo de cada campo, foco no primeiro
-  errado. Erro do servidor (ala repetida, e-mail com conta, teto de pedidos)
+- **`modo="pedido"` em dois passos** (pedido do dono: o formulário inteiro
+  parecia enorme e dava a impressão de que tudo era obrigatório de uma vez):
+  "Passo 1 de 2 · A ala" (os campos da ala e **"Continuar"**) e "Passo 2 de 2 ·
+  Quem vai cuidar do calendário" (um resumo da ala, "Ala X / Cidade (UF)", com
+  **"Alterar"** para voltar, a parte do líder e **"Enviar pedido"**). A linha do
+  passo recebe o foco ao trocar (o leitor de tela anuncia). O `modo="owner"`
+  continua num passo só, sem líder.
+- Estado e Cidade ficam **lado a lado** quando o formulário tem espaço
+  (container query `@md`, 28rem: o modal da home); no cartão estreito do
+  `/acesso`, um embaixo do outro.
+- Confere antes de seguir: o passo 1 confere a ala, o passo 2 a conta. Erro
+  embaixo de cada campo, foco no primeiro errado. Erro do servidor (ala repetida, e-mail com conta, teto de pedidos)
   vai no `ErrorMessage`, com o texto da rota.
 - Botões: pedido → "Enviar pedido" largo ("Enviando…"); owner → "Cancelar" e
   "Criar e entrar" ("Criando…").
