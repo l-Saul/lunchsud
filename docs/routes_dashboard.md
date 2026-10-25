@@ -17,8 +17,8 @@ src/app/(leader)/dashboard/
     HistoryCard.tsx                 card "Histórico de almoços" (3 meses anteriores)
     NotificationsCard.tsx           card "Notificações" (avisos por e-mail)
     UsersCard.tsx                   card "Usuários" (aprovar/remover acesso)
-    WardSwitcher.tsx                card do owner: trocar a ala em foco
-    CreateWardForm.tsx              "Criar nova ala" (dentro do WardSwitcher)
+    WardSwitcher.tsx                botão flutuante do owner + modal: trocar a ala em foco
+    CreateWardForm.tsx              "Criar nova ala" (dentro do modal do WardSwitcher)
     OpenCalendarButton.tsx          atalho para o calendário público da ala
     ShareLinkButtons.tsx            copiar e compartilhar o link da ala (ao lado do atalho)
     LogoutButton.tsx                botão Sair
@@ -38,7 +38,7 @@ Server Component busca de novo).
 | | owner (`perfil.is_owner`) | member |
 |---|---|---|
 | Alas | todas; a "ala em foco" vem do cookie `ala_atual` (ou a 1ª por nome) | só a do seu vínculo aprovado |
-| Trocar de ala / criar ala | sim (`WardSwitcher`) | não (o card nem aparece) |
+| Trocar de ala / criar ala | sim (`WardSwitcher`) | não (o botão nem aparece) |
 | Editar/remover almoço | da ala em foco | da sua ala |
 | Aprovar/remover usuário | de qualquer ala | da sua ala |
 
@@ -83,7 +83,7 @@ cada um.
 
 1. `DashboardClientGuard` envolvendo tudo; `DashboardRealtime` se houver ala em foco.
 2. `HeaderBand title="Painel da ala"` (só o título e a flor).
-3. **Linha da ala:** logo abaixo da faixa, **antes** do cartão do owner, em
+3. **Linha da ala:** logo abaixo da faixa, em
    **destaque com cor** (pedido do dono: "mais cor e vida"): degradê do azul de
    ação ao marinho (`bg-linear-to-r from-secondary to-primary`), sombra, foco
    dourado. O **nome da ala em foco** em branco (`text-xl`, negrito; "Selecione
@@ -91,12 +91,14 @@ cada um.
    dono recusou a faixinha vertical)
    (`flex-wrap`: com letra grande o botão desce). A pessoa lê em que ala está e
    acha o "Sair" logo de cara. Sem o " · owner" de antes (termo técnico na tela).
-4. `WardSwitcher`: só owner, e só se houver alas.
-5. Se a ala tem slug, uma linha com `OpenCalendarButton` (ocupa o espaço que sobra) e
+4. Se a ala tem slug, uma linha com `OpenCalendarButton` (ocupa o espaço que sobra) e
    os dois botões de ícone do `ShareLinkButtons` (copiar e compartilhar), todos com
    a mesma altura (`items-stretch`, `gap-2`, `sm:gap-3`).
-6. `MonthImageExport` (cartão "Gerar imagem do calendário") → `BookingsCard` →
+5. `MonthImageExport` (cartão "Gerar imagem do calendário") → `BookingsCard` →
    `HistoryCard` → `NotificationsCard` (só com ala em foco) → `UsersCard`.
+6. `WardSwitcher` (só owner, e só se houver alas): **fora** da `<section>` dos
+   cartões, no fim do `<main>`. É o botão fixo no canto inferior esquerdo da
+   tela (ver a seção dele).
 
 Do item 3 em diante tudo fica no `<main>`, sobre o fundo creme, em
 `max-w-3xl`. Os cartões são brancos com `ring-1 ring-primary/10` e
@@ -118,7 +120,7 @@ Props: `mesAtual`, `mesSeguinte` (`YYYY-MM`), `agendamentos` (`{ id, data, nome,
 - Um `CollapsibleMonth` por mês, com o rótulo (`formatMonthLabel`), o total e os
   disponíveis.
 - Mês vazio: "Nenhum almoço agendado ainda." (caixa tracejada).
-- Cada almoço: medalhão azul (`size-14`) com o dia e o dia da semana ("27 /
+- Cada almoço: medalhão azul de ação (`bg-secondary`, o mesmo azul dos botões; `size-14`) com o dia e o dia da semana ("27 /
   ter", `diaTile`; o mês já está no título), nome (`wrap-anywhere`: quebra a
   linha, nunca "…"; aguenta 80 caracteres sem espaço), telefone e o
   `EditBookingModal`. **Uma coluna** sempre: em duas, os nomes eram cortados.
@@ -130,10 +132,27 @@ mês tem ~30 dias: recolher o de cima evita rolar tudo para editar o de baixo.
 
 - Props: `label` ("Junho 2026"), `total` (agendados), `disponiveis` (dias
   agendáveis, sem segundas), `defaultOpen` (padrão `true`), `children`.
-- Cabeçalho é um `<button>` com `aria-expanded`, seta que gira (−90° fechado) e
-  o selo rosa "X de Y dias".
+- Cabeçalho é um `<button>` com `aria-expanded`: seta azul de 24px que gira
+  (−90° fechado), o nome do mês e o selo rosa "X de Y dias". Sem texto
+  "Abrir"/"Fechar" (o dono testou e não gostou).
 - Abre e fecha **animando a altura só com CSS**: a linha do grid vai de `0fr` a
   `1fr` (200 ms). Fechado, o conteúdo fica `inert` (fora do Tab e do leitor de tela).
+- **Cabeçalho grudado no topo** (pedido do dono): com o mês aberto, ao rolar a
+  lista o cabeçalho fica no alto da tela (`sticky top-0`), para fechar sem subir
+  tudo. Ele vive dentro da `<section>` do mês, então **sai sozinho quando o mês
+  acaba** (o do mês seguinte assume) e quando a pessoa sai do card. Fechado, não
+  gruda (a seção tem só a altura do cabeçalho). Fundo branco de ponta a ponta do
+  card (`-mx-4`/`sm:-mx-8`, a mesma medida do `p-4`/`sm:p-8` do `BookingsCard`;
+  mude os dois juntos) e `-my-2 py-2`, que dá folga no topo sem mudar o layout
+  parado. Grudado, ganha `shadow-md` (estado `fixado`, medido no `scroll` pelo
+  `<div>` marcador antes do cabeçalho; `IntersectionObserver` não serve: num
+  pulo de rolagem o marcador vai de "abaixo da tela" para "acima" sem disparar).
+- **Fechar grudado não larga a pessoa no fim:** antes de fechar, se o cabeçalho
+  está grudado, a página sobe na hora (`scrollBy` com `behavior: 'instant'`; o
+  `html` tem `scroll-behavior: smooth`) a distância entre o marcador e o
+  cabeçalho. O cabeçalho fica parado sob o dedo e o mês seguinte aparece logo
+  abaixo. Sem isso, a lista sumia e a pessoa caía no meio do mês seguinte ou do
+  Histórico.
 
 ## `EditBookingModal.tsx` (client)
 
@@ -259,8 +278,17 @@ mês abriu: não há outro aviso no dia 1.
 
 - Nada vem ligado: o líder escolhe o que quer receber.
 - Cada chave é um `<button role="switch" aria-checked>` do tamanho da linha
-  (≥ 56px), com título, frase e o interruptor (azul ligado / cinza desligado,
-  bolinha muda de lado: não depende só da cor).
+  (≥ 56px), com título, frase e o interruptor. **Nome curto:** só o título
+  (`aria-labelledby`); a frase vai por `aria-describedby`.
+- Interruptor de 28 × 48px (`h-7 w-12`, bolinha `size-5`): **ligado** = trilho
+  framboesa (`accent`, pedido do dono; branco sobre ele dá 5,9:1), bolinha
+  branca à direita; **desligado** = trilho branco com contorno
+  cinza `faded` (5,4:1) e bolinha cinza à esquerda (antes era cinza-claro,
+  ~1,5:1, abaixo do mínimo de 3:1). O estado se vê pela cor do trilho **e**
+  pela posição da bolinha, e o leitor de tela lê pelo `aria-checked`. **Sem
+  texto "Ligado"/"Desligado"** embaixo: o dono tirou, junto com o tamanho
+  antigo (32 × 56px), que achou grande. O alvo de toque continua sendo a linha
+  inteira.
 - A lista está em `AVISOS`, no próprio componente.
 - Não há aviso de almoço editado ou removido: quem faz isso é o próprio líder.
 - O e-mail "Pedido aprovado" **sempre** é enviado à pessoa aprovada e não aparece aqui.
@@ -324,27 +352,55 @@ Exporta `UsersCard` e o tipo `Usuario = { id (do vínculo ala_membro), nome, ema
 
 ## `WardSwitcher.tsx` (client, só owner)
 
-Cartão branco, como os outros (`<section>`), com o ícone num quadradinho azul
-claro e "Acesso owner / Acesso a todas as alas":
+**Discreto de propósito** (pedido do dono): só o owner vê, então não ocupa
+espaço no painel. Antes era um cartão branco entre a linha da ala e os botões;
+virou um **botão redondo flutuante no canto inferior esquerdo** que abre um
+modal.
 
-1. **Trocar de ala**: `<select id="trocar-ala">` do sistema (chevron próprio com
-   `appearance-none`). Opção "Selecione uma ala…" só quando não há ala em foco.
-2. **Criar nova ala**: o `CreateWardForm`, abaixo de uma linha separadora.
+- **Botão:** `size-15` (60px, ícone de 30px) no celular e `sm:size-18` (72px,
+  ícone `sm:size-9` de 36px) a partir de 640px: o dono pediu maior,
+  "principalmente no desktop, que tem espaço". **Dourado** (`bg-gold`, pedido do dono) com
+  ícone de engrenagem azul-marinho (as cores do `botao('dourado')`), sombra e
+  **`opacity-60`** (meio transparente, deixa ver a página atrás; fica inteiro
+  no hover e no foco).
+  `aria-label` e `title` "Administração geral", `aria-haspopup="dialog"`.
+- **Posição:** **sempre flutuando** (pedido do dono): `fixed bottom-4 left-4`
+  (`sm:bottom-6 sm:left-6`, alinhado à margem do `<main>`), por cima de tudo (`z-30`:
+  acima do cabeçalho grudado dos meses, abaixo dos modais e do `NoticeBar`).
+  No fim da página ele fica por cima do ícone de Cristo do `Footer`, que está
+  no mesmo canto: o dono sabe e preferiu assim (antes era `sticky` e parava
+  acima do rodapé; ele não quis).
+- **Modal** (`Modal`, `max-w-lg`): título `h2` **"Administração geral"**
+  (`text-xl`; quebra a linha com letra grande: `min-w-0 hyphens-auto
+  wrap-break-word`, senão empurrava o X para fora em 320px) e o X "Fechar"
+  (44px), como o `EditBookingModal`. Sem o "Acesso a todas as alas" do cartão
+  antigo. Dentro:
+  1. **Trocar de ala**: uma **lista de botões**, uma ala por linha (`<ul>`
+     com `aria-labelledby="trocar-ala"`, `min-h-12`, `text-lg`, nome com
+     `wrap-anywhere`). A ala em foco fica azul (`bg-secondary`, texto branco)
+     com ✓ e `aria-current`; as outras, brancas com contorno. Tocar numa ala
+     troca na hora; tocar na atual não faz nada. **Não volte ao `<select>`:**
+     no computador o menu dele é o do sistema (escuro, letra pequena, solto
+     por cima do modal) e não dá para estilizar; o dono pediu para ajustar.
+     Sem ala em foco, nenhuma fica marcada.
+  2. **Criar nova ala**: o `CreateWardForm`, abaixo de uma linha separadora.
 
 ### Trocar
 
 1. Ignora se for a mesma ala ou se já houver transição.
-2. Mostra o `LoadingOverlay` "Trocando de ala…" (tela toda).
+2. **Fecha o modal** e mostra o `LoadingOverlay` "Trocando de ala…" (tela
+   toda). Fechar antes é de propósito: os dois são camadas de `useModalLayer`
+   e não devem ficar abertos juntos.
 3. `focarAla(alaId)` → `POST /api/ala-atual { alaId }` (grava o cookie
    `ala_atual`). Devolve `false` em erro **ou sem internet**: aí o overlay some
-   e o `<select>`, controlado por `atualId`, volta para a ala atual.
+   e nada muda (a marca de ala atual vem de `atualId`).
 4. Deu certo → `router.refresh()`. O overlay **fica** até o servidor renderizar
    os dados novos: um efeito em `[atualId]` limpa a transição quando a ala em
    foco muda (exceção `eslint-disable-next-line react-hooks/set-state-in-effect`).
 
 ### Ala criada (`entrarNaNova`, chamado pelo `CreateWardForm`)
 
-Tenta focar a ala nova. Se conseguiu, mostra "Abrindo a ala…" e o efeito de
+Fecha o modal e tenta focar a ala nova. Se conseguiu, mostra "Abrindo a ala…" e o efeito de
 `[atualId]` encerra o overlay. Se não conseguiu, **só recarrega**, sem overlay
 (não haveria troca de ala para encerrá-lo e a tela ficaria presa); a ala nova
 aparece na lista.
@@ -352,8 +408,8 @@ aparece na lista.
 ## `CreateWardForm.tsx` (client, só owner)
 
 Fechado: botão tracejado **"+ Criar nova ala"** (texto azul). Aberto: o
-formulário (com X "Cancelar" no canto, que limpa tudo). Fica dentro do cartão
-branco do `WardSwitcher`: rótulos em texto escuro, campos com borda cinza.
+formulário (com X "Cancelar" no canto, que limpa tudo). Fica dentro do modal
+do `WardSwitcher`: rótulos em texto escuro, campos com borda cinza.
 
 ### Campos
 
@@ -456,6 +512,12 @@ O cartão **"Gerar imagem do calendário"** (título do dono), logo **antes** de
 Agendamentos. Props: `meses` (`YYYY-MM`[]: o atual e o seguinte),
 `agendamentos`.
 
+- **Prévia:** miniatura da imagem do mês escolhido (o próprio `MonthImage`
+  reduzido com `zoom: 224/1024`, caixa fixa de 224px com cantos e sombra),
+  que muda ao trocar o mês: a pessoa vê o que vai baixar. `role="img"` com
+  `aria-label` "Prévia da imagem de \<mês\>" (o conteúdo é `aria-hidden`).
+  No computador fica à esquerda das abas e dos botões; no celular, em cima.
+  Largura em px de propósito: com letra grande ela não cresce e não estoura.
 - **Mês:** as abas `MonthTabs` ("Outubro" / "Novembro", as mesmas do calendário
   público; `label` "Mês da imagem"). Começa no mês atual.
 - **"Baixar imagem"** (ícone de download): salva `almocos-<mês>-<ano>.png`
@@ -511,7 +573,10 @@ O calendário **desenhado para a imagem**, separado do calendário público.
 - **Nome**: quebra até palavra sem espaço (`overflowWrap: anywhere`), fonte
   menor se tiver mais de 16 caracteres (15 em vez de 18) e **no máximo 3 linhas**
   (o nome completo fica no painel). Telefone também quebra.
-- Rodapé: "Obrigada por servir os missionários" entre florzinhas.
+- Rodapé: o lema **"A caridade nunca falha"** (plano de design, 6.3) em serifa,
+  20px, negrito médio, azul-marinho, e embaixo "Obrigada por servir os
+  missionários" entre florzinhas (14px, cinza). Também está embaixo do
+  calendário público (ver [routes_slug.md](routes_slug.md)).
 
 ## Pontos de atenção
 

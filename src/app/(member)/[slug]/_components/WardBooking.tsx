@@ -4,7 +4,7 @@
  */
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Link from 'next/link'
 import { MonthCalendar } from './MonthCalendar'
 import { BookingModal, type Agendado } from './BookingModal'
@@ -12,6 +12,7 @@ import { useBookingsRealtime, type MudancaAgendamento } from '@/hooks/use-bookin
 import { HeaderBand } from '@/components/HeaderBand'
 import { NoticeBar, type Aviso } from '@/components/NoticeBar'
 import { botao } from '@/components/button-classes'
+import { lembrarAla } from '@/lib/last-ward'
 
 type DiaOcupado = {
     id: number
@@ -36,6 +37,8 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
     const [telefone, setTelefone] = useState('')
     const [diasOcupados, setDiasOcupados] = useState<DiaOcupado[]>(ocupados)
     const [aviso, setAviso] = useState<Aviso | null>(null)
+
+    useEffect(() => lembrarAla(slug), [slug])
 
     const [anoBase, mesBase] = mesAtual.split('-').map(Number)
     const inicioMesAtual = new Date(anoBase, mesBase - 1, 1)
@@ -135,6 +138,14 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
                                 }}
                             />
                         </div>
+
+                        <figure className="mx-auto max-w-md px-4 pt-2 text-center">
+                            <span aria-hidden="true" className="block h-8 font-serif text-6xl leading-none text-accent/70">“</span>
+                            <blockquote className="font-serif text-xl font-semibold text-primary">
+                                <p>A caridade nunca falha</p>
+                            </blockquote>
+                            <figcaption className="mt-1 text-base text-muted">Lema da Sociedade de Socorro</figcaption>
+                        </figure>
 
                         <div className="mt-12 border-t border-primary/10 pt-12 sm:mt-16 sm:pt-14">
                             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-2xl bg-background px-4 py-4 ring-1 ring-primary/10 sm:px-5">

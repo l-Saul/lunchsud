@@ -53,7 +53,7 @@ export function BookingsCard({ mesAtual, mesSeguinte, agendamentos }: Props) {
                                                 key={row.id}
                                                 className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 p-3 transition hover:border-accent/40 hover:bg-accent/5"
                                             >
-                                                <div className="flex size-14 shrink-0 flex-col items-center justify-center rounded-xl bg-primary text-white">
+                                                <div className="flex size-14 shrink-0 flex-col items-center justify-center rounded-xl bg-secondary text-white">
                                                     <span className="text-lg font-bold leading-none">{dia}</span>
                                                     <span className="mt-1 text-base leading-none text-white/85">{semana}</span>
                                                 </div>

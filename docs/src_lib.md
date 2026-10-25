@@ -168,6 +168,22 @@ quem chama trata (o servidor recusa).
 
 ---
 
+## `last-ward.ts`: a última ala aberta no aparelho
+
+Guarda no `localStorage` (chave `ultima-ala`) **só o slug** da última página
+de ala aberta, para o atalho "Continuar na sua ala" da home (ver
+[routes_home.md](routes_home.md)).
+
+- `lembrarAla(slug)`: chamado pela `WardBooking` ao abrir a página da ala.
+- `alaLembrada()` → `string | null`: lido pela home.
+- Os dois em `try/catch`: em aba anônima, navegador que bloqueia o
+  armazenamento ou WebView do WhatsApp, o acesso pode **lançar erro**. Aí não
+  grava e devolve `null`; nada quebra.
+- Não guarde nome nem telefone aqui (decidido: não lembrar dados de quem
+  agenda; o celular já autopreenche).
+
+---
+
 ## `site-url.ts`: URL pública do site
 
 `siteUrl()` monta links absolutos, como o `redirectTo` do e-mail de redefinição
@@ -372,8 +388,10 @@ O **padrão visual de todo aviso** fica em `src/lib/server/email/aviso.html`
 (junto do código que o usa), com o
 mesmo visual do site e dos e-mails do Supabase (`supabase/email/`): faixa azul
 no topo com o ícone e o nome do site, fundo creme, cartão branco (borda
-`#e0e2e2`) com fitinha framboesa→dourado, florzinha, título com serifa e o
-rodapé "Feito por um membro voluntário… Não é mantido nem aprovado pela Igreja…" em cinza. Estilos **inline**, sem Tailwind.
+`#e0e2e2`) com fitinha framboesa→dourado, florzinha e título com serifa. Sem
+frase de aviso sobre a Igreja no rodapé (o dono tirou de tudo); o único rodapé
+é o "Para parar…" em cinza, quando o aviso pode ser desligado. Estilos
+**inline**, sem Tailwind.
 Para mudar o visual de todos os avisos, edite esse arquivo.
 
 Marcadores que o código preenche:
@@ -391,7 +409,7 @@ Blocos que o código mantém ou tira inteiros:
 | Bloco | Fica quando |
 |---|---|
 | `<!--botao-->…<!--/botao-->` | o e-mail tem botão (só os de pedido para usar o painel) |
-| `<!--parar-->…<!--/parar-->` | o aviso pode ser desligado no card: "Para parar de receber este aviso, desligue-o no painel, em Notificações." (sem link). Sai no "Pedido aprovado" |
+| `<!--parar-->…<!--/parar-->` | o aviso pode ser desligado no card: a linha inteira do rodapé com "Para parar de receber este aviso, desligue-o no painel, em Notificações." (sem link). Sai no "Pedido aprovado", que fica sem rodapé |
 
 O arquivo é lido do disco na primeira vez
 (`process.cwd()/src/lib/server/email/aviso.html`) e fica em memória. O

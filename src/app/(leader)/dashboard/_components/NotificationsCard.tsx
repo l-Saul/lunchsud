@@ -45,7 +45,8 @@ const AVISOS: { tipo: TipoAviso; titulo: string; descricao: string }[] = [
     },
 ];
 
-function Chave({ titulo, descricao, ligado, onAlternar }: {
+function Chave({ id, titulo, descricao, ligado, onAlternar }: {
+    id: string;
     titulo: string;
     descricao: string;
     ligado: boolean;
@@ -56,19 +57,21 @@ function Chave({ titulo, descricao, ligado, onAlternar }: {
             type="button"
             role="switch"
             aria-checked={ligado}
+            aria-labelledby={`${id}-titulo`}
+            aria-describedby={`${id}-descricao`}
             onClick={onAlternar}
             className="flex min-h-14 w-full items-center justify-between gap-4 rounded-2xl border border-slate-200 p-4 text-left transition duration-100 hover:border-secondary/60 active:scale-[0.99] cursor-pointer"
         >
             <span className="min-w-0">
-                <span className="block font-semibold text-text">{titulo}</span>
-                <span className="mt-1 block text-base leading-snug text-muted">{descricao}</span>
+                <span id={`${id}-titulo`} className="block font-semibold text-text">{titulo}</span>
+                <span id={`${id}-descricao`} className="mt-1 block text-base leading-snug text-muted">{descricao}</span>
             </span>
             <span
                 aria-hidden="true"
-                className={`relative inline-flex h-8 w-14 shrink-0 items-center rounded-full transition-colors duration-200 ${ligado ? 'bg-secondary' : 'bg-slate-300'}`}
+                className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors duration-200 ${ligado ? 'bg-accent' : 'bg-white ring-2 ring-inset ring-faded'}`}
             >
                 <span
-                    className={`inline-block h-6 w-6 rounded-full bg-white shadow transition-transform duration-200 ${ligado ? 'translate-x-7' : 'translate-x-1'}`}
+                    className={`inline-block size-5 rounded-full shadow transition-transform duration-200 ${ligado ? 'translate-x-6 bg-white' : 'translate-x-1 bg-faded'}`}
                 />
             </span>
         </button>
@@ -177,6 +180,7 @@ export function NotificationsCard({ alaId, email, preferenciasIniciais }: Props)
                 {AVISOS.map(aviso => (
                     <Chave
                         key={aviso.tipo}
+                        id={`aviso-${aviso.tipo}`}
                         titulo={aviso.titulo}
                         descricao={aviso.descricao}
                         ligado={preferencias[aviso.tipo]}

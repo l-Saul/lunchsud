@@ -123,10 +123,6 @@ export default async function DashboardPage() {
                         <LogoutButton />
                     </div>
 
-                    {ctx.isOwner && alasParaTroca.length > 0 && (
-                        <WardSwitcher alas={alasParaTroca} atualId={alaId} />
-                    )}
-
                     {ala?.slug && (
                         <div className="flex flex-wrap items-stretch gap-2 sm:gap-3">
                             <OpenCalendarButton slug={ala.slug} />
@@ -151,6 +147,10 @@ export default async function DashboardPage() {
 
                     <UsersCard usuarios={usuarios} />
                 </section>
+
+                {ctx.isOwner && alasParaTroca.length > 0 && (
+                    <WardSwitcher alas={alasParaTroca} atualId={alaId} />
+                )}
             </main>
         </DashboardClientGuard>
     );

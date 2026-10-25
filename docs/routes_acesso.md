@@ -63,7 +63,8 @@ Cartão branco com fitinha e florzinha. Props: `nome` (do perfil), `alas`,
 ### Com vínculo pendente: aguardando
 
 - "Quase lá, \<nome\>!" e "Seu acesso à **\<ala\>** está aguardando a aprovação
-  de um responsável da ala."
+  de um responsável da ala. Você recebe um e-mail quando for aprovado." (o
+  e-mail "Pedido aprovado" sai quando alguém aprova)"
 - **"Já fui aprovado? Atualizar"** → `router.refresh()` dentro de
   `useTransition`. Enquanto atualiza: Spinner e "Atualizando…". Aprovado, a
   página redireciona para o painel.

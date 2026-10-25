@@ -14,6 +14,8 @@ página parte disso.
 ```
 src/app/(member)/[slug]/
   page.tsx                    Server Component: busca a ala e os dias ocupados; metadata
+  opengraph-image.tsx         imagem da prévia do link (WhatsApp): nome da ala + flor
+  _fonts/                     Source Serif 4 e Source Sans 3 (TTF, sem alteração) + OFL.md
   error.tsx                   tela de erro ("Tentar de novo")
   _components/
     WardBooking.tsx           estado da página, ao vivo, avisos; abre o modal
@@ -51,10 +53,36 @@ Busca a ala pelo slug (`buscarAlaPorSlug`) e monta:
 - **Prévia de compartilhamento** (WhatsApp etc.): título
   `Calendário de almoços da <ala>` e descrição
   `Agende seu almoço para nossos missionários ❤️`. Quem recebe já sabe de qual
-  ala é e o que fazer. **Sem imagem** (`openGraph` sem `images`, Twitter
-  `card: 'summary'`): o preview mostra só texto.
+  ala é e o que fazer. A **imagem** vem do `opengraph-image.tsx` (o Next põe
+  `og:image` e `twitter:image` sozinho); Twitter com
+  `card: 'summary_large_image'`.
 - Slug que não existe: título `Página não encontrada` (qualquer endereço de um
   nível cai aqui, não só ala digitada errado) e `robots: noindex, nofollow`.
+
+## `opengraph-image.tsx` (imagem da prévia do link)
+
+Plano de design, 6.4. Quando o líder manda o link da ala no grupo do WhatsApp,
+a prévia mostra uma imagem com a cara do site: dá credibilidade (a irmã
+reconhece que é da ala dela, não um link estranho).
+
+- 1200 × 630 PNG (`size`, `contentType`), ~60 KB (o WhatsApp recusa imagem
+  grande). `alt`: "Calendário de almoços dos missionários da ala".
+- Desenho: o mesmo fundo da `HeaderBand` (degradê marinho com brilho dourado e
+  rosa, copiado do `bg-band` do `globals.css`: mudou um, mude o outro), "Almoço
+  dos Missionários" pequeno em cima (Source Sans, branco 85%), o **nome da ala**
+  grande em serifa branca (100px; 72px com mais de 26 caracteres) e a flor
+  (`Flower`) entre as linhas douradas, como na faixa. Nome longo quebra a linha
+  (`wordBreak: 'break-word'`: nome de 80 caracteres sem espaço não estoura;
+  conferido).
+- Slug que não existe: a mesma imagem só com "Almoço dos Missionários" grande.
+- **Fontes:** o `ImageResponse` (`next/og`) não lê woff2 nem as fontes do
+  `next/font`; lê TTF. Os arquivos ficam em `_fonts/` (o `_` impede rota) e são
+  lidos com `readFile(path.join(process.cwd(), …))`; o Next inclui os arquivos
+  no pacote da função sozinho (conferido no `.nft.json` do build). **Não
+  recorte nem altere os TTF:** a licença (SIL OFL, `_fonts/OFL.md`, que vai
+  junto) reserva o nome "Source" para a fonte original.
+- Rota gerada: `/<slug>/opengraph-image-<hash>`; é pública (não passa pelo
+  `proxy.ts`) e só lê o nome da ala (`buscarAlaPorSlug`, com `cache()`).
 
 ### Página
 
@@ -169,6 +197,17 @@ conflito aparecia de novo no modal seguinte).
   contida: o calendário começa na primeira tela do celular.
 - Abaixo, no `<main>` sobre o creme: "Toque em um dia livre para agendar o
   almoço." (`text-lg`, texto escuro) e o calendário.
+- **Lema** logo abaixo do calendário (plano de design, 6.3, onde o dono pediu),
+  **como citação** (pedido do dono): `<figure>` centralizado com aspas grandes
+  “ em serifa framboesa (`text-6xl text-accent/70`, `aria-hidden`: o leitor de
+  tela não lê "aspas"), o `<blockquote>` "A caridade nunca falha" em serifa,
+  `text-xl`, negrito médio, azul-marinho (`text-primary`) e o `<figcaption>`
+  "Lema da Sociedade de Socorro" (`text-base`, cinza). **Sem itálico** (regra do
+  site). Também está na imagem do mês (ver
+  [routes_dashboard.md](routes_dashboard.md)).
+- **Lembra a ala no aparelho:** ao abrir, `lembrarAla(slug)` (efeito em
+  `[slug]`) grava a ala para o atalho "Continuar na sua ala" da home (ver
+  [routes_home.md](routes_home.md)).
 - **Acesso do líder**, depois do calendário: um espaço grande (~70px no celular,
   ~90px no computador, para não parecer parte do calendário), uma linha fina
   (`border-t border-primary/10`), outro espaço e uma linha branca **da largura do

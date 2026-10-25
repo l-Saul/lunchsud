@@ -51,9 +51,16 @@ também tirou "Entre para gerenciar os almoços da sua ala."). Repassa
 
 ### Modos
 
-`modo` alterna entre `'entrar'` e `'criar'` pelo botão de texto "Não tem conta?
-Criar conta" / "Já tem conta? Entrar". Trocar de modo limpa a confirmação de
-senha, o erro e o aviso.
+`modo` alterna entre `'entrar'` e `'criar'` pelo bloco de baixo, separado por
+uma linha: "Ainda não tem conta?" + botão secundário **"Criar conta"** (no modo
+entrar) ou "Já tem conta?" + **"Entrar com minha conta"** (no modo criar),
+`botao('secundario', 'grande')`, 52px. Antes era um link de texto de ~23px.
+Trocar de modo limpa a confirmação de senha, o erro e o aviso.
+
+- Sem a regra "Mínimo de 6 caracteres." embaixo do campo (o dono tirou); ela
+  aparece só no erro.
+- **"Esqueci minha senha"** continua com cara de link (sublinhado, cinza), mas
+  com área de toque de 48px (`min-h-12`).
 
 ### Entrar
 
@@ -95,7 +102,7 @@ o que fazer:
 
 | Erro do Supabase contém | Mensagem |
 |---|---|
-| `already registered` | "Já existe uma conta com esse e-mail. Toque em "Já tem conta? Entrar" ou em "Esqueci minha senha"." |
+| `already registered` | "Já existe uma conta com esse e-mail. Toque em "Entrar com minha conta", aqui embaixo, para entrar com ela." |
 | `password` | "Escolha uma senha mais forte (pelo menos 6 caracteres)." |
 | `email` | "Confira o e-mail digitado." |
 | outro | "Não foi possível criar a conta. Tente de novo." |

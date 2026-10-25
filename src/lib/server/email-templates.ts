@@ -30,7 +30,6 @@ type Conteudo = {
 const SITE_NO_AR = 'https://lunchsud.vercel.app';
 const MODELO = path.join(process.cwd(), 'src', 'lib', 'server', 'email', 'aviso.html');
 const PARAR = 'Para parar de receber este aviso, desligue-o no painel, em Notificações.';
-const RODAPE = 'Feito por um membro voluntário para ajudar as alas a organizar os almoços dos missionários. Não é mantido nem aprovado pela Igreja de Jesus Cristo dos Santos dos Últimos Dias.';
 
 let modelo: string | null = null;
 
@@ -120,7 +119,6 @@ function montar(c: Conteudo): Email {
         ...(c.lista ? [c.lista.titulo, c.lista.itens.map(linha).join('\n')].filter(Boolean) : []),
         ...(c.botao ? [`${c.botao.texto}: ${c.botao.url}`] : []),
         ...(c.pararDeReceber ? [PARAR] : []),
-        RODAPE,
     ].join('\n\n');
 
     return { para: c.para, assunto: c.assunto, html, texto };

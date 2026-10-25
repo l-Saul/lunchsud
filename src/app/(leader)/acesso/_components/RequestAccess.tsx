@@ -70,7 +70,8 @@ export default function RequestAccess({
                     <h2 className="text-xl font-semibold text-text">Quase lá, {nome}!</h2>
                     <p className="text-base text-muted">
                         Seu acesso à <strong className="text-text">{pendenteEm}</strong> está
-                        aguardando a aprovação de um responsável da ala.
+                        aguardando a aprovação de um responsável da ala. Você recebe um e-mail
+                        quando for aprovado.
                     </p>
                     <button
                         onClick={() => iniciarAtualizar(() => router.refresh())}

@@ -240,17 +240,34 @@ export default function MonthImage({ diasDoMes }: Props) {
                 <div
                     style={{
                         padding: '4px 24px 24px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 8,
+                        textAlign: 'center',
                         color: '#53575b',
-                        fontSize: 14,
                     }}
                 >
-                    <Flower size={16} />
-                    <span>Obrigada por servir os missionários</span>
-                    <Flower size={16} />
+                    <div
+                        style={{
+                            fontFamily: 'var(--font-serif), Georgia, serif',
+                            fontSize: 20,
+                            fontWeight: 600,
+                            color: AZUL,
+                        }}
+                    >
+                        A caridade nunca falha
+                    </div>
+                    <div
+                        style={{
+                            marginTop: 6,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8,
+                            fontSize: 14,
+                        }}
+                    >
+                        <Flower size={16} />
+                        <span>Obrigada por servir os missionários</span>
+                        <Flower size={16} />
+                    </div>
                 </div>
             </div>
         </div>

@@ -53,8 +53,9 @@ O ícone foi recortado de `public/lds.jpg` (na verdade um WebP, branco sobre
 transparente) logo abaixo da barra, sem o nome da Igreja. **Atenção:** o Cristo
 no arco é o símbolo oficial da Igreja (marca registrada). O dono foi avisado do
 risco de usar a marca num site não oficial, sem frase de aviso no site, e
-**decidiu manter** (25/10/2026). Os e-mails continuam com a frase "Feito por um
-membro voluntário… Não é mantido nem aprovado pela Igreja…" no rodapé.
+**decidiu manter** (25/10/2026). A frase "Feito por um membro voluntário… Não é
+mantido nem aprovado pela Igreja…" também saiu dos e-mails e do README: o dono
+não quer esse aviso **em lugar nenhum**. Não recoloque.
 
 Todo link externo: `target="_blank"` com `rel="noopener noreferrer"` e aviso de
 nova aba (ícone na tela, texto para leitor de tela).
@@ -111,7 +112,7 @@ tamanho)`, que devolve as classes; quem chama só acrescenta **layout** (largura
 | `primario` (padrão) | azul `bg-secondary`, texto branco, sombra | a ação principal da tela |
 | `secundario` | branco, contorno cinza, texto escuro | Cancelar, Manter, Voltar |
 | `perigo` | framboesa `bg-accent`, texto branco | remover, desligar (na confirmação) |
-| `dourado` | dourado `bg-gold`, texto marinho (7,8:1) | só o "Sair" do painel, sobre a linha azul (pedido do dono) |
+| `dourado` | dourado `bg-gold`, texto marinho (7,8:1) | só o "Sair" do painel, sobre a linha azul (pedido do dono). As mesmas cores (sem `botao()`, por ser redondo e só ícone) estão no botão flutuante do owner, no `WardSwitcher` |
 
 | `tamanho` | Medidas | Uso |
 |---|---|---|

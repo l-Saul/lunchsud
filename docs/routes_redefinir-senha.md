@@ -57,7 +57,7 @@ Prop `email: string | null`. Três telas, no mesmo cartão (fitinha + florzinha)
 | Campo | Atributos |
 |---|---|
 | Conta (escondido) | `type="email"`, `name="username"`, `autoComplete="username"`, `value={email}`, `readOnly`, `hidden`: diz ao gerenciador de senhas do celular de qual login é a senha nova |
-| Nova senha (`#nova-senha`) | `name="new-password"`, `autoComplete="new-password"` |
+| Nova senha (`#nova-senha`) | `name="new-password"`, `autoComplete="new-password"` (a regra dos 6 caracteres aparece só no erro; o dono tirou o texto fixo) |
 | Confirmar senha (`#confirmar-nova-senha`) | `name="new-password-confirm"`, `autoComplete="new-password"` |
 
 Cada campo de senha tem botão de olho (`aria-label` "Mostrar senha"/"Ocultar

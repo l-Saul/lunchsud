@@ -32,7 +32,7 @@ export async function generateMetadata(
             description: descricao,
         },
         twitter: {
-            card: 'summary',
+            card: 'summary_large_image',
             title: tituloCompartilhar,
             description: descricao,
         },

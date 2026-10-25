@@ -41,7 +41,8 @@ contraste, poucos passos, sem aglomerar informação.
 Sem cabeçalho, de propósito: JSON (`vercel.json`, `tsconfig.json`,
 `package.json`), `next-env.d.ts` (gerado pelo Next), os templates de e-mail em
 `supabase/email/` e `src/lib/server/email/aviso.html` (o HTML vai dentro de cada
-e-mail) e as migrations temporárias. `messages/` guarda só planos ainda não
+e-mail), as fontes da imagem de prévia do link em `src/app/(member)/[slug]/_fonts/`
+(TTF e a licença, sem alteração) e as migrations temporárias. `messages/` guarda só planos ainda não
 implementados (ex.: `design.md`), que não são `docs/` e podem ser apagados à
 vontade: nada do site depende dessa pasta. Implementou, documente em `docs/` e
 atualize ou remova o plano.
@@ -75,7 +76,7 @@ Regras:
 6. Antes de concluir, confira:
    ```bash
    # arquivos de código sem o cabeçalho
-   grep -rL --exclude="*.html" "leia CLAUDE.md" src next.config.ts eslint.config.mjs postcss.config.mjs supabase/schema.sql
+   grep -rL --exclude="*.html" --exclude-dir=_fonts "leia CLAUDE.md" src next.config.ts eslint.config.mjs postcss.config.mjs supabase/schema.sql
    # cabeçalhos que apontam para doc inexistente
    grep -rhoE "docs/[a-z_-]+\.md" src *.ts *.mjs supabase/schema.sql | sort -u | while read d; do [ -f "$d" ] || echo "falta $d"; done
    # arquivos sem seção no doc do seu cabeçalho
@@ -349,8 +350,8 @@ o arquivo. Nunca coloque SMTP em migration. Tudo em [`docs/database.md`](docs/da
   vermelho.
 - **Botão de ação: sempre `botao(tipo, tamanho)`** de
   `src/components/button-classes.ts` (primário azul, secundário com contorno,
-  perigo framboesa, dourado só no "Sair"; `normal` 48px no painel, `grande`
-  52px nas páginas públicas). Quem chama só acrescenta layout. Botão novo
+  perigo framboesa, dourado só no "Sair" e no botão flutuante do owner;
+  `normal` 48px no painel, `grande` 52px nas páginas públicas). Quem chama só acrescenta layout. Botão novo
   "do jeito dele" sai do padrão: não faça.
 - **Erro na tela:** o geral de um formulário ou ação vai no `ErrorMessage`
   (caixa rosa-claro com ícone, `role="alert"`) e diz o que fazer ("…e toque em

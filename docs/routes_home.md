@@ -7,7 +7,8 @@ Porta de entrada para quem não tem o link da ala. Mostra o logo, o título
 
 `src/app/(member)/page.tsx`: a página inteira é um componente client
 (`'use client'`). Dependências: `swr`,
-`src/components/{Spinner,HeaderBand}`, `GET /api/alas` (ver [routes_api.md](routes_api.md)).
+`src/components/{Spinner,HeaderBand}`, `src/lib/last-ward.ts` (última ala
+aberta), `GET /api/alas` (ver [routes_api.md](routes_api.md)).
 
 ## Renderização e dados
 
@@ -39,6 +40,28 @@ Porta de entrada para quem não tem o link da ala. Mostra o logo, o título
   do site, o mesmo do topo do calendário; `span` absoluto `w-1.5` com
   `overflow-hidden` no botão), texto marinho, `text-xl` (20px: é a ação
   principal da página); hover azul com texto branco.
+
+## "Continuar na sua ala" (última ala aberta)
+
+A irmã costuma usar sempre a mesma ala. Quando ela já abriu uma ala **neste
+aparelho**, a home mostra primeiro um atalho para ela (plano de design, 6.2):
+
+- A página da ala grava o slug (`lembrarAla`, ver [src_lib.md](src_lib.md)); a
+  home lê com `useSyncExternalStore(…, alaLembrada, () => null)`: no servidor e
+  na hidratação vale `null`, então não há diferença de HTML. Guarda **só o
+  slug**; o nome vem da lista de `/api/alas`, então ala renomeada aparece com o
+  nome novo e ala apagada (ou slug que não está na lista) **não mostra atalho**.
+- Botão azul cheio (`bg-secondary`), mesmo formato e fitinha dos outros, em duas
+  linhas: "Continuar na sua ala" (`text-base`, branco 85%) e o **nome da ala**
+  (`text-xl`, negrito). "Continuar na Ala X" foi evitado: o nome pode não
+  começar por "Ala" (ex.: "Ramo"), e a frase ficaria errada. Tocar funciona
+  igual aos outros botões ("Abrindo…" + spinner, todos desativados).
+- Embaixo: "Ou toque em outra ala:" (`text-lg`) e a lista **sem** a ala
+  lembrada (não aparece duas vezes). Só uma ala no sistema: só o atalho, sem
+  essa frase.
+- Sem `localStorage` (aba anônima, navegador que bloqueia): tudo funciona, só
+  não há atalho (`try/catch` no `last-ward.ts`).
+- Aparece junto com a lista (o `animate-aparecer` dela), sem pular depois.
 
 ## Layout
 

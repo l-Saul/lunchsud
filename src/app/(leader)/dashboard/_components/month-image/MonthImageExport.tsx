@@ -128,48 +128,64 @@ export default function MonthImageExport({ meses, agendamentos }: Props) {
                 <h2 className="min-w-0 hyphens-auto wrap-break-word text-xl font-semibold text-text">Gerar imagem do calendário</h2>
             </div>
 
-            <MonthTabs meses={meses} ativo={mes} onChange={setMes} label="Mês da imagem" />
-
-            {erro && <ErrorMessage key={erro}>{erro}</ErrorMessage>}
-
-            <div className="flex flex-wrap gap-3">
-                <button
-                    type="button"
-                    onClick={() => executar('baixar')}
-                    disabled={acao !== null}
-                    aria-busy={acao === 'baixar'}
-                    className={`${podeEnviar ? botao('secundario') : botao('primario')} grow basis-48`}
+            <div className="grid items-center gap-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-8">
+                <div
+                    role="img"
+                    aria-label={`Prévia da imagem de ${nomeDoMes(mes).toLowerCase()}`}
+                    className="mx-auto w-[224px] max-w-full overflow-hidden rounded-2xl shadow-md ring-1 ring-primary/10"
                 >
-                    {acao === 'baixar' ? (
-                        <Spinner className="h-5 w-5" />
-                    ) : (
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                            <path d="m7 10 5 5 5-5" />
-                            <path d="M12 15V3" />
-                        </svg>
-                    )}
-                    {acao === 'baixar' ? 'Gerando…' : 'Baixar imagem'}
-                </button>
+                    <div aria-hidden="true" className="pointer-events-none" style={{ zoom: 224 / 1024 }}>
+                        <div style={{ width: 1024 }}>
+                            <MonthImage diasDoMes={diasDoMes} />
+                        </div>
+                    </div>
+                </div>
 
-                {podeEnviar && (
-                    <button
-                        type="button"
-                        onClick={() => executar('enviar')}
-                        disabled={acao !== null}
-                        aria-busy={acao === 'enviar'}
-                        className={`${botao('primario')} grow basis-48`}
-                    >
-                        {acao === 'enviar' ? (
-                            <Spinner className="h-5 w-5" />
-                        ) : (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
-                                <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
-                            </svg>
+                <div className="flex min-w-0 flex-col gap-4">
+                    <MonthTabs meses={meses} ativo={mes} onChange={setMes} label="Mês da imagem" />
+
+                    {erro && <ErrorMessage key={erro}>{erro}</ErrorMessage>}
+
+                    <div className="flex flex-wrap gap-3">
+                        <button
+                            type="button"
+                            onClick={() => executar('baixar')}
+                            disabled={acao !== null}
+                            aria-busy={acao === 'baixar'}
+                            className={`${podeEnviar ? botao('secundario') : botao('primario')} grow basis-48`}
+                        >
+                            {acao === 'baixar' ? (
+                                <Spinner className="h-5 w-5" />
+                            ) : (
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <path d="m7 10 5 5 5-5" />
+                                    <path d="M12 15V3" />
+                                </svg>
+                            )}
+                            {acao === 'baixar' ? 'Gerando…' : 'Baixar imagem'}
+                        </button>
+
+                        {podeEnviar && (
+                            <button
+                                type="button"
+                                onClick={() => executar('enviar')}
+                                disabled={acao !== null}
+                                aria-busy={acao === 'enviar'}
+                                className={`${botao('primario')} grow basis-48`}
+                            >
+                                {acao === 'enviar' ? (
+                                    <Spinner className="h-5 w-5" />
+                                ) : (
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+                                        <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+                                    </svg>
+                                )}
+                                {acao === 'enviar' ? 'Gerando…' : 'Enviar no WhatsApp'}
+                            </button>
                         )}
-                        {acao === 'enviar' ? 'Gerando…' : 'Enviar no WhatsApp'}
-                    </button>
-                )}
+                    </div>
+                </div>
             </div>
 
             <div

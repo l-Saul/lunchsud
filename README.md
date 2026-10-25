@@ -66,6 +66,7 @@ Sem framer-motion, sem biblioteca de UI: animações só em CSS.
 |---|---|---|---|---|
 | `/` | estática + client | público | SWR em `/api/alas` | [home](docs/routes_home.md) |
 | `/[slug]` | dinâmica (SSR) | público | ala + dias ocupados da janela; Realtime | [slug](docs/routes_slug.md) |
+| `/[slug]/opengraph-image` | imagem (`next/og`) | público | nome da ala → PNG 1200×630 da prévia do link no WhatsApp | [slug](docs/routes_slug.md) |
 | `/admin` | dinâmica | público (redireciona logado) | Supabase Auth no client | [admin](docs/routes_admin.md) |
 | `/acesso` | dinâmica | logado sem ala | vínculo + alas | [acesso](docs/routes_acesso.md) |
 | `/redefinir-senha` | dinâmica | sessão do link | e-mail da sessão | [redefinir-senha](docs/routes_redefinir-senha.md) |
@@ -145,7 +146,8 @@ src/
     layout.tsx  globals.css  not-found.tsx  manifest.ts  robots.ts
   components/            usados por 2+ páginas (Spinner, Flower, Footer, LoadingOverlay)
   hooks/                 use-bookings-realtime (WebSocket)
-  lib/                   date, phone, location, wards, site-url, email-preferences, calendar-event
+  lib/                   date, phone, location, wards, site-url, email-preferences, calendar-event,
+                         last-ward (última ala aberta no aparelho)
   lib/server/            public-ward, session, validation,       (só servidor)
                          mailer, email-templates, notifications,
                          email/aviso.html (modelo dos avisos por e-mail)
@@ -256,6 +258,4 @@ build-manifest.json`).
 ---
 
 Desenvolvido por **Luis Henrique Engel Saul**:
-[luishsaul.com.br](https://luishsaul.com.br/#contato). Feito por um membro
-voluntário para ajudar as alas a organizar os almoços dos missionários. Não é
-mantido nem aprovado pela Igreja de Jesus Cristo dos Santos dos Últimos Dias.
+[luishsaul.com.br](https://luishsaul.com.br/#contato).

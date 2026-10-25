@@ -15,7 +15,7 @@ import { botao } from '@/components/button-classes';
 function mensagemDeCadastro(original: string) {
     const msg = original.toLowerCase();
     if (msg.includes('already registered')) {
-        return 'Já existe uma conta com esse e-mail. Toque em "Já tem conta? Entrar" ou em "Esqueci minha senha".';
+        return 'Já existe uma conta com esse e-mail. Toque em "Entrar com minha conta", aqui embaixo, para entrar com ela.';
     }
     if (msg.includes('password')) return 'Escolha uma senha mais forte (pelo menos 6 caracteres).';
     if (msg.includes('email')) return 'Confira o e-mail digitado.';
@@ -259,7 +259,7 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
                     type="button"
                     onClick={recuperarSenha}
                     disabled={loading}
-                    className="-mt-2 self-end text-base text-muted underline underline-offset-4 transition hover:text-secondary disabled:opacity-60 cursor-pointer"
+                    className="-my-2 inline-flex min-h-12 items-center self-end px-1 text-base text-muted underline underline-offset-4 transition hover:text-secondary disabled:opacity-60 cursor-pointer"
                 >
                     Esqueci minha senha
                 </button>
@@ -286,20 +286,23 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
                     : modo === 'entrar' ? 'Entrar' : 'Criar conta'}
             </button>
 
-            <button
-                type="button"
-                onClick={() => {
-                    setModo(m => (m === 'entrar' ? 'criar' : 'entrar'));
-                    setConfirmarSenha('');
-                    setErro('');
-                    setAviso('');
-                }}
-                className="text-center text-base text-muted transition hover:text-secondary cursor-pointer"
-            >
-                {modo === 'entrar'
-                    ? 'Não tem conta? Criar conta'
-                    : 'Já tem conta? Entrar'}
-            </button>
+            <div className="mt-2 flex flex-col items-center gap-3 border-t border-slate-200 pt-5">
+                <p className="text-base text-muted">
+                    {modo === 'entrar' ? 'Ainda não tem conta?' : 'Já tem conta?'}
+                </p>
+                <button
+                    type="button"
+                    onClick={() => {
+                        setModo(m => (m === 'entrar' ? 'criar' : 'entrar'));
+                        setConfirmarSenha('');
+                        setErro('');
+                        setAviso('');
+                    }}
+                    className={`${botao('secundario', 'grande')} w-full`}
+                >
+                    {modo === 'entrar' ? 'Criar conta' : 'Entrar com minha conta'}
+                </button>
+            </div>
         </form>
     );
 }
