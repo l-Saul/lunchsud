@@ -30,6 +30,7 @@ type Props =
     | { modo: 'pedido'; onEnviado: (email: string, usouConta: boolean) => void; contaLogada?: ContaLogada | null };
 
 type CampoAla = 'nome' | 'estado' | 'cidade';
+const ETAPAS = ['A ala', 'O líder'];
 const ORDEM_ALA: CampoAla[] = ['nome', 'estado', 'cidade'];
 
 export function WardForm(props: Props) {
@@ -49,7 +50,7 @@ export function WardForm(props: Props) {
     const [salvando, setSalvando] = useState(false);
     const [passo, setPasso] = useState<1 | 2>(1);
     const abertoEm = useRef(0);
-    const tituloPasso = useRef<HTMLParagraphElement>(null);
+    const tituloPasso = useRef<HTMLOListElement>(null);
     const mudouPasso = useRef(false);
 
     useEffect(() => {
@@ -268,9 +269,45 @@ export function WardForm(props: Props) {
 
     return (
         <form onSubmit={enviar} noValidate className="@container relative flex flex-col gap-5">
-            <p ref={tituloPasso} tabIndex={-1} className="text-base font-semibold text-secondary focus:outline-none">
-                Passo {passo} de 2 · {passo === 1 ? 'A ala' : 'Quem vai cuidar do calendário'}
-            </p>
+            <ol ref={tituloPasso} tabIndex={-1} aria-label="Etapas do pedido" className="flex flex-col gap-2 focus:outline-none">
+                <li className="sr-only">Passo {passo} de 2: {ETAPAS[passo - 1]}</li>
+                <li aria-hidden="true" className="flex items-center gap-2 px-1">
+                    {ETAPAS.map((_, i) => {
+                        const n = i + 1;
+                        const feito = n < passo;
+                        const atual = n === passo;
+                        return (
+                            <span key={n} className="contents">
+                                {i > 0 && (
+                                    <span className={`h-1 flex-1 rounded-full transition-colors ${passo > 1 ? 'bg-secondary' : 'bg-slate-200'}`} />
+                                )}
+                                <span
+                                    className={`flex size-10 shrink-0 items-center justify-center rounded-full text-lg font-bold transition-colors ${
+                                        atual
+                                            ? 'bg-secondary text-white shadow-md'
+                                            : feito
+                                                ? 'bg-secondary/15 text-secondary'
+                                                : 'bg-white text-muted ring-2 ring-inset ring-slate-300'
+                                    }`}
+                                >
+                                    {feito ? (
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M20 6 9 17l-5-5" />
+                                        </svg>
+                                    ) : n}
+                                </span>
+                            </span>
+                        );
+                    })}
+                </li>
+                <li aria-hidden="true" className="flex justify-between gap-3 text-base">
+                    {ETAPAS.map((rotulo, i) => (
+                        <span key={rotulo} className={i + 1 === passo ? 'font-semibold text-text' : 'text-muted'}>
+                            {rotulo}
+                        </span>
+                    ))}
+                </li>
+            </ol>
 
             {passo === 1 ? (
                 <>

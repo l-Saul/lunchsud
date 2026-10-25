@@ -258,10 +258,16 @@ o `/acesso` (escolhe a ala e depois "Pedir acesso").
   [routes_api.md](routes_api.md)).
 - **`modo="pedido"` em dois passos** (pedido do dono: o formulário inteiro
   parecia enorme e dava a impressão de que tudo era obrigatório de uma vez):
-  "Passo 1 de 2 · A ala" (os campos da ala e **"Continuar"**) e "Passo 2 de 2 ·
-  Quem vai cuidar do calendário" (um resumo da ala, "Ala X / Cidade (UF)", com
-  **"Alterar"** para voltar, a parte do líder e **"Enviar pedido"**). A linha do
-  passo recebe o foco ao trocar (o leitor de tela anuncia). O `modo="owner"`
+  passo 1 **"A ala"** (os campos da ala e **"Continuar"**) e passo 2 **"O
+  líder"** (um resumo da ala, "Ala X / Cidade (UF)", com **"Alterar"** para
+  voltar, a parte do líder e **"Enviar pedido"**).
+- **Indicador de etapas** no topo (`<ol aria-label="Etapas do pedido">`): dois
+  círculos de 40px ligados por uma linha, com "A ala" e "O líder" embaixo. O
+  passo atual é azul cheio com o número (e o nome em negrito); o já feito,
+  azul-claro com ✓; o próximo, branco com contorno cinza. A linha fica azul no
+  passo 2. O desenho é `aria-hidden`; o leitor de tela lê o item escondido
+  "Passo 1 de 2: A ala". Ao trocar de passo, o foco vai para o indicador (o
+  leitor anuncia o passo novo). O `modo="owner"`
   continua num passo só, sem líder.
 - Estado e Cidade ficam **lado a lado** quando o formulário tem espaço
   (container query `@md`, 28rem: o modal da home); no cartão estreito do
