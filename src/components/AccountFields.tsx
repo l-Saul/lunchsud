@@ -46,7 +46,7 @@ export function AccountFields({ modo, dados, onChange, erros = {}, disabled = fa
         'aria-describedby': erros[c] ? `${id(c)}-erro` : undefined,
     });
     const erro = (c: CampoConta) => erros[c] && (
-        <p id={`${id(c)}-erro`} className="text-base font-medium text-accent">{erros[c]}</p>
+        <p id={`${id(c)}-erro`} className="text-base font-semibold text-accent">{erros[c]}</p>
     );
 
     return (

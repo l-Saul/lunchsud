@@ -43,12 +43,19 @@ src/app/(member)/
    grande** e **sem escritura** (decisões do dono, 24 e 25/10/2026).
 2. **"Continuar na sua ala"**, se houver ala lembrada (abaixo).
 3. **`RequestWard`**: o grupo para pedir ala nova. **Logo depois do "Continuar"
-   e antes da busca**, por pedido do dono.
-4. **A busca**, num **cartão branco só** (`bg-background`, `ring-1`, sombra):
-   título `h2` **"Encontre a sua ala"** ("Encontre outra ala" quando há ala
-   lembrada) e o **`WardFilter`** (o mesmo do painel e do `/acesso`; ver
-   [src_components.md](src_components.md)) com a instrução "Toque na sua ala
-   para agendar.".
+   e antes da busca**, por pedido do dono, com espaço maior entre os dois
+   (`mt-12`, `sm:mt-14`), **sem linha**.
+4. **Linha e espaço** (`mt-12 border-t border-primary/10 pt-12`, `sm:mt-16
+   sm:pt-14`: a mesma divisória da página da ala, antes de "Faz parte da
+   presidência?") separam o pedido da busca, para não parecerem a mesma coisa.
+5. **A busca**, num **cartão branco só** (`bg-background`, `ring-1`, sombra):
+   título `h2` **"Procure a sua ala"** ("Procure outra ala" quando há ala
+   lembrada), "Escolha o estado e depois a cidade." e o **`WardFilter`** (o
+   mesmo do painel e do `/acesso`; ver [src_components.md](src_components.md))
+   com a instrução "Toque na sua ala para abrir o calendário.".
+
+Textos escritos para quem chega aqui (líderes e quem procura a ala): uma ideia
+por frase, quem faz o quê e o que acontece depois.
 
 Tudo no `<main>` sobre o creme, `max-w-xl`. Com letra grande em tela estreita,
 título e nomes **hifenizam** (`hyphens-auto` + `wrap-break-word`) em vez de
@@ -88,19 +95,26 @@ aparelho**, a home mostra primeiro um atalho para ela (plano de design, 6.2):
 Para a presidência de uma ala ou ramo que ainda não usa o calendário.
 
 - Cartão branco igual ao da busca (`rounded-2xl`, `ring-1`, `shadow-md`, `p-5`
-  / `sm:p-6`; `id="nova-ala"`): **"Sua ala ou ramo ainda não está aqui?"** (`h2`,
-  `text-xl`, como todo título de cartão), "A presidência pode pedir para usar o
-  calendário. O pedido é conferido antes de a ala aparecer no site." e o botão
-  `secundario` **"Pedir para usar o calendário"**.
+  / `sm:p-6`; `id="nova-ala"`): **"Sua ala ou ramo ainda não usa o
+  calendário?"** (`h2`, `text-xl`, como todo título de cartão), "Quem faz parte
+  da presidência pode pedir. Quando o pedido for aprovado, a ala aparece aqui e
+  chega um e-mail." e o botão `secundario` **"Pedir para usar o calendário"**.
+- **Ao abrir**, pergunta `GET /api/conta` se há alguém logado ("Carregando…"
+  com spinner enquanto isso). Logado, o `WardForm` recebe `contaLogada` e
+  oferece **"Minha conta"** (escolhida) ou **"Conta nova"**; com
+  a própria conta e uma ala, avisa que ela perde o acesso a essa ala (ver
+  `WardForm` em [src_components.md](src_components.md)). Sem login (ou se a
+  pergunta falhar), só o "Criar conta".
 - Abre um `Modal` ("Pedir para usar o calendário") com o **`WardForm
   modo="pedido"`**: a ala (ala ou ramo, nome, estado, cidade) e o **líder
   responsável** com os mesmos campos do "Criar conta" (`AccountFields`): o líder
   é sempre uma conta nova. Regras e proteções contra robô em
   [routes_api.md](routes_api.md) (`/api/alas/pedir`).
-- Enviado: o título vira **"Pedido enviado!"** e aparece (`role="status"`) "O
-  pedido foi enviado. Quando a ala e o acesso ao painel forem aprovados, chega
-  um e-mail para **\<e-mail\>**." + "Depois, é só entrar no painel com esse
-  e-mail e a senha que você escolheu." e o botão "Fechar".
+- Enviado: o título vira **"Pedido enviado!"** e aparece (`role="status"`)
+  "Quando a ala e o acesso ao painel forem aprovados, chega um e-mail para
+  **\<e-mail\>**." + "Depois, é só entrar no painel com esse e-mail e a senha
+  que você escolheu." ("…com a sua conta." se usou a própria) e o botão
+  "Fechar".
 - **`/#nova-ala`** abre o modal direto (efeito ao montar, com a exceção
   `react-hooks/set-state-in-effect`).
 - Nada aparece no site até o owner aprovar a ala; depois ele aprova o líder no

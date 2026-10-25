@@ -212,7 +212,8 @@ conflito aparecia de novo no modal seguinte).
 - **Acesso do líder**, depois do calendário: um espaço grande (~70px no celular,
   ~90px no computador, para não parecer parte do calendário), uma linha fina
   (`border-t border-primary/10`), outro espaço e uma linha branca **da largura do
-  calendário** com **"Faz parte da presidência?"** (texto do dono) e, embaixo, "Entre no painel da ala
+  calendário** com **"Faz parte da presidência?"** (texto do dono; `h2` em serifa,
+  `text-xl`, como todo título de cartão) e, embaixo, "Entre no painel da ala
   para ver quem agendou e organizar os almoços." à esquerda, e o botão azul
   padrão **"Entrar"** à direita (`flex-wrap`: com letra grande o botão desce).
   Leva a `/admin` (logado, o `/admin` manda direto para o painel). A linha em

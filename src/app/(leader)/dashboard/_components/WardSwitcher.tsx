@@ -166,7 +166,7 @@ export function WardSwitcher({ alas, atualId, pedidos }: { alas: Ala[]; atualId:
                                     return (
                                         <li key={p.id} className="flex flex-col gap-3 rounded-2xl border border-slate-200 p-4">
                                             <div className="min-w-0">
-                                                <p className="wrap-anywhere text-lg font-semibold text-text">{p.nome}</p>
+                                                <p className="wrap-anywhere text-base font-semibold text-text">{p.nome}</p>
                                                 <p className="text-base text-muted">{p.cidade} ({p.estado}) · pedido em {p.pedidoEm}</p>
                                                 {p.lider && (
                                                     <p className="wrap-anywhere text-base text-muted">

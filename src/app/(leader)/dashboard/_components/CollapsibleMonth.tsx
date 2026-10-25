@@ -57,7 +57,7 @@ export function CollapsibleMonth({ label, total, disponiveis, defaultOpen = true
                         </svg>
                         <h3 className="text-lg font-semibold text-text transition-colors group-hover:text-secondary">{label}</h3>
                     </span>
-                    <span className="rounded-full bg-accent/10 px-3 py-1 text-base font-medium text-accent">
+                    <span className="rounded-full bg-accent/10 px-3 py-1 text-base font-semibold text-accent">
                         {total} de {disponiveis} dias
                     </span>
                 </button>

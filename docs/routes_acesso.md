@@ -56,7 +56,17 @@ Cartão branco com fitinha e florzinha. Props: `nome` (do perfil), `alas`,
   [src_components.md](src_components.md)): Estado e Cidade em lista, as alas da
   cidade e a instrução "Toque na sua ala:". Tocar **marca** a ala (azul com ✓,
   `aria-pressed`); não envia nada ainda. O `<select>` de alas de antes saiu.
-- **"Pedir acesso"**: desativado sem ala escolhida. Enviando: `disabled`,
+- **"Pedir acesso"**: desativado sem ala escolhida.
+- **Embaixo, depois de uma linha** (`border-t border-primary/10`, espaço
+  generoso, para não confundir com o pedido de acesso): **"Sua ala ainda não usa
+  o calendário?"** (`h3`) e "A presidência pode pedir agora. Quando o pedido for
+  aprovado, a ala aparece no site." com o botão `secundario` **"Pedir para usar
+  o calendário"**. Para quem criou conta de líder na tela errada. Tocar **não
+  abre modal**: os campos do **`WardForm modo="pedido"`** aparecem ali mesmo,
+  com `contaLogada` = a conta da pessoa (sem ala, então sem aviso) e "Minha
+  conta" já escolhido. Com a própria conta, depois de enviar a página
+  recarrega e mostra o "Quase lá" da ala pendente; com conta nova, aparece
+  "Pedido enviado!" com o e-mail. Enviando: `disabled`,
   `aria-busy`, Spinner e "Enviando…".
 - `POST /api/acesso/solicitar { alaId }`:
   - sucesso → `router.refresh()` (a página passa a mostrar "aguardando");

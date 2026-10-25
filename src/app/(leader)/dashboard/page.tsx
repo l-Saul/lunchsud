@@ -63,15 +63,15 @@ export default async function DashboardPage() {
             .order('data', { ascending: true })
         : { data: [] };
 
-    const contagem = new Map<string, number>();
+    const datasPorMes = new Map<string, string[]>();
     for (const r of historicoRaw ?? []) {
         const ym = r.data.slice(0, 7);
-        contagem.set(ym, (contagem.get(ym) ?? 0) + 1);
+        datasPorMes.set(ym, [...(datasPorMes.get(ym) ?? []), r.data]);
     }
-    const historico: MesHistorico[] = Array.from(contagem, ([ym, total]) => ({
+    const historico: MesHistorico[] = Array.from(datasPorMes, ([ym, datas]) => ({
         ym,
-        total,
-        disponiveis: diasDisponiveisNoMes(ym),
+        total: datas.length,
+        disponiveis: diasDisponiveisNoMes(ym, datas),
     })).sort((a, b) => b.ym.localeCompare(a.ym));
 
     const { data: membros } = alaId !== null
@@ -143,7 +143,7 @@ export default async function DashboardPage() {
             <HeaderBand title="Painel da ala" />
 
             <main className="px-4 py-8 sm:px-6 sm:py-10">
-                <section className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+                <section className="mx-auto flex w-full max-w-3xl flex-col gap-[1.575rem]">
                     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-3xl bg-linear-to-r from-secondary to-primary px-4 py-4 text-white shadow-md [--focus-color:var(--color-gold)] sm:px-6">
                         <p className="min-w-0 wrap-anywhere text-xl font-semibold">
                             {ala?.nome ?? 'Selecione uma ala'}

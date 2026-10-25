@@ -31,7 +31,7 @@ mês "viraria" perto da meia-noite, e Manaus vira o dia 1 h depois de São Paulo
 | `formatMonthLabel('2026-06')` | `'Junho 2026'` | nomes em português |
 | `diaTile('2026-06-07')` | `{ dia: '7', semana: 'dom' }` | o medalhão de data do painel (dia da semana em UTC ao meio-dia, sem depender do fuso) |
 | `isPday('2026-06-08')` | `true` | segunda-feira? Calcula em UTC (`T00:00:00Z`), então não depende do fuso do servidor |
-| `diasDisponiveisNoMes('2026-06')` | `26` | dias do mês menos as segundas (o "Y" do "X de Y dias") |
+| `diasDisponiveisNoMes('2026-06', datasComAlmoco?)` | `26` | dias do mês menos as segundas **sem almoço** (o "Y" do "X de Y dias"). Segunda com almoço (o líder pode mover um para lá) conta como dia de almoço: sem isso o painel mostrava "28 de 27 dias" e a barra do histórico passava do fim |
 | `nomeDoMes('2026-12')` | `'Dezembro'` | só o nome do mês |
 | `somarDias('2026-10-30', 3)` | `'2026-11-02'` | soma dias em texto `YYYY-MM-DD` (conta em UTC, ao meio-dia, sem efeito de fuso) |
 | `dataPorExtenso('2026-04-16')` | `'quinta-feira, 16 de abril'` | data por extenso dos e-mails |
@@ -147,6 +147,9 @@ Nome de exibição, antes de gravar. `tipo` é `'ala'` ou `'ramo'` (`TipoUnidade
 
 - espaços normalizados; **title case** (é nome próprio), com as preposições
   `de, da, do, das, dos, e` minúsculas no meio ("Ala Vila do Sol");
+- **maiúscula depois de hífen, apóstrofo e barra** ("São-José", "D'Ávila",
+  "Centro/Sul"); no meio do nome, o "d'" fica minúsculo ("Santa Bárbara
+  d'Oeste");
 - **algarismo romano no meio fica em maiúscula** ("jardim ii" → "Ala Jardim
   II", até XXXIX): nome de ala com número é comum, e o title case virava "Ii"
   (achado na varredura). Palavra toda em maiúscula **não** é preservada: quem
@@ -163,21 +166,30 @@ Importa para a busca da home: a cidade é agrupada pelo texto exato.
 
 ### `gerarSlug(uf, cidade, nome)`
 
-O link público das **alas novas**: `<uf>_<cidade>_<nome>`. **Não invente outro
-formato. E o slug de uma ala que já existe nunca muda** (regra de negócio: o
-link já está nos grupos do WhatsApp; as 3 primeiras alas mantêm o formato
-antigo, só o nome).
+O link público das **alas novas**: `<uf>_<cidade>_<nome>`, com **`_` entre as
+partes** e **`-` no lugar dos espaços dentro de cada parte** (pedido do dono):
+`/pr_curitiba_sao-lourenco`. **Não invente outro formato. E o slug de uma ala
+que já existe nunca muda** (regra de negócio: o link já está nos grupos do
+WhatsApp; as alas antigas mantêm o formato delas, como `/sao_lourenco` e
+`/pr_curitiba_teste_aprovacao`).
 
-1. cada parte: separa letra e acento (`NFD`) e remove o que não é ASCII (tira
-   acentos), minúsculo, espaços e pontuação viram `_`, sem `_` nas pontas;
-2. do nome sai só o "Ala " da frente; **"Ramo" fica** (uma "Ala Centro" e um
-   "Ramo Centro" na mesma cidade não colidem);
-3. junta com `_`; no máximo 100 caracteres (sem `_` no fim).
+1. cada parte: compatibilidade e acento separados (`NFKD`: "1ª" → "1a", "º" →
+   "o", "ß" → "ss"), tira o que não é ASCII (acento, emoji, outro alfabeto),
+   minúsculo, qualquer sequência de espaço ou pontuação vira **um** `-`, sem
+   `-` nas pontas;
+2. do nome sai só o "Ala " da frente; **"Ramo" fica** (`ramo-centro`), para
+   uma "Ala Centro" e um "Ramo Centro" na mesma cidade não colidirem;
+3. se alguma parte ficar vazia (nome ou cidade só com símbolo, emoji ou outro
+   alfabeto), devolve `''` e a validação recusa com "Escreva o nome e a cidade
+   com letras ou números.". Nunca sai link sem nome nem com `_` sobrando;
+4. junta com `_`; no máximo 100 caracteres, sem `-` ou `_` no fim.
 
-Ex.: ("PR", "Curitiba", "Ala São Lourenço") → `pr_curitiba_sao_lourenco`;
-("SP", "São José do Rio Preto", "Ramo Jardim") →
-`sp_sao_jose_do_rio_preto_ramo_jardim`. Sai no formato aceito pela validação
-(`[a-z0-9_-]{1,100}`).
+Ex. (testados com nomes "malucos"): ("PR", "Curitiba", "Ala São Lourenço") →
+`pr_curitiba_sao-lourenco`; ("SP", "São José dos Campos", "Ramo Vila Nova") →
+`sp_sao-jose-dos-campos_ramo-vila-nova`; "D'Ávila & Cia." → `d-avila-cia`;
+"  --Centro__Norte--  " → `centro-norte`; "Jardim 🌸 Flores" → `jardim-flores`;
+"Santa Bárbara d'Oeste" → `santa-barbara-doeste`; "!!!" ou "日本語" → recusado.
+Sai sempre no formato aceito pela validação (`[a-z0-9_-]{1,100}`).
 
 ---
 
@@ -252,12 +264,15 @@ Pelo service-role, no servidor.
   2. **ala repetida** pelo slug: ativa → 409 "…já usa o calendário. Procure por
      ela na página inicial."; pendente → 409 "…já foi pedida e está esperando
      aprovação.";
-  3. **conta nova do líder** (sempre nova, regra do dono): e-mail que já está em
+  3. **conta do líder**: com `userIdLogado` (pedido com a própria conta), usa
+     essa conta e, no passo 4, apaga o vínculo antigo dela antes de gravar o
+     novo (se o novo falhar, devolve o antigo). Senão, **conta nova**: e-mail que já está em
      `perfil` → 409 "Este e-mail já tem conta no painel. Use outro e-mail para o
      líder responsável."; senão `auth.admin.createUser` (e-mail já confirmado,
      nome em `user_metadata`, que o trigger `handle_new_user` copia para o
      `perfil`). Nenhum e-mail sai do Supabase aqui;
-  4. **grava** a ala `pendente` (com `pedido_por` e `pedido_conta_nova = true`)
+  4. **grava** a ala `pendente` (com `pedido_por` e `pedido_conta_nova`: `true`
+     só para conta nova)
      e o vínculo `pendente` do líder. Se a ala falhar, apaga a conta; se o
      vínculo falhar, apaga a ala e a conta. Assim um erro no meio não deixa
      conta solta.
@@ -313,12 +328,12 @@ Evita payloads gigantes e corpos malformados.
 
 | Campo | Regra |
 |---|---|
-| nome | espaços normalizados, 2–80 caracteres, sem `<` `>` (anti-HTML/script) nem caracteres de controle (`\p{Cc}`) |
+| nome | espaços normalizados, 2–80 caracteres, sem `<` `>` (anti-HTML/script) nem caracteres de controle ou de formatação invisíveis (`\p{Cc}`, `\p{Cf}`: o U+202E, por exemplo, inverte o texto na tela e serve para disfarçar nome) |
 | telefone | `normalizarTelefone` sobre no máximo 40 caracteres; grava o `formatado` |
 | data | `^\d{4}-\d{2}-\d{2}$` e **data que existe**: lida ao meio-dia UTC, precisa voltar igual (`toISOString`). Só `Date.parse` não basta: o JavaScript "conserta" `2026-02-30` para 2 de março, e uma data assim chegava ao banco (que recusava, com erro 500) |
 | id | inteiro positivo |
-| slug | `^[a-z0-9_-]{1,100}$`, minúsculo. O `_` entra pela convenção (`pr_curitiba_sao_lourenco`; os antigos, como `jardim_brasil`, continuam valendo) |
-| cidade | texto com espaços normalizados, 2–80, sem `<` `>` nem controle; gravada como nome próprio (`normalizarCidade`) |
+| slug | `^[a-z0-9_-]{1,100}$`, minúsculo (`pr_curitiba_sao-lourenco`; os antigos, como `sao_lourenco`, continuam valendo) |
+| cidade | texto com espaços normalizados, 2–80, sem `<` `>` nem controle/formatação invisível; gravada como nome próprio (`normalizarCidade`) |
 | e-mail (pedido de ala) | sem espaços nas pontas, minúsculo, até 254, formato `algo@algo.algo` |
 | senha (pedido de ala) | 6–72 caracteres (o limite do Supabase Auth) |
 

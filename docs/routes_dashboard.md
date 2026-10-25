@@ -48,7 +48,10 @@ Sem login → `/admin`; logado sem ala aprovada → `/acesso` (`requireAcesso`).
 
 - **Janela do painel = mês atual + seguinte, no fuso da ala**
   (`getDashboardRange(ala.fuso_horario)`; sem ala em foco, `FUSO_PADRAO`).
-- **"X de Y dias"**: `Y = dias do mês − segundas` (`diasDisponiveisNoMes`).
+- **"X de Y dias"**: `Y = dias do mês − segundas sem almoço`
+  (`diasDisponiveisNoMes(ym, datas)`; nos Agendamentos e no Histórico). Segunda
+  com almoço movido pelo líder conta no Y, e a barra do histórico fica no
+  máximo cheia (100%).
 - **Histórico = só os 3 meses anteriores** ao atual (`getHistoricoRange(3, fuso)`).
   Não carregue mais que isso.
 - **O líder pode o que o membro não pode:** mover um almoço para segunda (P-day),
@@ -101,7 +104,8 @@ cada um.
    tela (ver a seção dele).
 
 Do item 3 em diante tudo fica no `<main>`, sobre o fundo creme, em
-`max-w-3xl`. Os cartões são brancos com `ring-1 ring-primary/10` e
+`max-w-3xl`, com **`gap-[1.575rem]`** entre os grupos (25,2px: o `gap-6` + 5%,
+pedido do dono). Os cartões são brancos com `ring-1 ring-primary/10` e
 `shadow-md`.
 
 **Letra no painel** (escala do `CLAUDE.md`): título da faixa `text-2xl`,
@@ -332,10 +336,14 @@ Exporta `UsersCard` e o tipo `Usuario = { id (do vínculo ala_membro), nome, ema
 - Seções **"Aguardando aprovação"** (só se houver) e **"Com acesso"** ("Ninguém
   com acesso ainda."). Sem nenhum: "Nenhum usuário vinculado ainda."
 - Cada linha: nome (ou "(sem nome)"), e-mail, **Aprovar** (pendentes) e **Remover**.
-  **A própria conta** aparece com "(você)" depois do nome e **sem "Remover"**:
-  tirar o próprio acesso trancava a pessoa fora do painel e podia deixar a ala
-  sem líder (achado na varredura). `Usuario.voce` vem do `page.tsx`
-  (`user_id === ctx.userId`).
+  **A própria conta** aparece com "(você)" depois do nome (`Usuario.voce`, do
+  `page.tsx`: `user_id === ctx.userId`) e **também pode ser removida** (decisão
+  do dono). A confirmação muda: título "Tirar o seu acesso?", "Você vai sair do
+  painel desta ala. Para voltar, precisa pedir acesso de novo." e o botão
+  "Tirar meu acesso". Se ela for a **única com acesso** (o único aprovado),
+  aparece antes, em destaque rosa-claro: "Você é a única pessoa com acesso a
+  esta ala. Sem você, ninguém vê os almoços nem aprova pedidos." Feito, vai
+  direto para `/acesso` (`router.push`).
   `flex-wrap` com `basis-40`: em tela estreita os botões descem.
 - **Uma ação por vez:** enquanto uma roda, todos os botões ficam travados, e o
   botão da ação mostra o verbo ("Aprovando…" / "Removendo…") com Spinner.

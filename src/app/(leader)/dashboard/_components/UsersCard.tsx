@@ -33,7 +33,7 @@ function Linha({ u, emAndamento, onAprovar, onRemover }: {
     return (
         <li className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-slate-200 p-3">
             <div className="min-w-0 flex-1 basis-40">
-                <p className="wrap-anywhere font-medium text-text">
+                <p className="wrap-anywhere font-semibold text-text">
                     {u.nome || '(sem nome)'}
                     {u.voce && <span className="font-normal text-muted"> (você)</span>}
                 </p>
@@ -52,17 +52,15 @@ function Linha({ u, emAndamento, onAprovar, onRemover }: {
                 </button>
             )}
 
-            {!u.voce && (
-                <button
-                    onClick={onRemover}
-                    disabled={emAndamento !== null}
-                    aria-busy={removendo}
-                    className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-base font-medium text-accent transition duration-100 hover:bg-accent/10 enabled:active:scale-[0.97] disabled:opacity-60 cursor-pointer"
-                >
-                    {removendo && <Spinner className="h-4 w-4" />}
-                    {removendo ? 'Removendo…' : 'Remover'}
-                </button>
-            )}
+            <button
+                onClick={onRemover}
+                disabled={emAndamento !== null}
+                aria-busy={removendo}
+                className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-base font-semibold text-accent transition duration-100 hover:bg-accent/10 enabled:active:scale-[0.97] disabled:opacity-60 cursor-pointer"
+            >
+                {removendo && <Spinner className="h-4 w-4" />}
+                {removendo ? 'Removendo…' : 'Remover'}
+            </button>
         </li>
     );
 }
@@ -74,7 +72,7 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
     const [confirmar, setConfirmar] = useState<Usuario | null>(null);
     const [erro, setErro] = useState('');
 
-    async function executar(acao: Acao, membroId: number) {
+    async function executar(acao: Acao, membroId: number, proprio = false) {
         if (emAndamento) return;
         setErro('');
         setEmAndamento({ id: membroId, acao });
@@ -91,6 +89,10 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
                     : 'Não foi possível remover o acesso. Atualize a página e tente de novo.');
                 return;
             }
+            if (proprio) {
+                router.push('/acesso');
+                return;
+            }
             iniciarAtualizacao(() => {
                 router.refresh();
                 setEmAndamento(null);
@@ -105,11 +107,12 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
         if (!confirmar) return;
         const alvo = confirmar;
         setConfirmar(null);
-        await executar('remover', alvo.id);
+        await executar('remover', alvo.id, alvo.voce);
     }
 
     const pendentes = usuarios.filter(u => u.status === 'pendente');
     const aprovados = usuarios.filter(u => u.status === 'aprovado');
+    const unicoComAcesso = confirmar?.voce && confirmar.status === 'aprovado' && aprovados.length === 1;
 
     return (
         <section className="flex flex-col gap-5 rounded-3xl bg-background p-4 shadow-md ring-1 ring-primary/10 sm:p-8">
@@ -154,12 +157,27 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
 
             {confirmar && (
                 <Modal onClose={() => setConfirmar(null)} labelledBy="remover-acesso-titulo" alerta className="max-w-sm text-center">
-                    <h3 id="remover-acesso-titulo" className="text-xl font-semibold text-text">Remover acesso?</h3>
-                    <p className="mt-3 text-base text-muted">
-                        Tem certeza que deseja remover o acesso de{' '}
-                        <strong className="text-text">{confirmar.nome || confirmar.email}</strong>?
-                        Para voltar, a pessoa precisará pedir acesso de novo.
-                    </p>
+                    <h3 id="remover-acesso-titulo" className="text-xl font-semibold text-text">
+                        {confirmar.voce ? 'Tirar o seu acesso?' : 'Remover acesso?'}
+                    </h3>
+                    {confirmar.voce ? (
+                        <>
+                            {unicoComAcesso && (
+                                <p className="mt-3 rounded-xl bg-accent-soft px-3 py-2.5 text-base font-semibold text-accent">
+                                    Você é a única pessoa com acesso a esta ala. Sem você, ninguém vê os almoços nem aprova pedidos.
+                                </p>
+                            )}
+                            <p className="mt-3 text-base text-muted">
+                                Você vai sair do painel desta ala. Para voltar, precisa pedir acesso de novo.
+                            </p>
+                        </>
+                    ) : (
+                        <p className="mt-3 text-base text-muted">
+                            Tem certeza que deseja remover o acesso de{' '}
+                            <strong className="text-text">{confirmar.nome || confirmar.email}</strong>?
+                            Para voltar, a pessoa precisará pedir acesso de novo.
+                        </p>
+                    )}
 
                     <div className="mt-6 flex flex-wrap gap-3">
                         <button
@@ -173,7 +191,7 @@ export function UsersCard({ usuarios }: { usuarios: Usuario[] }) {
                             onClick={confirmarRemocao}
                             className={`${botao('perigo', 'normal')} grow basis-28`}
                         >
-                            Remover
+                            {confirmar.voce ? 'Tirar meu acesso' : 'Remover'}
                         </button>
                     </div>
                 </Modal>

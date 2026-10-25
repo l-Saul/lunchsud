@@ -25,7 +25,7 @@ export async function buscarAlaIgual(ala: NovaAlaInput): Promise<{ status: strin
     return (doEstado ?? []).find(a => gerarSlug(ala.estado, a.cidade, a.nome) === ala.slug) ?? null;
 }
 
-async function contaNova(lider: PedidoAlaInput['lider']): Promise<{ userId: string } | ResultadoPedido> {
+async function contaNova(lider: NonNullable<PedidoAlaInput['lider']>): Promise<{ userId: string } | ResultadoPedido> {
     const { data: perfil } = await supabaseServer
         .from('perfil')
         .select('id')
@@ -53,7 +53,7 @@ async function contaNova(lider: PedidoAlaInput['lider']): Promise<{ userId: stri
     return { userId: data.user.id };
 }
 
-export async function pedirAla({ ala, lider }: PedidoAlaInput): Promise<ResultadoPedido> {
+export async function pedirAla({ ala, lider }: PedidoAlaInput, userIdLogado?: string): Promise<ResultadoPedido> {
     const { count } = await supabaseServer
         .from('ala')
         .select('id', { count: 'exact', head: true })
@@ -69,10 +69,19 @@ export async function pedirAla({ ala, lider }: PedidoAlaInput): Promise<Resultad
             : falha(409, `A ${ala.nome}, de ${ala.cidade}, já foi pedida e está esperando aprovação.`);
     }
 
-    const conta = await contaNova(lider);
-    if ('ok' in conta) return conta;
+    let conta: { userId: string; nova: boolean };
+    if (userIdLogado) {
+        conta = { userId: userIdLogado, nova: false };
+    } else {
+        if (!lider) return falha(400, 'Digite o nome do líder responsável.');
+        const criada = await contaNova(lider);
+        if ('ok' in criada) return criada;
+        conta = { userId: criada.userId, nova: true };
+    }
 
-    const desfazerConta = () => supabaseServer.auth.admin.deleteUser(conta.userId).catch(() => null);
+    const desfazerConta = async () => {
+        if (conta.nova) await supabaseServer.auth.admin.deleteUser(conta.userId).catch(() => null);
+    };
 
     const { data: nova, error } = await supabaseServer
         .from('ala')
@@ -84,7 +93,7 @@ export async function pedirAla({ ala, lider }: PedidoAlaInput): Promise<Resultad
             fuso_horario: ala.fuso,
             status: 'pendente',
             pedido_por: conta.userId,
-            pedido_conta_nova: true,
+            pedido_conta_nova: conta.nova,
         })
         .select('id')
         .single();
@@ -95,10 +104,20 @@ export async function pedirAla({ ala, lider }: PedidoAlaInput): Promise<Resultad
             : falha(500, 'Não foi possível enviar o pedido. Tente de novo.');
     }
 
+    const { data: antigos } = conta.nova
+        ? { data: [] }
+        : await supabaseServer.from('ala_membro').select('ala_id, status, aprovado_por').eq('user_id', conta.userId);
+    if (antigos?.length) {
+        await supabaseServer.from('ala_membro').delete().eq('user_id', conta.userId);
+    }
+
     const { error: erroVinculo } = await supabaseServer
         .from('ala_membro')
         .insert({ user_id: conta.userId, ala_id: nova.id, status: 'pendente' });
     if (erroVinculo) {
+        if (antigos?.length) {
+            await supabaseServer.from('ala_membro').insert(antigos.map(v => ({ ...v, user_id: conta.userId })));
+        }
         await supabaseServer.from('ala').delete().eq('id', nova.id);
         await desfazerConta();
         return falha(500, 'Não foi possível enviar o pedido. Tente de novo.');

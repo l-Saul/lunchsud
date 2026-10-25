@@ -24,10 +24,10 @@ export function HistoryCard({ historico }: { historico: MesHistorico[] }) {
             ) : (
                 <ul className="flex flex-col gap-3">
                     {historico.map(({ ym, total, disponiveis }) => {
-                        const pct = disponiveis ? Math.round((total / disponiveis) * 100) : 0;
+                        const pct = disponiveis ? Math.min(100, Math.round((total / disponiveis) * 100)) : 0;
                         return (
                             <li key={ym} className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                <span className="w-32 shrink-0 text-base font-medium text-text">
+                                <span className="w-32 shrink-0 text-base font-semibold text-text">
                                     {formatMonthLabel(ym)}
                                 </span>
                                 <div

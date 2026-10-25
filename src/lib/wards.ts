@@ -8,19 +8,22 @@ const ROMANO = /^(x{0,3})(ix|iv|v?i{0,3})$/;
 
 export type TipoUnidade = 'ala' | 'ramo';
 
+function maiusculas(palavra: string): string {
+    return palavra.replace(/(^|[-'’/._(])(\p{L})/gu, (_, antes: string, letra: string) => antes + letra.toUpperCase());
+}
+
 function nomeProprio(texto: string): string {
     return texto
         .replace(/\s+/g, ' ')
         .trim()
         .toLowerCase()
         .split(' ')
-        .map((palavra, i) =>
-            i > 0 && PREPOSICOES.has(palavra)
-                ? palavra
-                : i > 0 && ROMANO.test(palavra)
-                    ? palavra.toUpperCase()
-                    : palavra.charAt(0).toUpperCase() + palavra.slice(1)
-        )
+        .map((palavra, i) => {
+            if (i > 0 && PREPOSICOES.has(palavra)) return palavra;
+            if (i > 0 && ROMANO.test(palavra)) return palavra.toUpperCase();
+            if (i > 0 && /^d['’]\p{L}/u.test(palavra)) return palavra.slice(0, 2) + maiusculas(palavra.slice(2));
+            return maiusculas(palavra);
+        })
         .join(' ');
 }
 
@@ -36,19 +39,19 @@ export function normalizarCidade(cidade: string): string {
     return nomeProprio(cidade);
 }
 
+const LIMITE_SLUG = 100;
+
 function pedacoDoSlug(texto: string): string {
     return texto
-        .normalize('NFD')
+        .normalize('NFKD')
         .replace(/[^\x00-\x7F]/g, '')
         .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '_')
-        .replace(/^_+|_+$/g, '');
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
 }
 
 export function gerarSlug(uf: string, cidade: string, nome: string): string {
-    const s = [uf, cidade, nome.replace(/^ala\s+/i, '')]
-        .map(pedacoDoSlug)
-        .filter(Boolean)
-        .join('_');
-    return s.slice(0, 100).replace(/_+$/, '');
+    const partes = [uf, cidade, nome.replace(/^ala\s+/i, '')].map(pedacoDoSlug);
+    if (partes.some(p => !p)) return '';
+    return partes.join('_').slice(0, LIMITE_SLUG).replace(/[-_]+$/, '');
 }

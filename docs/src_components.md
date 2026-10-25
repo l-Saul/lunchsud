@@ -165,7 +165,7 @@ no calendário em [routes_slug.md](routes_slug.md).
   o iPhone dá zoom sozinho), foco azul com anel, `appearance-none` (o iOS tira a
   sombra interna) e `disabled:opacity-60`. Quem chama só soma layout (ex.:
   `pr-12` para um ícone).
-- `rotulo`: a classe do `<label>` (`text-base font-medium text-text`).
+- `rotulo`: a classe do `<label>` (`text-base font-semibold text-text`).
 
 Erro de campo: o texto vai embaixo do campo, ligado por `aria-describedby`, com
 `aria-invalid` no campo (sem `role="alert"`; ver `CLAUDE.md`).
@@ -239,13 +239,21 @@ o `/acesso` (escolhe a ala e depois "Pedir acesso").
 
 - Campos da ala, nesta ordem: **"É ala ou ramo?"** (`ChoiceGroup` Ala/Ramo),
   **Nome da ala/do ramo** (com "Vai aparecer como **Ala São Lourenço**" ao
-  digitar; o owner vê também o link, "· link /pr_curitiba_sao_lourenco"),
+  digitar; o owner vê também o link, "· link /pr_curitiba_sao-lourenco"),
   **Estado** (`SelectField` com as 27 UFs, "Escolha…") e **Cidade**.
   **Só Brasil: sem país. Sem endereço** (o dono tirou). Tudo com
   `autoComplete="off"` (é dado da ala).
-- `modo="pedido"` acrescenta **"Líder responsável"** ("Crie a conta de quem vai
-  cuidar do calendário…") com o `AccountFields modo="criar"`: o líder é sempre
-  uma **conta nova**. E o campo-armadilha `website`, fora da tela, e o `tempo`
+- `modo="pedido"` acrescenta **"Líder responsável"**:
+  - sem `contaLogada`: "Crie a conta de quem vai cuidar do calendário…" e o
+    `AccountFields modo="criar"` (conta nova);
+  - com `contaLogada` (`{ nome, email, ala }`, alguém logado): "Quem vai cuidar
+    do calendário. Pode ser a sua conta ou uma conta nova." e um `ChoiceGroup`
+    **"Minha conta"** (padrão) / **"Conta nova"** (rótulos curtos: "Usar a minha conta" quebrava a palavra no meio no cartão estreito do `/acesso`). Com a própria
+    conta: "Você entrou como **Rita** (rita@…). O pedido vai com esta conta." e,
+    **só se ela tiver ala**, o aviso rosa-claro "Atenção: ao enviar, você perde
+    o acesso à **Ala X**. Para manter, escolha "Conta nova"." Sem ala, sem
+    aviso. Envia `usarConta: true` no lugar de `lider`.
+  - `onEnviado(email, usouConta)`. E o campo-armadilha `website`, fora da tela, e o `tempo`
   desde que o formulário abriu (ver `/api/alas/pedir` em
   [routes_api.md](routes_api.md)).
 - Confere tudo antes de enviar: erro embaixo de cada campo, foco no primeiro
@@ -276,7 +284,15 @@ o `/acesso` (escolhe a ala e depois "Pedir acesso").
 - Casca padrão: fundo azul `bg-primary/50` **desfocado** (regra do dono), fade
   ao abrir (`animate-aparecer` + `animate-surgir`) e fechamento na hora; fundo
   rolável (`overflow-y-auto overscroll-contain`) para o teclado do celular não
-  esconder os botões; caixa branca `rounded-2xl`, `z-60`. Margem da caixa `p-5`
+  esconder os botões; caixa branca `rounded-2xl`, `z-60`.
+- **Teclado do celular:** a camada fica do tamanho da parte visível da tela
+  (`useVisualViewport`: `top` e `height` do `visualViewport`), então com o
+  teclado aberto o modal encolhe e rola, e o último campo e o botão continuam
+  alcançáveis. Ao focar um campo (`onFocus`), depois de 350 ms (o teclado
+  subindo) o campo é rolado para o meio (`scrollIntoView({ block: 'center' })`).
+  No Android, o `interactiveWidget: 'resizes-content'` do viewport já encolhe a
+  tela; no iPhone, que ignora isso, quem resolve é o `visualViewport`. Com zoom
+  de pinça (`scale ≠ 1`) a camada volta a ocupar a tela toda. Margem da caixa `p-5`
   e em volta dela `p-3` no celular (`sm:p-6` / `sm:p-4` a partir de 640px): em
   320px com letra grande, as margens maiores apertavam o título até quebrar a
   palavra no meio.
@@ -290,7 +306,7 @@ o `/acesso` (escolhe a ala e depois "Pedir acesso").
 ## `ErrorMessage.tsx`
 
 **Erro geral de formulário ou ação**: caixa rosa-claro (`bg-accent-soft`), ícone
-"!" e texto rosa (`text-accent`, `font-medium`), `role="alert"` e fade ao
+"!" e texto rosa (`text-accent`, `font-semibold`), `role="alert"` e fade ao
 aparecer. Antes era só texto rosa solto, fácil de não ver.
 
 - Uso: `{erro && <ErrorMessage key={erro}>{erro}</ErrorMessage>}`. A `key` faz o

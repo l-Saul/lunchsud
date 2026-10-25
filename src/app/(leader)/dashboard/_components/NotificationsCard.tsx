@@ -152,7 +152,7 @@ export function NotificationsCard({ alaId, email, preferenciasIniciais }: Props)
                         <span className="h-5 w-1.5 rounded-full bg-accent" />
                         <h2 className="min-w-0 hyphens-auto wrap-break-word text-xl font-semibold text-text">Notificações</h2>
                     </div>
-                    <p role="status" aria-live="polite" className="text-base font-medium">
+                    <p role="status" aria-live="polite" className="text-base font-semibold">
                         {status === 'salvando' && (
                             <span className="flex items-center gap-2 text-muted">
                                 <Spinner className="h-4 w-4" />

@@ -23,15 +23,18 @@ import {
     type ErrosConta,
 } from '@/components/AccountFields';
 
+export type ContaLogada = { nome: string; email: string; ala: string | null };
+
 type Props =
     | { modo: 'owner'; onCriada: (novaId: number | undefined) => Promise<void>; onCancelar: () => void }
-    | { modo: 'pedido'; onEnviado: (email: string) => void };
+    | { modo: 'pedido'; onEnviado: (email: string, usouConta: boolean) => void; contaLogada?: ContaLogada | null };
 
 type CampoAla = 'nome' | 'estado' | 'cidade';
 const ORDEM_ALA: CampoAla[] = ['nome', 'estado', 'cidade'];
 
 export function WardForm(props: Props) {
     const pedido = props.modo === 'pedido';
+    const contaLogada = props.modo === 'pedido' ? props.contaLogada ?? null : null;
     const id = useId();
     const [tipo, setTipo] = useState<TipoUnidade>('ala');
     const [nome, setNome] = useState('');
@@ -39,6 +42,7 @@ export function WardForm(props: Props) {
     const [cidade, setCidade] = useState('');
     const [conta, setConta] = useState(CONTA_VAZIA);
     const [website, setWebsite] = useState('');
+    const [usarConta, setUsarConta] = useState(contaLogada !== null);
     const [erros, setErros] = useState<Partial<Record<CampoAla, string>>>({});
     const [errosConta, setErrosConta] = useState<ErrosConta>({});
     const [erro, setErro] = useState('');
@@ -75,7 +79,7 @@ export function WardForm(props: Props) {
         if (!nomeFinal) novos.nome = `Digite o nome ${unidade}.`;
         if (!estado) novos.estado = 'Escolha o estado.';
         if (cidade.trim().length < 2) novos.cidade = 'Digite a cidade.';
-        const novosConta = pedido ? conferirConta(conta) : {};
+        const novosConta = pedido && !usarConta ? conferirConta(conta) : {};
         setErros(novos);
         setErrosConta(novosConta);
 
@@ -101,7 +105,9 @@ export function WardForm(props: Props) {
                 body: JSON.stringify(pedido
                     ? {
                         ...ala,
-                        lider: { nome: conta.nome.trim(), email: conta.email.trim(), senha: conta.senha },
+                        ...(usarConta
+                            ? { usarConta: true }
+                            : { lider: { nome: conta.nome.trim(), email: conta.email.trim(), senha: conta.senha } }),
                         website,
                         tempo: Date.now() - abertoEm.current,
                     }
@@ -121,7 +127,7 @@ export function WardForm(props: Props) {
         }
 
         if (props.modo === 'pedido') {
-            props.onEnviado(conta.email.trim().toLowerCase());
+            props.onEnviado(usarConta && contaLogada ? contaLogada.email : conta.email.trim().toLowerCase(), usarConta);
         } else {
             await props.onCriada(json?.ala?.id);
             setSalvando(false);
@@ -129,7 +135,7 @@ export function WardForm(props: Props) {
     }
 
     const erroDe = (c: CampoAla) => erros[c] && (
-        <p id={`${campoId(c)}-erro`} className="text-base font-medium text-accent">{erros[c]}</p>
+        <p id={`${campoId(c)}-erro`} className="text-base font-semibold text-accent">{erros[c]}</p>
     );
     const ligacao = (c: CampoAla, dica?: string) => ({
         'aria-invalid': erros[c] ? true : undefined,
@@ -215,21 +221,46 @@ export function WardForm(props: Props) {
             {pedido && (
                 <>
                     <div className="mt-2 flex flex-col gap-1 border-t border-slate-200 pt-5">
-                        <h3 className="text-lg font-semibold text-text">Líder responsável</h3>
+                        <h3 id={`${id}-lider`} className="text-lg font-semibold text-text">Líder responsável</h3>
                         <p className="text-base text-muted">
-                            Crie a conta de quem vai cuidar do calendário. Com este e-mail e esta senha, a
-                            pessoa entra no painel depois que o pedido for aprovado.
+                            {contaLogada
+                                ? 'Quem vai cuidar do calendário. Pode ser a sua conta ou uma conta nova.'
+                                : 'Crie a conta de quem vai cuidar do calendário. Com este e-mail e esta senha, a pessoa entra no painel depois que o pedido for aprovado.'}
                         </p>
                     </div>
 
-                    <AccountFields
-                        modo="criar"
-                        dados={conta}
-                        onChange={mudarConta}
-                        erros={errosConta}
-                        disabled={salvando}
-                        prefixo={prefixoConta}
-                    />
+                    {contaLogada && (
+                        <ChoiceGroup
+                            opcoes={[{ valor: 'minha', rotulo: 'Minha conta' }, { valor: 'nova', rotulo: 'Conta nova' }]}
+                            ativo={usarConta ? 'minha' : 'nova'}
+                            onChange={v => { setUsarConta(v === 'minha'); setErro(''); }}
+                            labelledBy={`${id}-lider`}
+                        />
+                    )}
+
+                    {contaLogada && usarConta ? (
+                        <div className="flex flex-col gap-3">
+                            <p className="text-base text-text wrap-anywhere">
+                                Você entrou como <strong>{contaLogada.nome || contaLogada.email}</strong>
+                                {contaLogada.nome && <> ({contaLogada.email})</>}. O pedido vai com esta conta.
+                            </p>
+                            {contaLogada.ala && (
+                                <p className="rounded-xl bg-accent-soft px-3 py-2.5 text-base font-semibold text-accent">
+                                    Atenção: ao enviar, você perde o acesso à <strong>{contaLogada.ala}</strong>. Para
+                                    manter, escolha &quot;Conta nova&quot;.
+                                </p>
+                            )}
+                        </div>
+                    ) : (
+                        <AccountFields
+                            modo="criar"
+                            dados={conta}
+                            onChange={mudarConta}
+                            erros={errosConta}
+                            disabled={salvando}
+                            prefixo={prefixoConta}
+                        />
+                    )}
 
                     <div aria-hidden="true" className="absolute -left-[9999px] top-0 h-px w-px overflow-hidden">
                         <label htmlFor={`${id}-website`}>Não preencha</label>

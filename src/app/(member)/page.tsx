@@ -72,7 +72,7 @@ export default function IndexPage() {
                     )}
 
                     {alas && (
-                        <div className="flex animate-aparecer flex-col gap-8">
+                        <div className="flex animate-aparecer flex-col">
                             {lembrada && (
                                 <button
                                     type="button"
@@ -99,20 +99,27 @@ export default function IndexPage() {
                                 </button>
                             )}
 
-                            <RequestWard />
+                            <div className={lembrada ? 'mt-12 sm:mt-14' : ''}>
+                                <RequestWard />
+                            </div>
 
                             {lista.length > 0 && (
-                                <section aria-labelledby="buscar-titulo" className="flex flex-col gap-5 rounded-2xl bg-background p-5 shadow-md ring-1 ring-primary/10 sm:p-6">
-                                    <h2 id="buscar-titulo" className="text-xl font-semibold text-text">
-                                        {lembrada ? 'Encontre outra ala' : 'Encontre a sua ala'}
-                                    </h2>
-                                    <WardFilter
-                                        alas={lista.map(ala => ({ ...ala, chave: ala.slug }))}
-                                        instrucao="Toque na sua ala para agendar."
-                                        ocupada={loadingSlug}
-                                        onEscolher={ala => abrir(ala.chave)}
-                                    />
-                                </section>
+                                <div className="mt-12 border-t border-primary/10 pt-12 sm:mt-16 sm:pt-14">
+                                    <section aria-labelledby="buscar-titulo" className="flex flex-col gap-5 rounded-2xl bg-background p-5 shadow-md ring-1 ring-primary/10 sm:p-6">
+                                        <div>
+                                            <h2 id="buscar-titulo" className="text-xl font-semibold text-text">
+                                                {lembrada ? 'Procure outra ala' : 'Procure a sua ala'}
+                                            </h2>
+                                            <p className="mt-2 text-base text-muted">Escolha o estado e depois a cidade.</p>
+                                        </div>
+                                        <WardFilter
+                                            alas={lista.map(ala => ({ ...ala, chave: ala.slug }))}
+                                            instrucao="Toque na sua ala para abrir o calendário."
+                                            ocupada={loadingSlug}
+                                            onEscolher={ala => abrir(ala.chave)}
+                                        />
+                                    </section>
+                                </div>
                             )}
                         </div>
                     )}

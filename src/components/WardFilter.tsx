@@ -87,7 +87,7 @@ export function WardFilter({ alas, instrucao, onEscolher, marcada, ocupada, text
                                         aria-pressed={comMarca ? escolhida : undefined}
                                         aria-busy={carregando || undefined}
                                         onClick={() => onEscolher(ala)}
-                                        className={`group relative flex min-h-16 w-full items-center justify-between gap-4 overflow-hidden rounded-2xl px-6 py-4 text-left text-xl font-medium shadow-md ring-1 ring-primary/10 transition duration-100 enabled:active:scale-[0.98] cursor-pointer disabled:cursor-default ${
+                                        className={`group relative flex min-h-16 w-full items-center justify-between gap-4 overflow-hidden rounded-2xl px-6 py-4 text-left text-xl font-semibold shadow-md ring-1 ring-primary/10 transition duration-100 enabled:active:scale-[0.98] cursor-pointer disabled:cursor-default ${
                                             azul ? 'bg-secondary text-white' : 'bg-white text-primary enabled:hover:bg-secondary enabled:hover:text-white enabled:hover:shadow-xl'
                                         }`}
                                     >

@@ -163,7 +163,7 @@ export function BookingModal({
             >
             <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
-                    <label htmlFor="nome" className="text-base font-medium text-text">
+                    <label htmlFor="nome" className="text-base font-semibold text-text">
                         Seu nome
                     </label>
                     <input
@@ -199,7 +199,7 @@ export function BookingModal({
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                    <label htmlFor="telefone" className="text-base font-medium text-text">
+                    <label htmlFor="telefone" className="text-base font-semibold text-text">
                         Seu telefone (com DDD)
                     </label>
                     <input

@@ -132,14 +132,16 @@ Regras:
 5. **Dia que já passou não é agendável pelo membro** (hoje em diante, no fuso da
    ala). Igual ao P-day: o calendário esmaece e, ao tocar, só mostra a mensagem;
    `/api/agendar` recusa. O líder edita qualquer data.
-6. Painel mostra "X de Y dias agendados", `Y = dias do mês − segundas`
-   (`diasDisponiveisNoMes`).
+6. Painel mostra "X de Y dias agendados", `Y = dias do mês − segundas sem
+   almoço` (`diasDisponiveisNoMes(ym, datasComAlmoco)`): uma segunda para onde o
+   líder moveu um almoço vira dia de almoço, e o X nunca passa do Y.
 7. **Histórico = só os 3 meses anteriores** ao atual (`getHistoricoRange(3)`);
    não carregue mais que isso no painel.
 8. **Só Brasil** (regra do dono, 25/10/2026). Não há país: a ala tem UF e
    cidade, e o **fuso sai da UF** (`UFS` em `src/lib/location.ts`). Sem endereço.
 9. **O link (slug) de uma ala existente nunca muda.** Ele já está nos grupos
-   do WhatsApp. Ala nova usa `<uf>_<cidade>_<nome>` (`gerarSlug`); se a regra
+   do WhatsApp. Ala nova usa `<uf>_<cidade>_<nome>`, com `-` nos espaços
+   (`pr_curitiba_sao-lourenco`, `gerarSlug`); se a regra
    mudar, vale só para as próximas. As 3 primeiras alas mantêm o formato
    antigo (`/ecoville`, `/pilarzinho`, `/sao_lourenco`).
 10. **Ala pendente não é pública.** A presidência pede ala nova pela home (com a
@@ -199,6 +201,13 @@ de data/fuso/P-day em componentes. Detalhes: [`docs/src_lib.md`](docs/src_lib.md
   | Subtítulo de seção; instrução principal ("Toque em…"); mensagem de resposta; botão principal; campo de formulário; abas do mês; número do dia | `text-lg` | 18px |
   | Texto, rótulo, botão do painel, legenda, dica, erro, rodapé | `text-base` | **16px, o mínimo** |
 
+  **Só três pesos** (padronizado em 25/10/2026, o dono via "muita mudança"):
+  **400** no texto corrido; **600** (`font-semibold`) em todo destaque
+  (títulos, rótulos, nomes em lista, botões, contadores, erros); **700** só nos
+  números (dia do calendário e medalhão de data). Sem `font-medium` (500), a não
+  ser nos estados do dia do calendário público. **Título é sempre serifa**
+  (`h1`/`h2`/`h3`): bloco com título usa um `h2`/`h3` de verdade, não um `<p>`
+  em negrito.
   **Nada abaixo de 16px** que precise ser lido: sem `text-sm`, `text-xs`,
   `text-[Npx]`. **Campo de formulário sempre `text-lg`**: abaixo de 16px o
   iPhone dá zoom sozinho ao tocar. Sem MAIÚSCULAS (`uppercase`) e sem itálico.
@@ -277,7 +286,7 @@ servidor e no banco (validação, constraints, permissões), não travando a pes
 - **owner** (`perfil.is_owner`): todas as alas; aprova/remove usuários, cria alas
   e troca a ala em foco (cookie `ala_atual`). **member**: uma ala só (vínculo
   aprovado). Sem ala aprovada → `/acesso`.
-- O **slug** é gerado por `gerarSlug(uf, cidade, nome)` (`pr_curitiba_sao_lourenco`):
+- O **slug** é gerado por `gerarSlug(uf, cidade, nome)` (`pr_curitiba_sao-lourenco`):
   não invente outro formato, e **nunca mude o slug de uma ala que já existe**
   (regra de negócio 9).
 - **O `.env` local aponta para o banco de produção:** agendar no `npm run dev`

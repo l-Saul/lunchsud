@@ -22,7 +22,7 @@ function asString(v: unknown): string {
 
 function nomeSaneado(v: unknown): string {
     const nome = asString(v).replace(/\s+/g, ' ').trim();
-    if (nome.length < 2 || nome.length > 80 || /[<>]/.test(nome) || /\p{Cc}/u.test(nome)) {
+    if (nome.length < 2 || nome.length > 80 || /[<>]/.test(nome) || /[\p{Cc}\p{Cf}]/u.test(nome)) {
         throw new ValidationError('Nome inválido');
     }
     return nome;
@@ -30,7 +30,7 @@ function nomeSaneado(v: unknown): string {
 
 function textoSaneado(v: unknown, min: number, max: number, erro: string): string {
     const s = asString(v).replace(/\s+/g, ' ').trim();
-    if (s.length < min || s.length > max || /[<>]/.test(s) || /\p{Cc}/u.test(s)) {
+    if (s.length < min || s.length > max || /[<>]/.test(s) || /[\p{Cc}\p{Cf}]/u.test(s)) {
         throw new ValidationError(erro);
     }
     return s;
@@ -177,7 +177,7 @@ export function parseNovaAla(raw: unknown): NovaAlaInput {
 
     const slug = gerarSlug(uf.sigla, cidade, nome);
     if (!SLUG_RE.test(slug)) {
-        throw new ValidationError('Não foi possível gerar um link válido a partir desse nome');
+        throw new ValidationError('Escreva o nome e a cidade com letras ou números.');
     }
 
     return { nome, slug, estado: uf.sigla, cidade, fuso: uf.fuso };
@@ -185,7 +185,8 @@ export function parseNovaAla(raw: unknown): NovaAlaInput {
 
 export type PedidoAlaInput = {
     ala: NovaAlaInput;
-    lider: { nome: string; email: string; senha: string };
+    lider: { nome: string; email: string; senha: string } | null;
+    usarConta: boolean;
     pareceRobo: boolean;
     rapidoDemais: boolean;
 };
@@ -195,22 +196,28 @@ export const TEMPO_MINIMO_PEDIDO_MS = 5000;
 export function parsePedidoAla(raw: unknown): PedidoAlaInput {
     const o = (raw ?? {}) as Record<string, unknown>;
     const ala = parseNovaAla(o);
+    const usarConta = o.usarConta === true;
 
-    const l = (o.lider ?? {}) as Record<string, unknown>;
-    const nome = textoSaneado(l.nome, 2, 80, 'Digite o nome do líder responsável.');
-    const email = asString(l.email).trim().toLowerCase();
-    if (email.length > 254 || !EMAIL_RE.test(email)) {
-        throw new ValidationError('Digite um e-mail válido.');
-    }
-    const senha = asString(l.senha);
-    if (senha.length < 6 || senha.length > 72) {
-        throw new ValidationError('A senha precisa ter pelo menos 6 caracteres.');
+    let lider: PedidoAlaInput['lider'] = null;
+    if (!usarConta) {
+        const l = (o.lider ?? {}) as Record<string, unknown>;
+        const nome = textoSaneado(l.nome, 2, 80, 'Digite o nome do líder responsável.');
+        const email = asString(l.email).trim().toLowerCase();
+        if (email.length > 254 || !EMAIL_RE.test(email)) {
+            throw new ValidationError('Digite um e-mail válido.');
+        }
+        const senha = asString(l.senha);
+        if (senha.length < 6 || senha.length > 72) {
+            throw new ValidationError('A senha precisa ter pelo menos 6 caracteres.');
+        }
+        lider = { nome, email, senha };
     }
 
     const tempo = Number(o.tempo);
     return {
         ala,
-        lider: { nome, email, senha },
+        lider,
+        usarConta,
         pareceRobo: asString(o.website).trim() !== '',
         rapidoDemais: !Number.isFinite(tempo) || tempo < TEMPO_MINIMO_PEDIDO_MS,
     };

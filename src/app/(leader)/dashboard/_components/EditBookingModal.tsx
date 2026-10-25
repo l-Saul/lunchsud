@@ -128,7 +128,7 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                     >
                         <div className="flex flex-col gap-4">
                             <div className="flex flex-col gap-1.5">
-                                <label htmlFor={`data-${id}`} className="text-base font-medium text-text">
+                                <label htmlFor={`data-${id}`} className="text-base font-semibold text-text">
                                     Data
                                 </label>
                                 <input
@@ -143,7 +143,7 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                             </div>
 
                             <div className="flex flex-col gap-1.5">
-                                <label htmlFor={`nome-${id}`} className="text-base font-medium text-text">
+                                <label htmlFor={`nome-${id}`} className="text-base font-semibold text-text">
                                     Nome
                                 </label>
                                 <input
@@ -174,7 +174,7 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                             </div>
 
                             <div className="flex flex-col gap-1.5">
-                                <label htmlFor={`tel-${id}`} className="text-base font-medium text-text">
+                                <label htmlFor={`tel-${id}`} className="text-base font-semibold text-text">
                                     Telefone
                                 </label>
                                 <input
@@ -254,7 +254,7 @@ export default function EditBookingModal({ id, data, nome, telefone }: Props) {
                                     type="button"
                                     onClick={() => setConfirmarRemocao(true)}
                                     disabled={ocupado}
-                                    className="min-h-12 w-full rounded-xl px-4 text-base font-medium text-accent transition hover:bg-accent/10 disabled:opacity-50 cursor-pointer"
+                                    className="min-h-12 w-full rounded-xl px-4 text-base font-semibold text-accent transition hover:bg-accent/10 disabled:opacity-50 cursor-pointer"
                                 >
                                     Remover agendamento
                                 </button>

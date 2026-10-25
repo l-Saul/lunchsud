@@ -29,11 +29,12 @@ export default async function AcessoPage() {
         .eq('user_id', ctx.userId)
         .maybeSingle();
 
-    const [{ data: alas }, { data: alaDoVinculo }] = await Promise.all([
+    const [{ data: alas }, { data: alaDoVinculo }, { data: perfil }] = await Promise.all([
         supabaseServer.from('ala').select('id, nome, estado, cidade').eq('status', 'ativa').order('nome'),
         vinculo
             ? supabaseServer.from('ala').select('nome, status').eq('id', vinculo.ala_id).maybeSingle()
             : Promise.resolve({ data: null }),
+        supabaseServer.from('perfil').select('email').eq('id', ctx.userId).maybeSingle(),
     ]);
 
     const lista = alas ?? [];
@@ -45,7 +46,7 @@ export default async function AcessoPage() {
             <HeaderBand title="Acesso ao painel" />
             <main className="flex justify-center px-4 py-10">
                 <section className="w-full max-w-md">
-                    <RequestAccess nome={ctx.nome} alas={lista} pendenteEm={pendenteEm} alaEsperando={alaEsperando} />
+                    <RequestAccess nome={ctx.nome} email={perfil?.email ?? ''} alas={lista} pendenteEm={pendenteEm} alaEsperando={alaEsperando} />
                 </section>
             </main>
         </>

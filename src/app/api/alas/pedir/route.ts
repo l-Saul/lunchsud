@@ -6,6 +6,7 @@
 import { NextResponse, after } from 'next/server';
 import { lerJson, parsePedidoAla, ValidationError, type PedidoAlaInput } from '@/lib/server/validation';
 import { pedirAla } from '@/lib/server/ward-request';
+import { getUsuario } from '@/lib/server/session';
 import { avisarPedidoDeAla } from '@/lib/server/notifications';
 
 export async function POST(req: Request) {
@@ -29,7 +30,19 @@ export async function POST(req: Request) {
         );
     }
 
-    const resultado = await pedirAla(entrada);
+    let userIdLogado: string | undefined;
+    if (entrada.usarConta) {
+        const user = await getUsuario();
+        if (!user) {
+            return NextResponse.json(
+                { error: 'Sua sessão terminou. Entre de novo no painel ou escolha "Conta nova".' },
+                { status: 401 }
+            );
+        }
+        userIdLogado = user.id;
+    }
+
+    const resultado = await pedirAla(entrada, userIdLogado);
     if (!resultado.ok) {
         return NextResponse.json({ error: resultado.erro }, { status: resultado.status });
     }

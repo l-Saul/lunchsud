@@ -89,7 +89,7 @@ Sem framer-motion, sem biblioteca de UI: animações só em CSS.
 | `POST /api/acesso/aprovar` | owner / member aprovado da ala | aprova vínculo |
 | `POST /api/acesso/remover` | owner / member aprovado da ala | remove vínculo |
 | `POST /api/ala-atual` | owner | troca a ala em foco (cookie `ala_atual`) |
-| `POST /api/alas/criar` | owner | cria ala ativa (slug `<uf>_<cidade>_<nome>`) |
+| `POST /api/alas/criar` | owner | cria ala ativa (slug `<uf>_<cidade>_<nome>`, ex. `pr_curitiba_sao-lourenco`) |
 | `POST /api/alas/aprovar` | owner | aprova ala pendente (passo 1; o líder é o passo 2) |
 | `POST /api/alas/recusar` | owner | recusa e apaga o pedido (e a conta criada nele) |
 | `POST /api/avisos/preferencias` | líder (ala em foco) | grava os avisos por e-mail escolhidos para a ala |

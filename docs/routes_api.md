@@ -11,7 +11,8 @@ público**, em português: nunca renomeie as pastas.
 | `GET /api/agendamentos/[slug]` | `WardBooking` (ressincronizar) | público | não |
 | `GET /api/agenda/[slug]?data=` | `BookingModal` (confirmação, aparelhos Apple) | público | não |
 | `GET /api/alas` | home (SWR) | público | não |
-| `POST /api/alas/pedir` | `WardForm` (home, "Pedir para usar o calendário") | público (sem conta) | não |
+| `POST /api/alas/pedir` | `WardForm` (home e `/acesso`, "Pedir para usar o calendário") | público (sem conta), ou logado para usar a própria conta | sim |
+| `GET /api/conta` | `RequestWard` (home, ao abrir o pedido) | público (diz se há alguém logado) | sim |
 | `POST /api/agendamentos/update` | `EditBookingModal` | líder, ala em foco | sim |
 | `POST /api/agendamentos/delete` | `EditBookingModal` | líder, ala em foco | sim |
 | `POST /api/acesso/solicitar` | `RequestAccess` | logado | sim |
@@ -192,8 +193,8 @@ Aprova um vínculo pendente: `status = 'aprovado'`, `aprovado_por = quem aprovou
 ## `POST /api/acesso/remover`
 
 Apaga um vínculo (tira o acesso daquela pessoa à ala). Mesmas regras do
-aprovar. **Ninguém tira o próprio acesso:** vínculo do próprio usuário → 409
-"Você não pode tirar o seu próprio acesso." (o cartão nem mostra o botão). A pessoa volta a cair em `/acesso` e pode pedir de novo. Erro → 500
+aprovar. A pessoa **pode** tirar o próprio acesso (o cartão avisa antes,
+principalmente se ela for a única com acesso à ala). A pessoa volta a cair em `/acesso` e pode pedir de novo. Erro → 500
 "Erro ao remover".
 
 ## `POST /api/ala-atual`
@@ -221,7 +222,9 @@ pedir acesso depois).
     com o prefixo ("Ala São Lourenço", "Ramo Centro");
   - `cidade` 2–80, nome próprio ("Digite a cidade.");
   - `slug` **sempre gerado** (`gerarSlug(uf, cidade, nome)` →
-    `pr_curitiba_sao_lourenco`), nunca vem do cliente. **Sem endereço.**
+    `pr_curitiba_sao-lourenco`: `_` entre as partes, `-` nos espaços), nunca
+    vem do cliente. Nome ou cidade sem letra nem número → "Escreva o nome e a
+    cidade com letras ou números.". **Sem endereço.**
   - Erro de validação → 400 com **a mensagem acima**.
 - Slug já usado (ativa ou pendente) → 409 `A <nome>, de <cidade>, já existe (ou
   já foi pedida).` (checado antes e de novo no `23505`). Outro erro → 500
@@ -238,7 +241,7 @@ pendente. Nada aparece no site até o owner aprovar (dois passos: a ala, depois 
 líder, no cartão Usuários da ala).
 
 - Corpo `{ tipo, nome, estado, cidade, lider: { nome, email, senha }, website,
-  tempo }` → `parsePedidoAla` (as mesmas regras de ala do `criar`; líder: nome
+  tempo }` (ou `usarConta: true` no lugar de `lider`) → `parsePedidoAla` (as mesmas regras de ala do `criar`; líder: nome
   2–80, e-mail válido em minúsculas, senha 6–72). Erro → 400 com a mensagem.
 - **Contra robô** (sem limite por IP, que barrava o Wi-Fi da igreja):
   1. **Campo-armadilha** `website`, escondido fora da tela (`aria-hidden`,
@@ -257,16 +260,32 @@ líder, no cartão Usuários da ala).
 - **Ala repetida:** slug já existe → 409 "A \<ala\>, de \<cidade\>, já usa o
   calendário. Procure por ela na página inicial." (ativa) ou "…já foi pedida e
   está esperando aprovação." (pendente).
-- **Líder = sempre conta nova:** e-mail que já tem conta → 409 "Este e-mail já
-  tem conta no painel. Use outro e-mail para o líder responsável." A conta é
-  criada pelo service-role (`auth.admin.createUser`, e-mail já confirmado, nome
-  em `user_metadata`), sem mandar e-mail.
-- Grava a ala (`status 'pendente'`, `pedido_por`, `pedido_conta_nova = true`) e o
-  vínculo pendente. Falhou no meio → desfaz o que já gravou (ala e conta) e
-  responde 500 "Não foi possível enviar o pedido. Tente de novo."
+- **Líder com conta nova** (`lider`): e-mail que já tem conta → 409 "Este
+  e-mail já tem conta no painel. Use outro e-mail para o líder responsável." A
+  conta é criada pelo service-role (`auth.admin.createUser`, e-mail já
+  confirmado, nome em `user_metadata`), sem mandar e-mail.
+- **Líder com a própria conta** (`usarConta: true`, quem já está logado): a
+  rota lê a sessão (`getUsuario`, por isso está no matcher do proxy). Sem
+  sessão → 401 "Sua sessão terminou. Entre de novo no painel ou escolha "Conta
+  nova"." Com sessão, o vínculo que a pessoa tinha (de outra ala, aprovado
+  ou pendente) **é apagado** e entra o pendente da ala nova: ela perde o acesso
+  antigo (a tela avisa antes). `pedido_conta_nova = false`: recusar o pedido
+  não apaga essa conta.
+- Grava a ala (`status 'pendente'`, `pedido_por`, `pedido_conta_nova`) e o
+  vínculo pendente. Falhou no meio → desfaz o que já gravou (ala, conta nova e,
+  com a própria conta, devolve o vínculo antigo) e responde 500 "Não foi
+  possível enviar o pedido. Tente de novo."
 - Sucesso `{ ok: true }`. Depois da resposta (`after`), manda a **todos os
   owners** o e-mail **"Pedido de nova ala"** (sempre, sem preferência;
   `avisarPedidoDeAla`).
+
+## `GET /api/conta`
+
+Diz ao formulário de pedido de ala se há alguém logado, para oferecer "Minha
+conta". Pública (sem login responde `{ logado: false }`, 200) e no matcher
+do proxy (lê a sessão). Logado: `{ logado: true, nome, email, ala }`, em que
+`ala` é o nome da ala do vínculo da pessoa (aprovado ou pendente) ou `null`.
+`dynamic = 'force-dynamic'`. Nunca devolve mais que isso.
 
 ## `POST /api/alas/aprovar`
 

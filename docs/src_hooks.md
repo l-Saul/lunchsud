@@ -74,6 +74,16 @@ de quem está agendando.
 
 Ver [database.md](database.md).
 
+## `use-visual-viewport.ts`
+
+`useVisualViewport()` → `{ top, height } | null`: a parte da tela que a pessoa
+vê agora (`window.visualViewport`: `offsetTop` e `height`), que **encolhe
+quando o teclado do celular abre**. Usado pelo `Modal` para a camada caber
+acima do teclado. `null` no servidor, sem `visualViewport` ou com zoom de pinça
+(`scale ≠ 1`). Feito com `useSyncExternalStore` (eventos `resize` e `scroll` do
+`visualViewport`), e o valor vem como texto (`"top|altura"`) para o React
+comparar sem renderizar à toa.
+
 ## `use-modal-layer.ts`
 
 **A camada de um modal** (ou de uma tela por cima, como o `LoadingOverlay`).

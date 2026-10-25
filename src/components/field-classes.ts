@@ -11,4 +11,4 @@ export function campo(erro = false) {
     return `${BASE} ${erro ? 'border-accent' : 'border-slate-300'}`;
 }
 
-export const rotulo = 'text-base font-medium text-text';
+export const rotulo = 'text-base font-semibold text-text';

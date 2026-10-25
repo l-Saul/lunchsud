@@ -151,7 +151,7 @@ export default function LoginForm({ erroInicial }: { erroInicial?: string }) {
                 <ErrorMessage key={erro}>{erro}</ErrorMessage>
             )}
             {aviso && (
-                <p role="status" className="text-center text-base font-medium text-secondary">
+                <p role="status" className="text-center text-base font-semibold text-secondary">
                     {aviso}
                 </p>
             )}

@@ -31,7 +31,7 @@ export function BookingsCard({ mesAtual, mesSeguinte, agendamentos }: Props) {
             <div className="flex flex-col divide-y divide-slate-100">
                 {[mesAtual, mesSeguinte].map(ym => {
                     const itens = agendamentos.filter(r => r.data.startsWith(ym));
-                    const disponiveis = diasDisponiveisNoMes(ym);
+                    const disponiveis = diasDisponiveisNoMes(ym, itens.map(r => r.data));
 
                     return (
                         <CollapsibleMonth
@@ -58,7 +58,7 @@ export function BookingsCard({ mesAtual, mesSeguinte, agendamentos }: Props) {
                                                     <span className="mt-1 text-base leading-none text-white/85">{semana}</span>
                                                 </div>
                                                 <div className="min-w-0 grow basis-40">
-                                                    <p className="wrap-anywhere font-medium text-text">{row.nome}</p>
+                                                    <p className="wrap-anywhere font-semibold text-text">{row.nome}</p>
                                                     <p className="text-base text-muted">{row.telefone}</p>
                                                 </div>
                                                 <EditBookingModal {...row} />

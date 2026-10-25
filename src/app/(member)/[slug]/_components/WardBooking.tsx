@@ -150,7 +150,7 @@ export default function WardBooking({ slug, alaId, nomeAla, ocupados, hoje, mesA
                         <div className="mt-12 border-t border-primary/10 pt-12 sm:mt-16 sm:pt-14">
                             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-2xl bg-background px-4 py-4 ring-1 ring-primary/10 sm:px-5">
                                 <div className="min-w-0 grow basis-56">
-                                    <p className="text-lg font-semibold text-text">Faz parte da presidência?</p>
+                                    <h2 className="text-xl font-semibold text-text">Faz parte da presidência?</h2>
                                     <p className="mt-1 text-base text-muted">
                                         Entre no painel da ala para ver quem agendou e organizar os almoços.
                                     </p>

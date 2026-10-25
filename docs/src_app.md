@@ -41,7 +41,10 @@ src/proxy.ts         renova a sessão nas rotas do líder
     sozinho (o painel mostra telefones e controla isso).
 - **Viewport**: `themeColor #003057` (barra do navegador marinho, emendando na
   faixa azul), `colorScheme: 'only light'` (vira `<meta name="color-scheme">`;
-  ver abaixo), largura do aparelho.
+  ver abaixo), largura do aparelho e **`interactiveWidget: 'resizes-content'`**:
+  no Android, o teclado encolhe a área da página em vez de cobrir o fim dela,
+  e os modais continuam mostrando o último campo e o botão (no iPhone, quem faz
+  isso é o `useVisualViewport` do `Modal`).
 - `<html lang="pt-BR">`. `<body>` em coluna com `min-h-screen`: o conteúdo fica
   num `flex-1` e o **`Footer`** vai para o fim, em todas as páginas.
 - `body` com **fundo creme** (`bg-cream`) e texto escuro (`text-text`). O azul é
@@ -224,11 +227,15 @@ função: roda antes da requisição). Aqui ela **renova a sessão do Supabase A
 ```
 /dashboard/:path*  /admin/:path*  /acesso/:path*  /redefinir-senha/:path*  /auth/:path*
 /api/acesso/:path*  /api/agendamentos/update  /api/agendamentos/delete
-/api/ala-atual  /api/alas/criar  /api/alas/aprovar  /api/alas/recusar  /api/avisos/:path*
+/api/ala-atual  /api/alas/criar  /api/alas/pedir  /api/conta  /api/alas/aprovar
+/api/alas/recusar  /api/avisos/:path*
 ```
 
+`/api/alas/pedir` e `/api/conta` são públicas, mas leem a sessão quando há
+alguém logado (pedido de ala com a própria conta), por isso entram.
+
 O caminho do membro (home, calendário da ala, `/api/agendar`,
-`/api/agendamentos/[slug]`, `/api/alas`, `/api/alas/pedir`) **não tem login**, então vai direto para
+`/api/agendamentos/[slug]`, `/api/alas`) **não tem login**, então vai direto para
 a rota, sem esse passo extra. O cron (`/api/cron/avisos`) também fica fora: não
 tem sessão, é protegido pelo `CRON_SECRET`. **Rota nova que use sessão
 (`getUsuario`/`getContexto`) precisa entrar no matcher.**

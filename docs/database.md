@@ -49,7 +49,7 @@ schema public from anon, authenticated` como garantia explícita.
 | `status` | `text`, padrão `'ativa'` | `'pendente'` (pedida pela home, esperando o owner) ou `'ativa'`. Check `ala_status_valido`. Índice `idx_ala_status` |
 | `criado_em` | `timestamptz`, padrão `now()` | quando a ala foi criada ou pedida (ordem e data dos pedidos no modal do owner) |
 | `pedido_por` | `uuid` → `auth.users`, `on delete set null` | quem pediu a ala pela home (o líder responsável). Índice `idx_ala_pedido_por`. Nulo nas alas criadas pelo owner |
-| `pedido_conta_nova` | `boolean`, padrão `false` | `true` quando a conta do líder foi criada no pedido (sempre, hoje): recusar o pedido apaga essa conta |
+| `pedido_conta_nova` | `boolean`, padrão `false` | `true` quando a conta do líder foi criada no pedido: recusar o pedido apaga essa conta. `false` quando a pessoa pediu com a própria conta (já logada): recusar não apaga |
 
 O **fuso** define o "hoje" (dia passado bloqueado), a janela de 2 meses e a virada
 do mês **dessa ala** (ver [src_lib.md](src_lib.md)).
@@ -60,8 +60,8 @@ ressincronizar, imagem da prévia do link), `/api/acesso/solicitar`, a lista do
 `/acesso`, `/api/ala-atual`, a primeira ala do owner (`getContexto`) e a lista de
 troca do painel. O owner vê as pendentes só no modal "Administração geral".
 
-**Slug: regra de negócio.** Alas novas usam `<uf>_<cidade>_<nome>` sem acento
-(`pr_curitiba_sao_lourenco`; "Ramo" fica no link, "Ala" sai: `gerarSlug` em
+**Slug: regra de negócio.** Alas novas usam `<uf>_<cidade>_<nome>` sem acento,
+com `-` nos espaços (`pr_curitiba_sao-lourenco`; "Ramo" fica no link, "Ala" sai: `gerarSlug` em
 [src_lib.md](src_lib.md)). **O slug de uma ala existente nunca muda**, nem
 quando mudar a regra: o link já foi mandado nos grupos do WhatsApp. Por isso as
 3 primeiras alas continuam com o formato antigo, só o nome.

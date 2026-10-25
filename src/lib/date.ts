@@ -109,13 +109,15 @@ export function isPday(dateISO: string) {
     return new Date(`${dateISO}T00:00:00Z`).getUTCDay() === 1;
 }
 
-export function diasDisponiveisNoMes(ym: string) {
+export function diasDisponiveisNoMes(ym: string, datasComAlmoco: string[] = []) {
     const [ano, mes] = ym.split('-').map(Number);
     const totalDias = new Date(ano, mes, 0).getDate();
+    const comAlmoco = new Set(datasComAlmoco);
 
     let disponiveis = 0;
     for (let dia = 1; dia <= totalDias; dia++) {
-        if (new Date(ano, mes - 1, dia).getDay() !== 1) {
+        const data = `${ym}-${pad(dia)}`;
+        if (!isPday(data) || comAlmoco.has(data)) {
             disponiveis++;
         }
     }

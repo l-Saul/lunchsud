@@ -11,16 +11,19 @@ import { Spinner } from '@/components/Spinner';
 import { ErrorMessage } from '@/components/ErrorMessage';
 import { botao } from '@/components/button-classes';
 import { WardFilter } from '@/components/WardFilter';
+import { WardForm } from '@/components/WardForm';
 
 type Ala = { id: number; nome: string; estado: string; cidade: string };
 
 export default function RequestAccess({
     nome,
+    email,
     alas,
     pendenteEm,
     alaEsperando,
 }: {
     nome: string;
+    email: string;
     alas: Ala[];
     pendenteEm: string | null;
     alaEsperando: boolean;
@@ -32,6 +35,8 @@ export default function RequestAccess({
     const [erro, setErro] = useState('');
     const [atualizando, iniciarAtualizar] = useTransition();
     const [saindo, setSaindo] = useState(false);
+    const [pedindoAla, setPedindoAla] = useState(false);
+    const [enviadoPara, setEnviadoPara] = useState<string | null>(null);
 
     async function pedirAcesso() {
         if (!alaId || loading) return;
@@ -127,6 +132,43 @@ export default function RequestAccess({
                         {loading && <Spinner />}
                         {loading ? 'Enviando…' : 'Pedir acesso'}
                     </button>
+
+                    <div className="mt-6 flex w-full flex-col gap-4 border-t border-primary/10 pt-8 text-left">
+                        {enviadoPara ? (
+                            <div role="status" className="flex animate-aparecer flex-col gap-2">
+                                <h3 className="text-lg font-semibold text-text">Pedido enviado!</h3>
+                                <p className="text-base text-muted">
+                                    Quando a ala e o acesso ao painel forem aprovados, chega um e-mail para{' '}
+                                    <strong className="wrap-anywhere text-text">{enviadoPara}</strong>.
+                                </p>
+                            </div>
+                        ) : (
+                            <>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-text">Sua ala ainda não usa o calendário?</h3>
+                                    <p className="mt-1 text-base text-muted">
+                                        A presidência pode pedir agora. Quando o pedido for aprovado, a ala aparece no site.
+                                    </p>
+                                </div>
+                                {pedindoAla ? (
+                                    <div className="animate-aparecer">
+                                        <WardForm
+                                            modo="pedido"
+                                            contaLogada={{ nome, email, ala: null }}
+                                            onEnviado={(para, usouConta) => {
+                                                if (usouConta) router.refresh();
+                                                else setEnviadoPara(para);
+                                            }}
+                                        />
+                                    </div>
+                                ) : (
+                                    <button type="button" onClick={() => setPedindoAla(true)} className={`${botao('secundario', 'grande')} w-full`}>
+                                        Pedir para usar o calendário
+                                    </button>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </>
             )}
 
