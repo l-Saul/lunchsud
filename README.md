@@ -20,7 +20,7 @@ alto contraste, poucos passos, sem conta para agendar.
 | Banco | Supabase Postgres (`sa-east-1`) com RLS e permissões por coluna |
 | Auth | Supabase Auth (e-mail + senha) via `@supabase/ssr`, sessão em cookies |
 | Tempo real | Supabase Realtime (WebSocket, `postgres_changes`) via `@supabase/realtime-js` |
-| Dados no cliente | SWR (só a lista de alas da home) |
+| Dados no cliente | SWR (só as alas da busca da home) |
 | Imagem do mês | `html-to-image` (PNG) + Web Share API |
 | E-mail ao líder | `nodemailer` 10 pelo SMTP do Gmail; Vercel Cron diário |
 | Hospedagem | Vercel, funções em `gru1` (São Paulo) |

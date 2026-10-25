@@ -44,7 +44,8 @@ function telefoneSaneado(v: unknown): string {
 
 function dataSaneada(v: unknown): string {
     const data = asString(v).trim();
-    if (!DATA_RE.test(data) || Number.isNaN(Date.parse(data))) {
+    const real = DATA_RE.test(data) ? new Date(`${data}T12:00:00Z`) : null;
+    if (!real || Number.isNaN(real.getTime()) || real.toISOString().slice(0, 10) !== data) {
         throw new ValidationError('Data inválida');
     }
     return data;

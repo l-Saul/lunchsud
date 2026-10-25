@@ -25,9 +25,9 @@ export function RequestWard() {
 
     return (
         <section id="nova-ala" aria-labelledby="nova-ala-titulo" className="scroll-mt-6">
-            <div className="flex flex-col gap-4 rounded-2xl bg-background px-5 py-5 ring-1 ring-primary/10">
+            <div className="flex flex-col gap-4 rounded-2xl bg-background p-5 shadow-md ring-1 ring-primary/10 sm:p-6">
                 <div>
-                    <h2 id="nova-ala-titulo" className="text-lg font-semibold text-text">
+                    <h2 id="nova-ala-titulo" className="text-xl font-semibold text-text">
                         Sua ala ou ramo ainda não está aqui?
                     </h2>
                     <p className="mt-1 text-base text-muted">

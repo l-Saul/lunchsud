@@ -134,6 +134,7 @@ export default async function DashboardPage() {
         nome: perfilPorId.get(m.user_id)?.nome ?? '',
         email: perfilPorId.get(m.user_id)?.email ?? '',
         status: m.status,
+        voce: m.user_id === ctx.userId,
     }));
 
     return (

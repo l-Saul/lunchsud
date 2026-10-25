@@ -192,7 +192,8 @@ Aprova um vínculo pendente: `status = 'aprovado'`, `aprovado_por = quem aprovou
 ## `POST /api/acesso/remover`
 
 Apaga um vínculo (tira o acesso daquela pessoa à ala). Mesmas regras do
-aprovar. A pessoa volta a cair em `/acesso` e pode pedir de novo. Erro → 500
+aprovar. **Ninguém tira o próprio acesso:** vínculo do próprio usuário → 409
+"Você não pode tirar o seu próprio acesso." (o cartão nem mostra o botão). A pessoa volta a cair em `/acesso` e pode pedir de novo. Erro → 500
 "Erro ao remover".
 
 ## `POST /api/ala-atual`

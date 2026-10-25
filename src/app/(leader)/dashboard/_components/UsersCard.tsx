@@ -16,6 +16,7 @@ export type Usuario = {
     nome: string;
     email: string;
     status: 'pendente' | 'aprovado';
+    voce: boolean;
 };
 
 type Acao = 'aprovar' | 'remover';
@@ -32,7 +33,10 @@ function Linha({ u, emAndamento, onAprovar, onRemover }: {
     return (
         <li className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-slate-200 p-3">
             <div className="min-w-0 flex-1 basis-40">
-                <p className="wrap-anywhere font-medium text-text">{u.nome || '(sem nome)'}</p>
+                <p className="wrap-anywhere font-medium text-text">
+                    {u.nome || '(sem nome)'}
+                    {u.voce && <span className="font-normal text-muted"> (você)</span>}
+                </p>
                 <p className="wrap-anywhere text-base text-muted">{u.email}</p>
             </div>
 
@@ -48,15 +52,17 @@ function Linha({ u, emAndamento, onAprovar, onRemover }: {
                 </button>
             )}
 
-            <button
-                onClick={onRemover}
-                disabled={emAndamento !== null}
-                aria-busy={removendo}
-                className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-base font-medium text-accent transition duration-100 hover:bg-accent/10 enabled:active:scale-[0.97] disabled:opacity-60 cursor-pointer"
-            >
-                {removendo && <Spinner className="h-4 w-4" />}
-                {removendo ? 'Removendo…' : 'Remover'}
-            </button>
+            {!u.voce && (
+                <button
+                    onClick={onRemover}
+                    disabled={emAndamento !== null}
+                    aria-busy={removendo}
+                    className="flex min-h-11 items-center gap-2 rounded-xl px-3 text-base font-medium text-accent transition duration-100 hover:bg-accent/10 enabled:active:scale-[0.97] disabled:opacity-60 cursor-pointer"
+                >
+                    {removendo && <Spinner className="h-4 w-4" />}
+                    {removendo ? 'Removendo…' : 'Remover'}
+                </button>
+            )}
         </li>
     );
 }

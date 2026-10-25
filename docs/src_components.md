@@ -213,7 +213,9 @@ o `/acesso` (escolhe a ala e depois "Pedir acesso").
 
 - **Estado** e **Cidade** em `SelectField` (só os estados e cidades que têm ala
   ativa, em ordem alfabética; estado pelo nome, "Paraná"). Cidade fica
-  desativada ("Escolha o estado primeiro") até escolher o estado.
+  desativada até escolher o estado. O texto vazio das duas é só "Escolha…" (o
+  rótulo já diz o quê): a lista do sistema não quebra linha, e "Escolha o
+  estado…" ficava cortado em 320px com letra grande.
 - **Sem escolha automática** (regra do dono): os dois campos começam vazios em
   todo lugar, mesmo com um estado ou uma cidade só, e a pessoa escolhe. Trocar
   o estado limpa a cidade.
@@ -238,7 +240,7 @@ o `/acesso` (escolhe a ala e depois "Pedir acesso").
 - Campos da ala, nesta ordem: **"É ala ou ramo?"** (`ChoiceGroup` Ala/Ramo),
   **Nome da ala/do ramo** (com "Vai aparecer como **Ala São Lourenço**" ao
   digitar; o owner vê também o link, "· link /pr_curitiba_sao_lourenco"),
-  **Estado** (`SelectField` com as 27 UFs, "Escolha o estado…") e **Cidade**.
+  **Estado** (`SelectField` com as 27 UFs, "Escolha…") e **Cidade**.
   **Só Brasil: sem país. Sem endereço** (o dono tirou). Tudo com
   `autoComplete="off"` (é dado da ala).
 - `modo="pedido"` acrescenta **"Líder responsável"** ("Crie a conta de quem vai
@@ -274,7 +276,10 @@ o `/acesso` (escolhe a ala e depois "Pedir acesso").
 - Casca padrão: fundo azul `bg-primary/50` **desfocado** (regra do dono), fade
   ao abrir (`animate-aparecer` + `animate-surgir`) e fechamento na hora; fundo
   rolável (`overflow-y-auto overscroll-contain`) para o teclado do celular não
-  esconder os botões; caixa branca `rounded-2xl p-6`, `z-60`.
+  esconder os botões; caixa branca `rounded-2xl`, `z-60`. Margem da caixa `p-5`
+  e em volta dela `p-3` no celular (`sm:p-6` / `sm:p-4` a partir de 640px): em
+  320px com letra grande, as margens maiores apertavam o título até quebrar a
+  palavra no meio.
 - Foco, fundo inerte, trava da rolagem e Esc: `useModalLayer`
   ([src_hooks.md](src_hooks.md)). O foco começa na **caixa** (o leitor de tela lê
   o título; o teclado do celular não abre sozinho), ou no elemento marcado com

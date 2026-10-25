@@ -280,10 +280,16 @@ servidor e no banco (validação, constraints, permissões), não travando a pes
 - O **slug** é gerado por `gerarSlug(uf, cidade, nome)` (`pr_curitiba_sao_lourenco`):
   não invente outro formato, e **nunca mude o slug de uma ala que já existe**
   (regra de negócio 9).
-- **Não há ala de teste.** O `.env` local aponta para o banco de **produção**:
-  agendar no `npm run dev` grava numa ala real e aparece ao vivo para os líderes.
-  Teste fluxos que gravam só com o usuário ciente, numa ala combinada, e entregue
-  o SQL de limpeza.
+- **O `.env` local aponta para o banco de produção:** agendar no `npm run dev`
+  grava de verdade e aparece ao vivo para os líderes. **A ala de teste** (criada
+  pelo dono em 25/10/2026) é a **"Ala Teste Aprovação"**
+  (`/pr_curitiba_teste_aprovacao`, em SP / São Paulo; o link ficou com o
+  estado antigo porque link não muda), com o líder
+  `lider.teste.lunchsud@example.com` (senha com o dono). Ela é ativa e aparece
+  na busca da home. Teste que grava vai **só nela** (ou em contas
+  `…lunchsud@example.com` criadas e apagadas no teste), e o que for criado é
+  apagado no fim. Em qualquer outra ala, só com o usuário ciente e com o SQL de
+  limpeza.
 
 ## Avisos por e-mail (Gmail + Vercel Cron)
 

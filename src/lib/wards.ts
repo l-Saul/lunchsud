@@ -4,6 +4,7 @@
  */
 
 const PREPOSICOES = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
+const ROMANO = /^(x{0,3})(ix|iv|v?i{0,3})$/;
 
 export type TipoUnidade = 'ala' | 'ramo';
 
@@ -16,7 +17,9 @@ function nomeProprio(texto: string): string {
         .map((palavra, i) =>
             i > 0 && PREPOSICOES.has(palavra)
                 ? palavra
-                : palavra.charAt(0).toUpperCase() + palavra.slice(1)
+                : i > 0 && ROMANO.test(palavra)
+                    ? palavra.toUpperCase()
+                    : palavra.charAt(0).toUpperCase() + palavra.slice(1)
         )
         .join(' ');
 }

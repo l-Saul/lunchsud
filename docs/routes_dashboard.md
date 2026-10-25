@@ -332,6 +332,10 @@ Exporta `UsersCard` e o tipo `Usuario = { id (do vínculo ala_membro), nome, ema
 - Seções **"Aguardando aprovação"** (só se houver) e **"Com acesso"** ("Ninguém
   com acesso ainda."). Sem nenhum: "Nenhum usuário vinculado ainda."
 - Cada linha: nome (ou "(sem nome)"), e-mail, **Aprovar** (pendentes) e **Remover**.
+  **A própria conta** aparece com "(você)" depois do nome e **sem "Remover"**:
+  tirar o próprio acesso trancava a pessoa fora do painel e podia deixar a ala
+  sem líder (achado na varredura). `Usuario.voce` vem do `page.tsx`
+  (`user_id === ctx.userId`).
   `flex-wrap` com `basis-40`: em tela estreita os botões descem.
 - **Uma ação por vez:** enquanto uma roda, todos os botões ficam travados, e o
   botão da ação mostra o verbo ("Aprovando…" / "Removendo…") com Spinner.
@@ -460,7 +464,9 @@ mandar o link da ala no grupo do WhatsApp. Props: `slug`, `nomeAla`. O link é
 
 - **Mesma cor do botão principal** (azul `bg-secondary`, ícone branco), cantos
   `rounded-xl` como os do padrão (`button-classes.ts`) e mesma altura; largura 3rem no celular e 3.5rem a partir de `sm`
-  (≥ 44px de alvo).
+  (≥ 44px de alvo). **Altura mínima própria** (`min-h-12`, `sm:min-h-13`): com
+  letra grande a fileira quebra e o botão vai sozinho para a linha de baixo;
+  sem isso ele ficava com a altura do ícone (24px, achado na varredura).
 - Sem texto visível, então cada um tem `aria-label` ("Copiar o link do
   calendário da ala", "Compartilhar o link do calendário da ala") e `title`
   (dica no computador).
@@ -576,7 +582,12 @@ O calendário **desenhado para a imagem**, separado do calendário público.
   nome longo sem espaço esticar a coluna e empurrar o sábado para fora da imagem
   (achado com Playwright).
 - Dia: medalhão com o número (azul livre, rosa com almoço, cinza P-day); P-day
-  escrito no centro; com almoço, nome e telefone.
+  escrito no centro; com almoço, nome e telefone. **Almoço numa segunda ganha
+  do P-day** (`pday = isPday(data) && !temAlmoco`): o líder pode mover um
+  almoço para segunda, e a imagem vai para o grupo, então ela mostra quem vai
+  receber os missionários (antes mostrava só "P-day" e escondia o nome, achado
+  na varredura). O calendário público continua mostrando P-day na segunda: lá
+  a irmã não agenda segunda de qualquer jeito.
 - **Nome**: quebra até palavra sem espaço (`overflowWrap: anywhere`), fonte
   menor se tiver mais de 16 caracteres (15 em vez de 18) e **no máximo 3 linhas**
   (2 nos meses de 6 semanas, em que o dia é mais baixo; o nome completo fica no

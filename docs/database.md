@@ -66,9 +66,11 @@ troca do painel. O owner vê as pendentes só no modal "Administração geral".
 quando mudar a regra: o link já foi mandado nos grupos do WhatsApp. Por isso as
 3 primeiras alas continuam com o formato antigo, só o nome.
 
-Hoje há 3 alas (`ecoville`, `pilarzinho`, `sao_lourenco`), todas BR / PR /
-Curitiba / `America/Sao_Paulo`. A ala de teste (`teste`) foi removida em
-2026-10-24 e não existe mais.
+Hoje há 3 alas reais (`ecoville`, `pilarzinho`, `sao_lourenco`), todas PR /
+Curitiba / `America/Sao_Paulo`, e a **ala de teste** "Ala Teste Aprovação"
+(`pr_curitiba_teste_aprovacao`, SP / São Paulo, criada pelo pedido da home em
+2026-10-25 e movida para SP depois; o link não mudou, pela regra). Ver
+`CLAUDE.md` para o uso dela nos testes.
 
 ### `agendamento`
 

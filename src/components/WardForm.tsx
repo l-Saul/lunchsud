@@ -186,7 +186,7 @@ export function WardForm(props: Props) {
                     erro={!!erros.estado}
                     {...ligacao('estado')}
                 >
-                    <option value="">Escolha o estado…</option>
+                    <option value="">Escolha…</option>
                     {UFS.map(uf => (
                         <option key={uf.sigla} value={uf.sigla}>{uf.nome}</option>
                     ))}

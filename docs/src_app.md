@@ -181,16 +181,17 @@ Página nova: título de até ~20 letras, sem o nome do site.
 ## `not-found.tsx`: 404 do site
 
 Na prática, link de ala digitado errado ou de uma ala que não existe mais. Em
-vez da tela padrão do Next (em inglês), um cartão calmo leva à lista de alas da
-home, onde a pessoa acha a sua com um toque:
+vez da tela padrão do Next (em inglês), um cartão calmo leva à busca de alas da
+home (estado → cidade → ala):
 
 - Título da aba: "Página não encontrada" (`metadata` do próprio arquivo, com
   `robots: noindex`), para endereços com mais de um nível (`/a/b`); os de um
   nível caem no `[slug]`, que dá o mesmo título.
 - `<HeaderBand title="Página não encontrada" />` no topo e o cartão num
   `<main>` sobre o creme (sem título nem flor no cartão).
-- Texto: "Confira o link que você recebeu ou escolha a sua ala na lista."
-- Botão **"Ver as alas"** → `/`.
+- Texto: "Confira o link que você recebeu ou procure a sua ala na página
+  inicial." (a home é uma busca por estado e cidade, não uma lista).
+- Botão **"Procurar a ala"** → `/`.
 
 Também é usado pelo `notFound()` da página da ala (slug inexistente).
 

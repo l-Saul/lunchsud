@@ -148,8 +148,8 @@ export default function MonthImage({ diasDoMes }: Props) {
                         ))}
 
                         {diasDoMes.map(dia => {
-                            const pday = isPday(dia.data);
                             const temAlmoco = dia.agendamentos.length > 0;
+                            const pday = isPday(dia.data) && !temAlmoco;
 
                             return (
                                 <div

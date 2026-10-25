@@ -147,6 +147,10 @@ Nome de exibição, antes de gravar. `tipo` é `'ala'` ou `'ramo'` (`TipoUnidade
 
 - espaços normalizados; **title case** (é nome próprio), com as preposições
   `de, da, do, das, dos, e` minúsculas no meio ("Ala Vila do Sol");
+- **algarismo romano no meio fica em maiúscula** ("jardim ii" → "Ala Jardim
+  II", até XXXIX): nome de ala com número é comum, e o title case virava "Ii"
+  (achado na varredura). Palavra toda em maiúscula **não** é preservada: quem
+  digita com Caps Lock ("SÃO PAULO") vira "São Paulo";
 - `nomeSemTipo` tira um "Ala"/"Ramo" que a pessoa tenha digitado na frente;
   `normalizarNomeAla` põe o certo: "são lourenço" → "Ala São Lourenço",
   ("vila nova", `'ramo'`) → "Ramo Vila Nova", ("Ala Centro", `'ramo'`) →
@@ -311,7 +315,7 @@ Evita payloads gigantes e corpos malformados.
 |---|---|
 | nome | espaços normalizados, 2–80 caracteres, sem `<` `>` (anti-HTML/script) nem caracteres de controle (`\p{Cc}`) |
 | telefone | `normalizarTelefone` sobre no máximo 40 caracteres; grava o `formatado` |
-| data | `^\d{4}-\d{2}-\d{2}$` e data real (`Date.parse`) |
+| data | `^\d{4}-\d{2}-\d{2}$` e **data que existe**: lida ao meio-dia UTC, precisa voltar igual (`toISOString`). Só `Date.parse` não basta: o JavaScript "conserta" `2026-02-30` para 2 de março, e uma data assim chegava ao banco (que recusava, com erro 500) |
 | id | inteiro positivo |
 | slug | `^[a-z0-9_-]{1,100}$`, minúsculo. O `_` entra pela convenção (`pr_curitiba_sao_lourenco`; os antigos, como `jardim_brasil`, continuam valendo) |
 | cidade | texto com espaços normalizados, 2–80, sem `<` `>` nem controle; gravada como nome próprio (`normalizarCidade`) |

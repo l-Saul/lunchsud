@@ -48,7 +48,7 @@ export function WardFilter({ alas, instrucao, onEscolher, marcada, ocupada, text
                         setCidade('');
                     }}
                 >
-                    <option value="">Escolha o estado…</option>
+                    <option value="">Escolha…</option>
                     {estados.map(uf => (
                         <option key={uf} value={uf}>{nomeDaUf(uf)}</option>
                     ))}
@@ -64,7 +64,7 @@ export function WardFilter({ alas, instrucao, onEscolher, marcada, ocupada, text
                     onChange={e => setCidade(e.target.value)}
                     disabled={!estado}
                 >
-                    <option value="">{estado ? 'Escolha a cidade…' : 'Escolha o estado primeiro'}</option>
+                    <option value="">Escolha…</option>
                     {cidades.map(c => (
                         <option key={c} value={c}>{c}</option>
                     ))}

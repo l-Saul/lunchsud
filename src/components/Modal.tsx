@@ -22,14 +22,14 @@ export function Modal({ onClose, labelledBy, alerta = false, className = 'max-w-
 
     return createPortal(
         <div ref={camada} className="fixed inset-0 z-60 animate-aparecer overflow-y-auto overscroll-contain bg-primary/50 backdrop-blur-sm">
-            <div onClick={onClose} className="flex min-h-full items-center justify-center p-4">
+            <div onClick={onClose} className="flex min-h-full items-center justify-center p-3 sm:p-4">
                 <div
                     onClick={e => e.stopPropagation()}
                     role={alerta ? 'alertdialog' : 'dialog'}
                     aria-modal="true"
                     aria-labelledby={labelledBy}
                     tabIndex={-1}
-                    className={`w-full animate-surgir rounded-2xl bg-background p-6 shadow-2xl focus:outline-none ${className}`}
+                    className={`w-full animate-surgir rounded-2xl bg-background p-5 shadow-2xl sm:p-6 focus:outline-none ${className}`}
                 >
                     {children}
                 </div>

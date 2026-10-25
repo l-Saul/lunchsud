@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
     const { data: membro } = await supabaseServer
         .from('ala_membro')
-        .select('id, ala_id')
+        .select('id, ala_id, user_id')
         .eq('id', membroId)
         .maybeSingle();
 
@@ -33,6 +33,10 @@ export async function POST(req: Request) {
 
     if (!(await podeEditarAla(ctx.userId, ctx.isOwner, membro.ala_id))) {
         return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
+    }
+
+    if (membro.user_id === ctx.userId) {
+        return NextResponse.json({ error: 'Você não pode tirar o seu próprio acesso.' }, { status: 409 });
     }
 
     const { error } = await supabaseServer

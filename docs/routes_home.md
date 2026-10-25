@@ -87,8 +87,9 @@ aparelho**, a home mostra primeiro um atalho para ela (plano de design, 6.2):
 
 Para a presidência de uma ala ou ramo que ainda não usa o calendário.
 
-- Cartão branco com contorno (`id="nova-ala"`): **"Sua ala ou ramo ainda não
-  está aqui?"** (`h2`, `text-lg`), "A presidência pode pedir para usar o
+- Cartão branco igual ao da busca (`rounded-2xl`, `ring-1`, `shadow-md`, `p-5`
+  / `sm:p-6`; `id="nova-ala"`): **"Sua ala ou ramo ainda não está aqui?"** (`h2`,
+  `text-xl`, como todo título de cartão), "A presidência pode pedir para usar o
   calendário. O pedido é conferido antes de a ala aparecer no site." e o botão
   `secundario` **"Pedir para usar o calendário"**.
 - Abre um `Modal` ("Pedir para usar o calendário") com o **`WardForm
