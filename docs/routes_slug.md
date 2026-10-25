@@ -46,15 +46,15 @@ APIs: `POST /api/agendar`, `GET /api/agendamentos/[slug]`, `GET /api/agenda/[slu
 
 Busca a ala pelo slug (`buscarAlaPorSlug`) e monta:
 
-- **Título da aba** = só o nome da ala (`title: { absolute: ala.nome }`). O
-  `absolute` ignora o template `"%s · Almoço dos Missionários"` do layout: aba
-  curta, que não estoura.
+- **Título da aba** = só o nome da ala (`title: ala.nome`): aba curta, que não
+  estoura (ver "Títulos da aba" em [src_app.md](src_app.md)).
 - **Prévia de compartilhamento** (WhatsApp etc.): título
   `Calendário de almoços da <ala>` e descrição
   `Agende seu almoço para nossos missionários ❤️`. Quem recebe já sabe de qual
   ala é e o que fazer. **Sem imagem** (`openGraph` sem `images`, Twitter
   `card: 'summary'`): o preview mostra só texto.
-- Slug que não existe: título `Ala não encontrada` e `robots: noindex, nofollow`.
+- Slug que não existe: título `Página não encontrada` (qualquer endereço de um
+  nível cai aqui, não só ala digitada errado) e `robots: noindex, nofollow`.
 
 ### Página
 

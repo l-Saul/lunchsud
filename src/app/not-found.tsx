@@ -3,9 +3,15 @@
  * Mudou o comportamento? Atualize o doc na mesma mudança.
  */
 
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Flower } from '@/components/Flower'
 import { HeaderBand } from '@/components/HeaderBand'
+
+export const metadata: Metadata = {
+    title: 'Página não encontrada',
+    robots: { index: false, follow: false },
+}
 
 export default function NaoEncontrada() {
     return (

@@ -16,14 +16,14 @@ export async function generateMetadata(
     const ala = await buscarAlaPorSlug(slug)
 
     if (!ala) {
-        return { title: 'Ala não encontrada', robots: { index: false, follow: false } }
+        return { title: 'Página não encontrada', robots: { index: false, follow: false } }
     }
 
     const tituloCompartilhar = `Calendário de almoços da ${ala.nome}`
     const descricao = 'Agende seu almoço para nossos missionários ❤️'
 
     return {
-        title: { absolute: ala.nome },
+        title: ala.nome,
         description: descricao,
         openGraph: {
             type: 'website',

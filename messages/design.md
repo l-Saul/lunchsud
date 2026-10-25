@@ -49,13 +49,12 @@ no painel. Visão cansada, mãos com tremor, medo de "estragar algo".
 
 | # | O que fazer | Onde |
 |---|---|---|
-| 6.1 | **Título da aba "Página não encontrada"** para endereço que não é de ala (hoje todo endereço de um nível cai no `[slug]` e mostra "Ala não encontrada") | `(member)/[slug]/page.tsx` (`generateMetadata`) |
-| 6.2 | **Link externo avisa:** "(abre em outra aba)" no link do rodapé (WCAG 3.2.5) | `Footer.tsx` |
-| 6.3 | **Letra do sistema no iPhone:** o Safari ignora o tamanho de letra que a pessoa escolheu no iPhone. `font: -apple-system-body` resolve, mas no padrão dá 17px (a base é 16px): aplicar só no iOS (`@supports`), compensar no `body` e reaplicar a fonte. **Precisa de iPhone real** (letra do sistema no mínimo, padrão e máximo) | `globals.css` |
-| 6.4 | Lembrar a última ala na home ("Continuar na Ala Ecoville"), no aparelho | `(member)/page.tsx` (**decidir**) |
-| 6.5 | Lema "A caridade nunca falha", discreto, em serifa | faixa da home e/ou rodapé (**decidir onde**) |
-| 6.6 | Prévia do link no WhatsApp com imagem (nome da ala + flor) | `(member)/[slug]` (Open Graph) (**decidir**) |
-| 6.7 | Botão "Letra maior" na faixa, salvo no aparelho; soma ao zoom, não substitui | (**decidir**) |
+| 6.1 | **Link externo avisa:** "(abre em outra aba)" no link do rodapé (WCAG 3.2.5) | `Footer.tsx` |
+| 6.2 | **Letra do sistema no iPhone:** o Safari ignora o tamanho de letra que a pessoa escolheu no iPhone. `font: -apple-system-body` resolve, mas no padrão dá 17px (a base é 16px): aplicar só no iOS (`@supports`), compensar no `body` e reaplicar a fonte. **Precisa de iPhone real** (letra do sistema no mínimo, padrão e máximo) | `globals.css` |
+| 6.3 | Lembrar a última ala na home ("Continuar na Ala Ecoville"), no aparelho | `(member)/page.tsx` (**decidir**) |
+| 6.4 | Lema "A caridade nunca falha", discreto, em serifa | faixa da home e/ou rodapé (**decidir onde**) |
+| 6.5 | Prévia do link no WhatsApp com imagem (nome da ala + flor) | `(member)/[slug]` (Open Graph) (**decidir**) |
+| 6.6 | Botão "Letra maior" na faixa, salvo no aparelho; soma ao zoom, não substitui | (**decidir**) |
 
 ---
 
@@ -77,10 +76,10 @@ teste só combinado com a líder, numa ala combinada, e apagado depois.
 
 ## Decisões em aberto
 
-1. Lema: faixa da home, rodapé ou os dois? (6.5)
-2. Lembrar a última ala no aparelho? (6.4)
-3. Prévia do link com imagem: vale o esforço agora? (6.6)
-4. Botão "Letra maior": precisa, com a base de 16px? (6.7)
+1. Lema: faixa da home, rodapé ou os dois? (6.4)
+2. Lembrar a última ala no aparelho? (6.3)
+3. Prévia do link com imagem: vale o esforço agora? (6.5)
+4. Botão "Letra maior": precisa, com a base de 16px? (6.6)
 
 ## Decidido: não fazer
 

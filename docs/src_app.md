@@ -31,8 +31,9 @@ src/proxy.ts         renova a sessão nas rotas do líder
   `display: swap`.
 - **Metadata padrão** do site:
   - `metadataBase: https://lunchsud.vercel.app`; nome "Almoço dos Missionários";
-  - título com template `"%s · Almoço dos Missionários"` (páginas que querem a
-    aba curta usam `title: { absolute }`);
+  - título padrão "Almoço dos Missionários" (é o da home), **sem template**:
+    cada página dá o seu título curto, sem o sufixo do site (ver "Títulos da
+    aba" abaixo);
   - descrição, palavras-chave, Open Graph (`pt_BR`, imagem `lunchsud512x512.png`);
   - ícones `lunchsud32x32.png`, `lunchsud512x512.png` e Apple `lunchsud180x180.png`;
   - `appleWebApp` (título "Almoço"), `manifest: /manifest.webmanifest`;
@@ -158,12 +159,34 @@ enfeite: parado, a pessoa acha que travou e toca de novo.
 Barra de rolagem fina até 767px (Firefox `scrollbar-width: thin`; Chrome/Safari
 6px, polegar cinza translúcido). **Hoje nenhum componente usa a classe.**
 
+### Títulos da aba
+
+A aba do celular e do navegador mostra só o começo do título (~20 letras), então
+ele é **curto e começa pelo que importa**. Não há o sufixo
+" · Almoço dos Missionários" (ele empurrava o que importa para fora da aba); o
+ícone da aba já mostra que é o site.
+
+| Página | Título |
+|---|---|
+| `/` | Almoço dos Missionários |
+| `/[slug]` | o nome da ala ("Ala Ecoville") |
+| `/admin` | Entrar |
+| `/acesso` | Acesso ao painel |
+| `/redefinir-senha` | Nova senha |
+| `/dashboard` | Painel da ala |
+| ala inexistente e 404 | Página não encontrada |
+
+Página nova: título de até ~20 letras, sem o nome do site.
+
 ## `not-found.tsx`: 404 do site
 
 Na prática, link de ala digitado errado ou de uma ala que não existe mais. Em
 vez da tela padrão do Next (em inglês), um cartão calmo leva à lista de alas da
 home, onde a pessoa acha a sua com um toque:
 
+- Título da aba: "Página não encontrada" (`metadata` do próprio arquivo, com
+  `robots: noindex`), para endereços com mais de um nível (`/a/b`); os de um
+  nível caem no `[slug]`, que dá o mesmo título.
 - `<HeaderBand />` no topo e o cartão num `<main>` sobre o creme.
 - Título: **"Não encontramos essa página"**
 - Texto: "Confira o link que você recebeu ou escolha a sua ala na lista."

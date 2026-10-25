@@ -30,7 +30,7 @@ Dependências: `src/lib/server/session.ts` (`getContexto`),
 
 ## `page.tsx`
 
-- `dynamic = 'force-dynamic'`, `revalidate = 0`. Metadata: título "Acesso",
+- `dynamic = 'force-dynamic'`, `revalidate = 0`. Metadata: título "Acesso ao painel",
   `robots: noindex, nofollow`.
 - Estrutura: `<HeaderBand />` (faixa azul com o ícone e "Almoço dos
   Missionários") e, abaixo, o `<main>` com o cartão sobre o fundo creme.

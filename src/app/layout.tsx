@@ -23,10 +23,7 @@ const fontSerif = Source_Serif_4({
 export const metadata: Metadata = {
     metadataBase: new URL("https://lunchsud.vercel.app"),
     applicationName: "Almoço dos Missionários",
-    title: {
-        default: "Almoço dos Missionários",
-        template: "%s · Almoço dos Missionários",
-    },
+    title: "Almoço dos Missionários",
     description:
         "Agende um almoço para os missionários da sua ala. Escolha um dia disponível no calendário, de forma simples e rápida.",
     keywords: [
